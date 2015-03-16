@@ -12,10 +12,7 @@ Contents:
    :maxdepth: 2
 
    Release Notes <release-notes>
-   Install Guide <installation-guide>
-   Quickstart Guide <quickstart-guide>
    User Guide <user-guide>
-   Developer Guide <developer-guide>
 
 Indices and tables
 ==================
