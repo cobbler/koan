@@ -1,0 +1,2 @@
+include COPYING AUTHORS README
+include koan.spec config/service/cobblerd.service

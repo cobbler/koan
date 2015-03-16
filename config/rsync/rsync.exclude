@@ -1,0 +1,14 @@
+### files to exclude from "cobbler import" commands that use
+### rsync mirrors.  by default ISOs, PPC code, and debug
+### RPM's are not transferred.  Some users may want to
+### re-enable debug RPM's.
+**/debug/**
+**/alpha/**
+**/source/**
+**/SRPMS/**
+**/*.iso
+**/kde-i18n**
+pool/**/*.dsc
+pool/**/*.gz
+### Avoid deleting the local cache created by createrepo
+**/cache/**

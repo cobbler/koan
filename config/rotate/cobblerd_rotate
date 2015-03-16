@@ -1,0 +1,28 @@
+/var/log/cobbler/cobbler.log {
+   missingok
+   notifempty
+   rotate 4
+   weekly
+   postrotate
+      if [ -f /var/lock/subsys/cobblerd ]; then
+         /etc/init.d/cobblerd condrestart > /dev/null
+      fi
+   endscript
+}
+
+/var/log/cobbler/tasks/*.log {
+   weekly
+   rotate 0
+   missingok
+   ifempty
+   nocompress
+   nocreate
+   nomail
+}
+
+/var/log/cobbler/install.log {
+   missingok
+   notifempty
+   rotate 4
+   weekly
+}
