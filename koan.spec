@@ -71,12 +71,10 @@ rm -rf $RPM_BUILD_ROOT
 %files -f INSTALLED_FILES
 %defattr(-,root,root)
 %{python_sitelib}/*
-#%dir /etc/zenossctl
-#%config(noreplace) %attr(640,root,root) /etc/zenossctl/zenossctl.json
 %doc README AUTHORS COPYING
 
 %changelog
-* Wed Apr 09 2014 Jörgen Maas <jorgen.maas@gmail.com>
-- 1.0.0 - Initial release
+* Wed Apr 09 2015 Jörgen Maas <jorgen.maas@gmail.com>
+- 2.9.0 - Initial release
 
 # EOF
