@@ -41,7 +41,9 @@ BuildArchitectures: noarch
 %endif
 
 BuildRequires: python >= 2.3
+
 Requires: python >= 2.3
+Requires: python-ethtool
 
 %if 0%{?suse_version} == 1010
 BuildRequires: python-devel
