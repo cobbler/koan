@@ -199,6 +199,20 @@ class KoanVirtInstallTest(unittest.TestCase):
              "--network bridge=br2 --wait 0 --noautoconsole")
         )
 
+    def testVirtVersionCheckTest(self):
+        tss = [
+            ("19.19.19", "2.2.2", True),
+            ("1.19.19", "2.2.2", False),
+            ("2.19.19", "2.2.2", True),
+            ("2.2.19", "2.2.2", True),
+            ("1.1.0", "2.2.2", False),
+            ("1.2.1", "2.2.2", False),
+            ("2.2.2", "2.2.2", False),
+        ]
+        for t in tss:
+            self.assertTrue(koan.app._check_version_greater_or_equal(t[0],
+                            t[1]) == t[2])
+
     @patch('koan.virtinstall.utils.subprocess_call')
     @patch('koan.virtinstall.utils.os.path', new_callable=OsPathMock)
     def test_create_qcow_file(self, mock_path, mock_subprocess):
