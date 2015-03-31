@@ -735,7 +735,7 @@ class Koan:
                 # is libvirt new enough?
                 rc, version_str = utils.subprocess_get_response(
                     shlex.split('/usr/bin/virt-install --version'), True)
-                if rc != 0 or _check_version_greater_or_equal(version_str.strip(), "0.2.0"):
+                if rc != 0 or utils.check_version_greater_or_equal(version_str.strip(), "0.2.0"):
                     raise InfoException(
                         "need python-virtinst >= 0.2 or virt-install package to do installs for qemu/kvm (depending on your OS)")
 
@@ -2070,17 +2070,6 @@ class Koan:
             return uuid
         return self.uuidToString(self.randomUUID())
 
-    def _check_version_greater_or_equal(version1, version2):
-        ass = version1.split(".")
-        bss = version2.split(".")
-        if len(ass) != len(bss):
-           raise Exception("expected version format differs")
-        for i, a in enumerate(ass):
-           a = int(a)
-           b = int(bss[i])
-           if a < b:
-               return False
-        return True
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,6 @@
 import unittest
 import koan
+import koan.utils
 
 from koan.virtinstall import build_commandline
 from koan.virtinstall import create_image_file
@@ -210,7 +211,7 @@ class KoanVirtInstallTest(unittest.TestCase):
             ("2.2.2", "2.2.2", True),
         ]
         for t in tss:
-            self.assertTrue(koan.app._check_version_greater_or_equal(t[0],
+            self.assertTrue(utils.check_version_greater_or_equal(t[0],
                             t[1]) == t[2])
 
     @patch('koan.virtinstall.utils.subprocess_call')
