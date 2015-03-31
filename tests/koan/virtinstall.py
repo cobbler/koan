@@ -207,7 +207,7 @@ class KoanVirtInstallTest(unittest.TestCase):
             ("2.2.19", "2.2.2", True),
             ("1.1.0", "2.2.2", False),
             ("1.2.1", "2.2.2", False),
-            ("2.2.2", "2.2.2", False),
+            ("2.2.2", "2.2.2", True),
         ]
         for t in tss:
             self.assertTrue(koan.app._check_version_greater_or_equal(t[0],
