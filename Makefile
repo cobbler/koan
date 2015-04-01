@@ -90,5 +90,5 @@ rpms: release
 
 
 .PHONY: tags
-tags: 
+tags:
 	find . \( -name build -o -name .git \) -prune -o -type f -name '*.py' -print | xargs etags -o TAGS --
