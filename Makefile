@@ -54,7 +54,7 @@ release: clean qa authors sdist doc
 	@cp debian/rules release/debian.rules
 
 nosetests:
-	PYTHONPATH=./koan/ nosetests -v -w tests/koan/ 2>&1 | tee test.log
+	PYTHONPATH=./koan/ nosetests -v -w tests/cli/ 2>&1 | tee test.log
 
 build:
 	python setup.py build -f
