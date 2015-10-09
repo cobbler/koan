@@ -188,7 +188,7 @@ def input_string_or_dict(options, delim=None, allow_multiples=True):
         new_dict = {}
         tokens = string.split(options, delim)
         for t in tokens:
-            tokens2 = string.split(t, "=")
+            tokens2 = string.split(t, "=", 1)
             if len(tokens2) == 1:
                 # this is a singleton option, no value
                 key = tokens2[0]
