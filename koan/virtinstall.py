@@ -233,6 +233,10 @@ def build_commandline(uri,
             fullvirt = True
         else:
             fullvirt = None
+        # is libvirt new enough?
+        if not utils.check_version_greater_or_equal(virtinst_version, "0.2.0"):
+            raise InfoException(
+                "need python-virtinst >= 0.2 or virt-install package to do installs for qemu/kvm (depending on your OS)")
 
     floppy = None
     cdrom = None

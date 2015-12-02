@@ -732,13 +732,6 @@ class Koan:
                 # qemu package installed?
                 if not os.path.exists("/usr/bin/qemu-img"):
                     raise InfoException("qemu package needs to be installed")
-                # is libvirt new enough?
-                rc, version_str = utils.subprocess_get_response(
-                    shlex.split('/usr/bin/virt-install --version'), True)
-                version_str = version_str.strip()
-                if len(version_str) == 0 and not utils.check_version_greater_or_equal(version_str, "0.2.0"):
-                    raise InfoException(
-                        "need python-virtinst >= 0.2 or virt-install package to do installs for qemu/kvm (depending on your OS)")
 
             # for vmware
             if self.virt_type == "vmware" or self.virt_type == "vmwarew":
