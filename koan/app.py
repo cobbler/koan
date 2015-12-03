@@ -861,7 +861,7 @@ class Koan:
                 tree = tree.split()[0]
             else:
                 tree = tree_found
-            tree_re = re.compile('(http|ftp|nfs):')
+            tree_re = re.compile('(https?|ftp|nfs):')
             # Next check for installation tree on remote server
             if tree_re.match(tree):
                 tree = tree.replace(
