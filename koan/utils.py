@@ -613,6 +613,8 @@ def check_version_greater_or_equal(version1, version2):
     for i, a in enumerate(ass):
        a = int(a)
        b = int(bss[i])
+       if a > b:
+           return True
        if a < b:
            return False
     return True
