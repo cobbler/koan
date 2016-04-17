@@ -32,4 +32,6 @@ from . import virtinstall
 
 def start_install(*args, **kwargs):
     cmd = virtinstall.build_commandline("xen:///", *args, **kwargs)
-    utils.subprocess_call(cmd)
+    rc, result, result_stderr = utils.subprocess_get_response(cmd, ignore_rc=True, get_stderr=True)
+    if rc != 0:
+        raise utils.InfoException, "command failed (%s): %s %s" % (rc, result, result_stderr)
