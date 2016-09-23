@@ -12,8 +12,25 @@
 # https://build.opensuse.org/project/subprojects/home:libertas-ict
 #
 
-%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
-%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
+%if 0%{?fedora}
+%global use_python3 1
+%global use_python2 0
+%global pythonbin %{__python3}
+%global python_sitelib %{python3_sitelib}
+%else
+%global use_python3 0
+%global use_python2 1
+%if 0%{?__python2:1}
+%global pythonbin %{__python2}
+%global python_sitelib %{python2_sitelib}
+%else
+%global pythonbin %{__python}
+%global python_sitelib %{python_sitelib}
+%endif
+%endif
+
+%{!?python_sitelib: %global python_sitelib %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
+%{!?python_sitearch: %global python_sitearch %(%{pythonbin} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
 
 %global debug_package %{nil}
 %define _binaries_in_noarch_packages_terminate_build 1
@@ -40,13 +57,19 @@ Url: http://github.com/cobbler/koan
 BuildArchitectures: noarch
 %endif
 
+%if %{use_python3}
+BuildRequires: python3
+Requires: python3
+Requires: python3-netifaces
+%else
 BuildRequires: python >= 2.3
-
 Requires: python >= 2.3
 Requires: python-ethtool
 
 %if 0%{?suse_version} == 1010
 BuildRequires: python-devel
+%endif
+
 %endif
 
 
@@ -61,11 +84,11 @@ bla
 %setup -n %{name}-%{unmangled_version}
 
 %build
-%{__python} setup.py build
+%{pythonbin} setup.py build
 
 %install
 test "x$RPM_BUILD_ROOT" != "x" && rm -rf $RPM_BUILD_ROOT
-%{__python} setup.py install -O1 --prefix=%{_prefix} --root=%{buildroot} --record=INSTALLED_FILES
+%{pythonbin} setup.py install -O1 --prefix=%{_prefix} --root=%{buildroot} --record=INSTALLED_FILES
 
 %clean
 rm -rf $RPM_BUILD_ROOT
