@@ -37,7 +37,7 @@ import string
 import urlgrabber
 import ethtool
 import time
-from cexceptions import KX, InfoException
+from .cexceptions import KX, InfoException
 
 VIRT_STATE_NAME_MAP = {
     0: "running",

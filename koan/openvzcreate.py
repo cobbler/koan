@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 from __future__ import print_function
 
 import os
-from cexceptions import OVZCreateException
+from .cexceptions import OVZCreateException
 
 
 def start_install(*args, **kwargs):

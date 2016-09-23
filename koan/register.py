@@ -29,7 +29,7 @@ import time
 import sys
 import socket
 from . import utils
-from cexceptions import InfoException
+from .cexceptions import InfoException
 import string
 
 # usage: cobbler-register [--server=server] [--fqdn=hostname] --profile=foo

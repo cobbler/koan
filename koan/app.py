@@ -39,7 +39,7 @@ import re
 import sys
 import string
 import socket
-from cexceptions import InfoException
+from .cexceptions import InfoException
 from . import utils
 from . import configurator
 
