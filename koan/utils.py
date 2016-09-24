@@ -259,7 +259,7 @@ def nfsmount(input_path):
     # FIXME: move this function to util.py so other modules can use it
     # we have to mount it first
     filename = input_path.split("/")[-1]
-    dirpath = string.join(input_path.split("/")[:-1], "/")
+    dirpath = "/".join(input_path.split("/")[:-1])
     tempdir = tempfile.mkdtemp(suffix='.mnt', prefix='koan_', dir='/tmp')
     mount_cmd = [
         "/bin/mount", "-t", "nfs", "-o", "ro", dirpath, tempdir
@@ -601,7 +601,7 @@ def create_qemu_image_file(path, size, driver_type):
     except:
         traceback.print_exc()
         raise InfoException(
-            "Image file create failed: %s" % string.join(cmd, " ")
+            "Image file create failed: %s" % " ".join(cmd)
         )
 
 
