@@ -41,7 +41,6 @@ except ImportError:  # python 3
 import subprocess
 import shutil
 import sys
-import string
 import time
 from .cexceptions import KX, InfoException
 
@@ -192,9 +191,9 @@ def input_string_or_dict(options, delim=None, allow_multiples=True):
         raise InfoException("No idea what to do with list: %s" % options)
     elif isinstance(options, type("")):
         new_dict = {}
-        tokens = string.split(options, delim)
+        tokens = options.split(delim)
         for t in tokens:
-            tokens2 = string.split(t, "=", 1)
+            tokens2 = t.split("=", 1)
             if len(tokens2) == 1:
                 # this is a singleton option, no value
                 key = tokens2[0]
