@@ -1540,10 +1540,10 @@ class Koan:
             hash2 = utils.input_string_or_dict(self.kopts_override)
             hashv.update(hash2)
         options = utils.dict_to_string(hashv)
-        options = string.replace(options, "lang ", "lang= ")
+        options = options.replace("lang ", "lang= ")
         # if using ksdevice=bootif that only works for PXE so replace
         # it with something that will work
-        options = string.replace(options, "ksdevice=bootif", "ksdevice=link")
+        options = options.replace("ksdevice=bootif", "ksdevice=link")
         return options
 
     def virt_net_install(self, profile_data):
