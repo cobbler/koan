@@ -30,12 +30,13 @@ import traceback
 import tempfile
 try:  # python 2
     import urllib2
+    import xmlrpclib
 except ImportError:  # python 3
     import urllib.request as urllib2
+    import xmlrpc.client as xmlrpclib
 import subprocess
 import shutil
 import sys
-import xmlrpclib
 import string
 import urlgrabber
 import ethtool
