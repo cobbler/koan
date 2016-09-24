@@ -28,7 +28,10 @@ import random
 import re
 import traceback
 import tempfile
-import urllib2
+try:  # python 2
+    import urllib2
+except ImportError:  # python 3
+    import urllib.request as urllib2
 import subprocess
 import shutil
 import sys

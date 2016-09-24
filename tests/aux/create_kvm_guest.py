@@ -16,7 +16,10 @@ import shlex
 import shutil
 import socket
 import subprocess
-import urllib2
+try:  # python 2
+    import urllib2
+except ImportError:  # python 3
+    import urllib.request as urllib2
 
 DEBUG = True
 # default number of CPUs
