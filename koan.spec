@@ -61,10 +61,12 @@ BuildArchitectures: noarch
 BuildRequires: python3
 Requires: python3
 Requires: python3-netifaces
+Requires: python3-simplejson
 %else
 BuildRequires: python >= 2.3
 Requires: python >= 2.3
 Requires: python-ethtool
+Requires: python-simplejson
 
 %if 0%{?suse_version} == 1010
 BuildRequires: python-devel
