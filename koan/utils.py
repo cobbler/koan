@@ -31,14 +31,17 @@ import tempfile
 try:  # python 2
     import urllib2
     import xmlrpclib
+    import ethtool
+    ethtool_available = True
 except ImportError:  # python 3
     import urllib.request as urllib2
     import xmlrpc.client as xmlrpclib
+    import netifaces
+    ethtool_available = False
 import subprocess
 import shutil
 import sys
 import string
-import ethtool
 import time
 from .cexceptions import KX, InfoException
 
@@ -398,16 +401,25 @@ def uniqify(lst, purge=None):
 def get_network_info():
     interfaces = {}
     # get names
-    inames = ethtool.get_devices()
+    if ethtool_available:
+        inames = ethtool.get_devices()
+    else:
+        inames = netifaces.interfaces()
 
     for iname in inames:
-        mac = ethtool.get_hwaddr(iname)
+        if ethtool_available:
+            mac = ethtool.get_hwaddr(iname)
+        else:
+            mac = netifaces.ifaddresses(iname)[netifaces.AF_LINK][0]['addr']
 
         if mac == "00:00:00:00:00:00":
             mac = "?"
 
         try:
-            ip = ethtool.get_ipaddr(iname)
+            if ethtool_available:
+                ip = ethtool.get_ipaddr(iname)
+            else:
+                ip = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]['addr']
             if ip == "127.0.0.1":
                 ip = "?"
         except:
@@ -417,7 +429,10 @@ def get_network_info():
         module = ""
 
         try:
-            nm = ethtool.get_netmask(iname)
+            if ethtool_available:
+                nm = ethtool.get_netmask(iname)
+            else:
+                nm = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]['netmask']
         except:
             nm = "?"
 
