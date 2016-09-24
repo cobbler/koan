@@ -38,7 +38,6 @@ import subprocess
 import shutil
 import sys
 import string
-import urlgrabber
 import ethtool
 import time
 from .cexceptions import KX, InfoException
@@ -538,7 +537,7 @@ def make_floppy(autoinst):
     # download the autoinst file onto the mounted floppy
     print("- downloading %s" % autoinst)
     save_file = os.path.join(mount_path, "unattended.txt")
-    urlgrabber.urlgrab(autoinst, filename=save_file)
+    urlgrab(autoinst, save_file)
 
     # umount
     cmd = "umount %s" % mount_path
