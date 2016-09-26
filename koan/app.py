@@ -1097,7 +1097,7 @@ class Koan:
     def get_boot_loader_info(self):
         cmd = ["/sbin/grubby", "--bootloader-probe"]
         probe_process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        which_loader = probe_process.communicate()[0]
+        which_loader = probe_process.communicate()[0].decode()
         return probe_process.returncode, which_loader
 
     def replace(self):
@@ -1153,7 +1153,7 @@ class Koan:
                 "/bin/uname -m",
                 stdout=subprocess.PIPE,
                 shell=True)
-            arch = arch_cmd.communicate()[0]
+            arch = arch_cmd.communicate()[0].decode()
 
             # Validate kernel argument length (limit depends on architecture --
             # see asm-*/setup.h).  For example:
