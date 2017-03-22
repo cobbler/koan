@@ -37,9 +37,8 @@ import shutil
 import errno
 import re
 import sys
-import string
 import socket
-from cexceptions import InfoException
+from .cexceptions import InfoException
 from . import utils
 from . import configurator
 
@@ -379,7 +378,7 @@ def main():
         except:
             print(xa)
             print(xb)
-            print(string.join(traceback.format_list(traceback.extract_tb(tb))))
+            print("".join(traceback.format_list(traceback.extract_tb(tb))))
         return 1
 
     return 0
@@ -571,7 +570,7 @@ class Koan:
         systems = self.get_data("systems")
         for system in systems:
             obj_name = system["name"]
-            for (obj_iname, obj_interface) in system['interfaces'].iteritems():
+            for (obj_iname, obj_interface) in system['interfaces'].items():
                 mac = obj_interface["mac_address"].upper()
                 ip = obj_interface["ip_address"].upper()
                 for my_mac in mac_criteria:
@@ -1098,7 +1097,7 @@ class Koan:
     def get_boot_loader_info(self):
         cmd = ["/sbin/grubby", "--bootloader-probe"]
         probe_process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        which_loader = probe_process.communicate()[0]
+        which_loader = probe_process.communicate()[0].decode()
         return probe_process.returncode, which_loader
 
     def replace(self):
@@ -1154,7 +1153,7 @@ class Koan:
                 "/bin/uname -m",
                 stdout=subprocess.PIPE,
                 shell=True)
-            arch = arch_cmd.communicate()[0]
+            arch = arch_cmd.communicate()[0].decode()
 
             # Validate kernel argument length (limit depends on architecture --
             # see asm-*/setup.h).  For example:
@@ -1191,7 +1190,7 @@ class Koan:
                     cmd.append("--copy-default")
 
                 boot_probe_ret_code, probe_output = self.get_boot_loader_info()
-                if boot_probe_ret_code == 0 and string.find(probe_output, "lilo") >= 0:
+                if boot_probe_ret_code == 0 and probe_output.find("lilo") >= 0:
                     cmd.append("--lilo")
 
                 if self.add_reinstall_entry:
@@ -1235,7 +1234,7 @@ class Koan:
                 else:
                     # if grubby --bootloader-probe returns lilo,
                     #    apply lilo changes
-                    if boot_probe_ret_code == 0 and string.find(probe_output, "lilo") != -1:
+                    if boot_probe_ret_code == 0 and probe_output.find("lilo") != -1:
                         print("- applying lilo changes")
                         cmd = ["/sbin/lilo"]
                         utils.subprocess_call(cmd)
@@ -1540,10 +1539,10 @@ class Koan:
             hash2 = utils.input_string_or_dict(self.kopts_override)
             hashv.update(hash2)
         options = utils.dict_to_string(hashv)
-        options = string.replace(options, "lang ", "lang= ")
+        options = options.replace("lang ", "lang= ")
         # if using ksdevice=bootif that only works for PXE so replace
         # it with something that will work
-        options = string.replace(options, "ksdevice=bootif", "ksdevice=link")
+        options = options.replace("ksdevice=bootif", "ksdevice=link")
         return options
 
     def virt_net_install(self, profile_data):

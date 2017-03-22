@@ -28,16 +28,21 @@ import random
 import re
 import traceback
 import tempfile
-import urllib2
+try:  # python 2
+    import urllib2
+    import xmlrpclib
+    import ethtool
+    ethtool_available = True
+except ImportError:  # python 3
+    import urllib.request as urllib2
+    import xmlrpc.client as xmlrpclib
+    import netifaces
+    ethtool_available = False
 import subprocess
 import shutil
 import sys
-import xmlrpclib
-import string
-import urlgrabber
-import ethtool
 import time
-from cexceptions import KX, InfoException
+from .cexceptions import KX, InfoException
 
 VIRT_STATE_NAME_MAP = {
     0: "running",
@@ -137,7 +142,7 @@ def urlgrab(url, saveto):
     see comments for urlread as to why it's this way.
     """
     data = urlread(url)
-    fd = open(saveto, "w+")
+    fd = open(saveto, "w+b")
     fd.write(data)
     fd.close()
 
@@ -186,9 +191,9 @@ def input_string_or_dict(options, delim=None, allow_multiples=True):
         raise InfoException("No idea what to do with list: %s" % options)
     elif isinstance(options, type("")):
         new_dict = {}
-        tokens = string.split(options, delim)
+        tokens = options.split(delim)
         for t in tokens:
-            tokens2 = string.split(t, "=", 1)
+            tokens2 = t.split("=", 1)
             if len(tokens2) == 1:
                 # this is a singleton option, no value
                 key = tokens2[0]
@@ -253,7 +258,7 @@ def nfsmount(input_path):
     # FIXME: move this function to util.py so other modules can use it
     # we have to mount it first
     filename = input_path.split("/")[-1]
-    dirpath = string.join(input_path.split("/")[:-1], "/")
+    dirpath = "/".join(input_path.split("/")[:-1])
     tempdir = tempfile.mkdtemp(suffix='.mnt', prefix='koan_', dir='/tmp')
     mount_cmd = [
         "/bin/mount", "-t", "nfs", "-o", "ro", dirpath, tempdir
@@ -389,22 +394,31 @@ def uniqify(lst, purge=None):
             if x != purge:
                 temp2[x] = 1
         temp = temp2
-    return temp.keys()
+    return list(temp.keys())
 
 
 def get_network_info():
     interfaces = {}
     # get names
-    inames = ethtool.get_devices()
+    if ethtool_available:
+        inames = ethtool.get_devices()
+    else:
+        inames = netifaces.interfaces()
 
     for iname in inames:
-        mac = ethtool.get_hwaddr(iname)
+        if ethtool_available:
+            mac = ethtool.get_hwaddr(iname)
+        else:
+            mac = netifaces.ifaddresses(iname)[netifaces.AF_LINK][0]['addr']
 
         if mac == "00:00:00:00:00:00":
             mac = "?"
 
         try:
-            ip = ethtool.get_ipaddr(iname)
+            if ethtool_available:
+                ip = ethtool.get_ipaddr(iname)
+            else:
+                ip = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]['addr']
             if ip == "127.0.0.1":
                 ip = "?"
         except:
@@ -414,7 +428,10 @@ def get_network_info():
         module = ""
 
         try:
-            nm = ethtool.get_netmask(iname)
+            if ethtool_available:
+                nm = ethtool.get_netmask(iname)
+            else:
+                nm = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]['netmask']
         except:
             nm = "?"
 
@@ -534,7 +551,7 @@ def make_floppy(autoinst):
     # download the autoinst file onto the mounted floppy
     print("- downloading %s" % autoinst)
     save_file = os.path.join(mount_path, "unattended.txt")
-    urlgrabber.urlgrab(autoinst, filename=save_file)
+    urlgrab(autoinst, save_file)
 
     # umount
     cmd = "umount %s" % mount_path
@@ -583,7 +600,7 @@ def create_qemu_image_file(path, size, driver_type):
     except:
         traceback.print_exc()
         raise InfoException(
-            "Image file create failed: %s" % string.join(cmd, " ")
+            "Image file create failed: %s" % " ".join(cmd)
         )
 
 
@@ -605,16 +622,17 @@ def random_mac():
 def generate_timestamp():
     return str(int(time.time()))
 
+
 def check_version_greater_or_equal(version1, version2):
     ass = version1.split(".")
     bss = version2.split(".")
     if len(ass) != len(bss):
-       raise Exception("expected version format differs")
+        raise Exception("expected version format differs")
     for i, a in enumerate(ass):
-       a = int(a)
-       b = int(bss[i])
-       if a > b:
-           return True
-       if a < b:
-           return False
+        a = int(a)
+        b = int(bss[i])
+        if a > b:
+            return True
+        if a < b:
+            return False
     return True

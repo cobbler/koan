@@ -29,8 +29,7 @@ import time
 import sys
 import socket
 from . import utils
-from cexceptions import InfoException
-import string
+from .cexceptions import InfoException
 
 # usage: cobbler-register [--server=server] [--fqdn=hostname] --profile=foo
 
@@ -98,7 +97,7 @@ def main():
         except:
             print(xa)
             print(xb)
-            print(string.join(traceback.format_list(traceback.extract_tb(tb))))
+            print("".join(traceback.format_list(traceback.extract_tb(tb))))
         return 1
 
     return 0

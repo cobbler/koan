@@ -28,7 +28,7 @@ setup(
     packages=['koan'],
     license='GPLv2',
     scripts=['bin/koan', 'bin/cobbler-register'],
-    #data_files=[('/etc/zenossctl', ['config/zenossctl.json'])],
+    # data_files=[('/etc/zenossctl', ['config/zenossctl.json'])],
 )
 
 # EOF
