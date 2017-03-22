@@ -338,7 +338,7 @@ def build_commandline(uri,
     if gfx_type is None:
         cmd += "--nographics "
     else:
-        cmd += "--%s " % gfx_type
+        cmd += "--graphics %s " % gfx_type
 
     if is_qemu and virt_type:
         if not disable_virt_type:

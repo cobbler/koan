@@ -222,7 +222,6 @@ def main():
     p.add_option(
         "-g",
         "--graphics",
-        action="store_true",
         dest="gfx_type",
         help="specify the graphics type: vnc, sdl, spice, none"
     )
