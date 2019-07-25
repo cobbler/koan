@@ -20,8 +20,9 @@ VERSION = "2.9.0"
 setup(
     name='koan',
     version=VERSION,
-    description='xxx',
-    long_description='xxx',
+    description='Kickstart over a Network Client for Cobbler',
+    long_description='This client can initiate and prepare a reinstallation of your operation system with the help of'
+                     'cobbler.',
     author='xxx',
     author_email='xxx',
     url='http://www.github.com/cobbler/koan',
