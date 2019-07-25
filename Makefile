@@ -31,7 +31,7 @@ qa:
 	@pyflakes *.py bin/koan bin/cobbler-register koan/*.py
 
 	@echo "checking: pep8"
-	@pep8 -r --ignore E303,E501 \
+	@pycodestyle -r --ignore E303,E501 \
         *.py bin/koan bin/cobbler-register koan/*.py
 
 authors:
@@ -69,12 +69,6 @@ install: build
 
 savestate:
 	python setup.py -v savestate --root $(DESTDIR); \
-
-
-webtest: devinstall
-	make clean
-	make devinstall
-
 
 rpms: release
 	mkdir -p rpm-build
