@@ -1,2 +1,4 @@
 simplejson
 ethtool
+pyflakes
+pycodestyle
