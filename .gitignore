@@ -3,8 +3,6 @@
 *.tmp
 *~
 *.class
-*~
-*.class
 dist
 rpm-build
 release
@@ -17,7 +15,8 @@ tags
 .coverage
 .metadata
 
-# setuptools
+# Python Folders/Files
+venv/
 cobbler.egg-info
 
 # docs - ignore pod output
@@ -35,3 +34,6 @@ cobbler4j/target
 
 # Testrun output
 test.log
+
+# IDE Config Folders
+.idea/
