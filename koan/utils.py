@@ -26,17 +26,22 @@ from __future__ import print_function
 import os
 import random
 import re
-import traceback
 import tempfile
+import traceback
+
+import distro
+
 try:  # python 2
     import urllib2
     import xmlrpclib
     import ethtool
+
     ethtool_available = True
 except ImportError:  # python 3
     import urllib.request as urllib2
     import xmlrpc.client as xmlrpclib
     import netifaces
+
     ethtool_available = False
 import subprocess
 import shutil
@@ -61,12 +66,11 @@ def setupLogging(appname):
     """
     set up logging ... code borrowed/adapted from virt-manager
     """
-    import logging
     import logging.handlers
 
     dateFormat = "%a, %d %b %Y %H:%M:%S"
     fileFormat = "[%(asctime)s " + appname + \
-        " %(process)d] %(levelname)s (%(module)s:%(lineno)d) %(message)s"
+                 " %(process)d] %(levelname)s (%(module)s:%(lineno)d) %(message)s"
     streamFormat = "%(asctime)s %(levelname)-8s %(message)s"
     filename = "/var/log/koan/koan.log"
 
@@ -255,7 +259,6 @@ def dict_to_string(hash):
 def nfsmount(input_path):
     # input:  [user@]server:/foo/bar/x.img as string
     # output:  (dirname where mounted, last part of filename) as 2-element tuple
-    # FIXME: move this function to util.py so other modules can use it
     # we have to mount it first
     filename = input_path.split("/")[-1]
     dirpath = "/".join(input_path.split("/")[:-1])
@@ -325,12 +328,12 @@ def get_vm_state(conn, vmid):
 
 def check_dist():
     """
-    Determines what distro we're running under.
+    Determines what distro we're running under (with the distro module).
     """
-    if os.path.exists("/etc/debian_version"):
-        import lsb_release
-        return lsb_release.get_distro_information()['ID'].lower()
-    elif os.path.exists("/etc/SuSE-release"):
+    distroname = distro.id()
+    if distroname is "debian":
+        return distroname
+    elif distroname is "suse" or distroname is "sles" or "opensuse" in distroname:
         return "suse"
     else:
         # valid for Fedora and all Red Hat / Fedora derivatives
@@ -339,49 +342,23 @@ def check_dist():
 
 def os_release():
     """
-    This code is borrowed from Cobbler and really shouldn't be repeated.
+    This code detects your os with the distro module and return the name and version. If it is not detected correctly it
+    returns "unkown" (str) and "0" (float).
+    @:returns tuple (str, float)
+        WHERE
+        str is the name
+        int is the version number
     """
-    if check_dist() == "redhat":
-        fh = open("/etc/redhat-release")
-        data = fh.read().lower()
-        if data.find("fedora") != -1:
-            make = "fedora"
-        elif data.find("centos") != -1:
-            make = "centos"
-        else:
-            make = "redhat"
-        release_index = data.find("release")
-        rest = data[release_index + 7:-1]
-        tokens = rest.split(" ")
-        for t in tokens:
-            try:
-                match = re.match('^\d+(?:\.\d+)?', t)
-                if match:
-                    return (make, float(match.group(0)))
-            except ValueError:
-                pass
-        raise KX("failed to detect local OS version from /etc/redhat-release")
+    distroname, version, codename = distro.linux_distribution(full_distribution_name=True)
 
-    elif check_dist() == "debian":
-        import lsb_release
-        release = lsb_release.get_distro_information()['RELEASE']
-        return ("debian", release)
-    elif check_dist() == "ubuntu":
-        version = subprocess.check_output(
-            ("lsb_release", "--release", "--short")).rstrip()
-        make = "ubuntu"
-        return (make, float(version))
-    elif check_dist() in ("suse", "opensuse"):
-        fd = open("/etc/SuSE-release")
-        for line in fd.read().split("\n"):
-            if line.find("VERSION") != -1:
-                version = line.replace("VERSION = ", "")
-            if line.find("PATCHLEVEL") != -1:
-                rest = line.replace("PATCHLEVEL = ", "")
-        make = "suse"
-        return (make, float(version))
+    allowed_distros = ["rhel", "centos", "fedora", "debian", "ubuntu"]
+
+    if distroname in allowed_distros:
+        return distroname, float(version)
+    elif distroname is "sles" or "suse" or "opensuse" in distroname:
+        return "suse", float(version)
     else:
-        return ("unknown", 0)
+        return "unkown", 0.0
 
 
 def uniqify(lst, purge=None):
@@ -448,7 +425,6 @@ def get_network_info():
 
 
 def connect_to_server(server=None, port=None):
-
     if server is None:
         server = os.environ.get("COBBLER_SERVER", "")
     if server == "":
@@ -521,7 +497,6 @@ def libvirt_enable_autostart(domain_name):
 
 
 def make_floppy(autoinst):
-
     (fd, floppy_path) = tempfile.mkstemp(
         suffix='.floppy', prefix='tmp', dir="/tmp")
     print("- creating floppy image at %s" % floppy_path)
@@ -569,6 +544,7 @@ def sync_file(ofile, nfile, uid, gid, mode):
     shutil.copy(nfile, ofile)
     os.chmod(ofile, mode)
     os.chown(ofile, uid, gid)
+
 
 # class ServerProxy(xmlrpclib.ServerProxy):
 #
