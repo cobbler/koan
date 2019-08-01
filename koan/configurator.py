@@ -26,7 +26,7 @@ from __future__ import print_function
 
 import filecmp
 import shutil
-from . import utils
+from koan import utils
 import tempfile
 import stat
 import os.path

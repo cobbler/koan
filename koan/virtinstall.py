@@ -32,8 +32,8 @@ import os
 import re
 import shlex
 
-from . import utils
-from .cexceptions import InfoException
+from koan import utils
+from koan.cexceptions import InfoException
 
 # The virtinst module will no longer be availabe to import in some
 # distros. We need to get all the info we need from the virt-install

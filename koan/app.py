@@ -39,9 +39,9 @@ import time
 import traceback
 from optparse import OptionParser
 
-from . import configurator
-from . import utils
-from .cexceptions import InfoException
+from koan import configurator
+from koan import utils
+from koan.cexceptions import InfoException
 
 COBBLER_REQUIRED = 1.300
 KOAN_CONF_DIR = '/var/lib/koan/config/'

@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 from __future__ import print_function
 
 import os
-from .cexceptions import VirtCreateException, InfoException
+from koan.cexceptions import VirtCreateException, InfoException
 
 IMAGE_DIR = "/var/lib/vmware/images"
 VMX_DIR = "/var/lib/vmware/vmx"

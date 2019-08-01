@@ -4,3 +4,4 @@ pyflakes
 pycodestyle
 distro
 libvirt-python
+netifaces

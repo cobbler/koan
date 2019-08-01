@@ -1,6 +1,6 @@
 import unittest
 
-from mock import patch
+from unittest.mock import patch
 
 import koan
 import koan.utils
@@ -214,8 +214,7 @@ class KoanVirtInstallTest(unittest.TestCase):
             ("2.2.2", "2.2.2", True),
         ]
         for t in tss:
-            self.assertTrue(utils.check_version_greater_or_equal(t[0],
-                                                                 t[1]) == t[2])
+            self.assertTrue(koan.utils.check_version_greater_or_equal(t[0], t[1]) == t[2])
 
     @patch('koan.virtinstall.utils.subprocess_call')
     @patch('koan.virtinstall.utils.os.path', new_callable=OsPathMock)
