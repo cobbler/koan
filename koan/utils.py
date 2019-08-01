@@ -25,7 +25,6 @@ from __future__ import print_function
 
 import os
 import random
-import re
 import tempfile
 import traceback
 
@@ -47,7 +46,7 @@ import subprocess
 import shutil
 import sys
 import time
-from .cexceptions import KX, InfoException
+from .cexceptions import InfoException
 
 VIRT_STATE_NAME_MAP = {
     0: "running",
@@ -331,9 +330,9 @@ def check_dist():
     Determines what distro we're running under (with the distro module).
     """
     distroname = distro.id()
-    if distroname is "debian":
+    if distroname == "debian":
         return distroname
-    elif distroname is "suse" or distroname is "sles" or "opensuse" in distroname:
+    elif distroname == "suse" or distroname == "sles" or "opensuse" in distroname:
         return "suse"
     else:
         # valid for Fedora and all Red Hat / Fedora derivatives
@@ -355,7 +354,7 @@ def os_release():
 
     if distroname in allowed_distros:
         return distroname, float(version)
-    elif distroname is "sles" or "suse" or "opensuse" in distroname:
+    elif (distroname == "sles") or (distroname == "suse") or ("opensuse" in distroname):
         return "suse", float(version)
     else:
         return "unkown", 0.0
