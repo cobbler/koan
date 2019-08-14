@@ -1,4 +1,6 @@
+****************************************
 Support for OpenVZ containers in Cobbler
+****************************************
 
 THIS FUNCTIONS CONSIDERED AS ALPHA STAGE FOR TESTING AND LIMITED UGAGE!
 USAGE IN PRODUCTION CAN BE DANGEROUS! YOU WARNED!
@@ -9,6 +11,7 @@ deploying OpenVZ containers too.
 Current support for OpenVZ is rather basic, but I think this functionality can reach level we have now for KVM.
 
 How to use it?
+##############
 
 Because OpenVZ container is in nature chrooted environment we use cobbler+koan to create this on OpenVZ-enabled node.
 For cobbler and koan in case of OpenVZ all operations is similar - we should define distros, automated installation files, profiles, 
@@ -17,9 +20,10 @@ Now we do all operations only for RHEL/CentOS6. It may be suitable for recent Fe
 distributions.
 
 How it works?
+#############
 
 All options keeps on cobbler side as for other VMs.
-Besides of common options you can use openvz-specific ones by defining them as vz_ prefixed, low-cased variables 
+Besides of common options you can use openvz-specific ones by defining them as ``vz_`` prefixed, low-cased variables
 from this list: KMEMSIZE, LOCKEDPAGES, PRIVVMPAGES, SHMPAGES, NUMPROC, VMGUARPAGES, OOMGUARPAGES, NUMTCPSOCK,
 NUMFLOCK, NUMPTY, NUMSIGINFO, TCPSNDBUF, TCPRCVBUF, OTHERSOCKBUF, DGRAMRCVBUF, NUMOTHERSOCK, DCACHESIZE, NUMFILE,
 AVNUMPROC, NUMIPTENT, DISKINODES, QUOTATIME, VE_ROOT, VE_PRIVATE, SWAPPAGES, ONBOOT (See ctid.conf(5) for meaning 
@@ -28,7 +32,7 @@ Because cobbler does not have a place to keep CTID you MUST use it in ks_meta (a
 We use it on cobbler-side to be able allocate them from one place.
 We turn off pxe-menu creation for openvz containers to not pollute this menu.
 
-For exapmle:
+For example:
 	# cobbler profile add --name=vz01 --distro=CentOS6-x86_64 --autoinst=/your/autoinst.cfg \
 			--ks_meta="lang=ru_RU.UTF-8 keyb=ru vz_ctid=101 vz_swappages=0:2G vz_numproc=120:120" \
 			--repos="centos6-x86_64-os centos-x86_64-updates" \
@@ -68,7 +72,9 @@ Created container started after that, so you should be able to log in to it with
 in autoinst file.
 
 
-Options for creating OpenVZ containers.
+Options for creating OpenVZ containers
+######################################
+
 You should set virt-type to "openvz" in profile or system to create OpenVZ container.
 --virt-file-size 	not used for now. We think we can use it for logical volume creation, or quoting 
 					filesystem usage, or for creating containers in ploop-file.

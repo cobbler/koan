@@ -7,8 +7,8 @@ koan - kickstart over a network, client side helper for cobbler
 koan --server=hostname [--list=type] [--virt|--replace-self|--display] [--profile=name] [--system=name] [--image=name] [--add-reinstall-entry] [--virt-name=name] [--virt-path=path] [--virt-type=type] [--nogfx] [--static-interface=name] [--kexec]
 
 =head1 DESCRIPTION
- 
-Koan stands for "kickstart-over-a-network" and is a client-side helper program for use with Cobbler.  koan allows for both network provisioning of new virtualized guests (Xen, QEMU/KVM, VMware) and re-installation of an existing system.  
+
+Koan stands for "kickstart-over-a-network" and is a client-side helper program for use with Cobbler.  koan allows for both network provisioning of new virtualized guests (Xen, QEMU/KVM, VMware) and re-installation of an existing system.
 
 When invoked, koan requests install information from a remote cobbler boot server, it then kicks off installations based on what is retrieved from cobbler and fed in on the koan command line.   The examples below
 show the various use cases.
@@ -101,7 +101,7 @@ Koan respects the COBBLER_SERVER variable to specify the cobbler server to use. 
 
 Reading the cobbler manpage and www.cobblerd.org is highly recommended.
 
-The mailing list is cobbler@lists.fedorahosted.org.  
+The mailing list is cobbler@lists.fedorahosted.org.
 
 Subscribe at https://fedorahosted.org/mailman/listinfo/cobbler
 
