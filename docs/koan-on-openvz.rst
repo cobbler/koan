@@ -33,6 +33,9 @@ We use it on cobbler-side to be able allocate them from one place.
 We turn off pxe-menu creation for openvz containers to not pollute this menu.
 
 For example:
+
+.. code-block:: shell
+
 	# cobbler profile add --name=vz01 --distro=CentOS6-x86_64 --autoinst=/your/autoinst.cfg \
 			--ks_meta="lang=ru_RU.UTF-8 keyb=ru vz_ctid=101 vz_swappages=0:2G vz_numproc=120:120" \
 			--repos="centos6-x86_64-os centos-x86_64-updates" \
@@ -57,6 +60,9 @@ For example:
 	        --name-servers=NAME_SERVERS_IPs
 
 On koan side:
+
+.. code-block:: none
+
 	# koan --server=COBBLER_IP --virt --system=vz01
 
 This will start installation process. ovz-install script will install all packages and groups listed in $packages
@@ -76,6 +82,9 @@ Options for creating OpenVZ containers
 ######################################
 
 You should set virt-type to "openvz" in profile or system to create OpenVZ container.
+
+.. code-block:: none
+
 --virt-file-size 	not used for now. We think we can use it for logical volume creation, or quoting 
 					filesystem usage, or for creating containers in ploop-file.
 --virt-ram			as for other VMs

@@ -1,4 +1,5 @@
-=head1 NAME
+Cobbler-Register
+****************
 
 cobbler-register - create a cobbler system record
 

@@ -1,4 +1,5 @@
-=head1 NAME
+Koan
+****
 
 koan - kickstart over a network, client side helper for cobbler
 
