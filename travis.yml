@@ -1,0 +1,17 @@
+dist: xenial
+language: generic
+sudo: required
+branches:
+  only:
+    - master
+addons:
+  apt:
+    packages:
+      - python3
+      - python3-pip
+before_script:
+  - pip3 install pyflakes pycodestyle
+  - pip3 install requirements-test.txt
+script:
+  - make qa
+  - pytest
