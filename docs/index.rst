@@ -14,8 +14,8 @@ Contents:
    Koan <koan>
    cobbler-register <cobbler-register>
    Koan on OpenVZ <koan-on-openvz>
-   Release Notes <release-notes>
    User Guide <user-guide>
+   Release Notes <release-notes>
 
 Indices and tables
 ==================
