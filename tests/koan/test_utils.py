@@ -17,7 +17,7 @@ def test_check_dist():
 
 def test_os_release():
     # Arrange
-    distro.linux_distribution = MagicMock(return_value="suse")
+    distro.linux_distribution = MagicMock(return_value=("suse", 11, "codename"))
 
     # Act
     resname, resnumber = utils.os_release()
