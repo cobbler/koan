@@ -26,21 +26,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 from __future__ import print_function
 
-import random
-import os
-import traceback
-import shlex
-import subprocess
-from optparse import OptionParser
-import time
-import shutil
 import errno
+import os
+import random
 import re
-import sys
+import shlex
+import shutil
 import socket
-from .cexceptions import InfoException
-from . import utils
+import subprocess
+import sys
+import time
+import traceback
+from optparse import OptionParser
+
 from . import configurator
+from . import utils
+from .cexceptions import InfoException
 
 COBBLER_REQUIRED = 1.300
 KOAN_CONF_DIR = '/var/lib/koan/config/'
@@ -462,11 +463,11 @@ class Koan:
 
         # if both --profile and --system were ommitted, autodiscover
         if self.is_virt:
-            if (self.profile is None and self.system is None and self.image is None):
+            if self.profile is None and self.system is None and self.image is None:
                 raise InfoException(
                     "must specify --profile, --system, or --image")
         else:
-            if (self.profile is None and self.system is None and self.image is None):
+            if self.profile is None and self.system is None and self.image is None:
                 self.system = self.autodetect_system(
                     allow_interactive=self.live_cd)
                 if self.system is None:
@@ -483,21 +484,21 @@ class Koan:
                     "--virt-type should be qemu, xenpv, xenfv, vmware, vmwarew, kvm, or auto")
 
         # if --qemu-disk-type was called without --virt-type=qemu, then fail
-        if (self.qemu_disk_type is not None):
+        if self.qemu_disk_type is not None:
             self.qemu_disk_type = self.qemu_disk_type.lower()
             if self.virt_type not in ["qemu", "auto", "kvm"]:
                 raise InfoException(
                     "--qemu-disk-type must use with --virt-type=qemu")
 
         # if --qemu-net-type was called without --virt-type=qemu, then fail
-        if (self.qemu_net_type is not None):
+        if self.qemu_net_type is not None:
             self.qemu_net_type = self.qemu_net_type.lower()
             if self.virt_type not in ["qemu", "auto", "kvm"]:
                 raise InfoException(
                     "--qemu-net-type must use with --virt-type=qemu")
 
         # if --qemu-machine-type was called without --virt-type=qemu, then fail
-        if (self.qemu_machine_type is not None):
+        if self.qemu_machine_type is not None:
             self.qemu_machine_type = self.qemu_machine_type.lower()
             if self.virt_type not in ["qemu", "auto", "kvm"]:
                 raise InfoException(
@@ -643,12 +644,10 @@ class Koan:
             # use the ones in the install_tree
             if self.safe_load(profile_data, "install_tree"):
                 if not self.safe_load(profile_data, "kernel"):
-                    profile_data["kernel"] = profile_data[
-                        "install_tree"] + "/images/pxeboot/vmlinuz"
+                    profile_data["kernel"] = profile_data["install_tree"] + "/images/pxeboot/vmlinuz"
 
                 if not self.safe_load(profile_data, "initrd"):
-                    profile_data["initrd"] = profile_data[
-                        "install_tree"] + "/images/pxeboot/initrd.img"
+                    profile_data["initrd"] = profile_data["install_tree"] + "/images/pxeboot/initrd.img"
 
         # find the correct file download location
         if not self.is_virt:
@@ -790,8 +789,7 @@ class Koan:
             raw = utils.urlread(url)
             lines = raw.splitlines()
 
-            method_re = re.compile(
-                '(?P<urlcmd>\s*url\s.*)|(?P<nfscmd>\s*nfs\s.*)')
+            method_re = re.compile(r"(?P<urlcmd>\s*url\s.*)|(?P<nfscmd>\s*nfs\s.*)")
 
             url_parser = OptionParser()
             url_parser.add_option("--url", dest="url")
@@ -862,7 +860,7 @@ class Koan:
             else:
                 # Now take the first parameter as the local path
                 profile_data["install_tree"] = "http://" + \
-                    profile_data["http_server"] + tree
+                                               profile_data["http_server"] + tree
 
             if self.safe_load(profile_data, "install_tree"):
                 print("install_tree:", profile_data["install_tree"])
@@ -888,6 +886,7 @@ class Koan:
                     if x == 'kernel_options':
                         value = self.calc_kernel_args(profile_data)
                     print("%20s  : %s" % (x, value))
+
         return self.net_install(after_download)
 
     def virt(self):
@@ -1054,7 +1053,8 @@ class Koan:
 
             (make, version) = utils.os_release()
 
-            if (make == "centos" and version < 7) or (make == "redhat" and version < 7) or (make == "fedora" and version < 10) or (make == "suse"):
+            if (make == "centos" and version < 7) or (make == "redhat" and version < 7) or (
+                    make == "fedora" and version < 10) or (make == "suse"):
 
                 # embed the initrd in the autoinst file because of libdhcp and/or pump
                 # needing the help due to some DHCP timeout potential in some certain
@@ -1091,6 +1091,7 @@ class Koan:
                 self.safe_load(profile_data, 'kernel_local')
             ])
             print("Kernel loaded; run 'kexec -e' to execute")
+
         return self.net_install(after_download)
 
     def get_boot_loader_info(self):
@@ -1135,7 +1136,8 @@ class Koan:
 
             autoinst = self.safe_load(profile_data, 'autoinst')
 
-            if (make == "centos" and version < 7) or (make == "redhat" and version < 7) or (make == "fedora" and version < 10) or (make == "suse"):
+            if (make == "centos" and version < 7) or (make == "redhat" and version < 7) or (
+                    make == "fedora" and version < 10) or (make == "suse"):
 
                 # embed the initrd in the autoinst file because of libdhcp and/or pump
                 # needing the help due to some DHCP timeout potential in some certain
@@ -1258,8 +1260,7 @@ class Koan:
                     default_cmd = [
                         'sed',
                         '-i',
-                        's/^GRUB_DEFAULT\=.*$/GRUB_DEFAULT="%s"/g' %
-                        name,
+                        's/^GRUB_DEFAULT\\=.*$/GRUB_DEFAULT="%s"/g' % name,
                         grub_default_file]
 
                 # Create grub2 menuentry
@@ -1434,7 +1435,7 @@ class Koan:
                 kextra = "autoyast=" + autoinst
             elif breed is not None and breed == "debian" or breed == "ubuntu":
                 kextra = "auto-install/enable=true priority=critical url=" + \
-                    autoinst
+                         autoinst
             else:
                 kextra = "ks=" + autoinst
 
@@ -1447,7 +1448,8 @@ class Koan:
 
         hashv = utils.input_string_or_dict(kextra)
 
-        if self.static_interface is not None and (breed == "redhat" or breed == "suse" or breed == "debian" or breed == "ubuntu"):
+        if self.static_interface is not None and (
+                breed == "redhat" or breed == "suse" or breed == "debian" or breed == "ubuntu"):
             interface_name = self.static_interface
             interfaces = self.safe_load(pd, "interfaces")
             if interface_name.startswith("eth"):
@@ -1490,8 +1492,8 @@ class Koan:
                 hashv["ksdevice"] = self.static_interface
             newdracut = False
             if (breed == "redhat" and
-                ((os_version[0:4] == "rhel" and int(os_version[4:]) >= 7) or
-                 (os_version[0:6] == "fedora" and int(os_version[6:]) >= 17))):
+                    ((os_version[0:4] == "rhel" and int(os_version[4:]) >= 7) or
+                     (os_version[0:6] == "fedora" and int(os_version[6:]) >= 17))):
                 newdracut = True
             if ip is not None:
                 if breed == "suse":
@@ -1504,6 +1506,7 @@ class Koan:
                         for octet in netmask.split('.'):
                             binary_str += bin(int(octet))[2:].zfill(8)
                         return str(len(binary_str.rstrip('0')))
+
                     hashv["ip"] = "%s::%s:%s:%s:%s:none" % (ip, gateway, get_cidr(netmask), hostname, interface_name)
                 else:
                     hashv["ip"] = ip

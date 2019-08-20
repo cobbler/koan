@@ -31,6 +31,7 @@ from __future__ import print_function
 import os
 import re
 import shlex
+
 from . import utils
 from .cexceptions import InfoException
 
@@ -63,6 +64,7 @@ else:
 supported_variants = set()
 try:
     from virtinst import osdict
+
     for ostype in osdict.OS_TYPES.keys():
         for variant in osdict.OS_TYPES[ostype]["variants"].keys():
             supported_variants.add(variant)
@@ -125,7 +127,7 @@ def _sanitize_nics(nics, bridge, profile_bridge, network_count):
 
     interfaces = sorted(nics.keys())
     counter = -1
-    vlanpattern = re.compile("[a-zA-Z0-9]+\.[0-9]+")
+    vlanpattern = re.compile(r"[a-zA-Z0-9]+\.[0-9]+")
 
     for iname in interfaces:
         counter = counter + 1
@@ -190,7 +192,6 @@ def build_commandline(uri,
                       wait=0,
                       noreboot=False,
                       osimport=False):
-
     # Set flags for CLI arguments based on the virtinst_version
     # tuple above. Older versions of python-virtinst don't have
     # a version easily accessible, so it will be None and we can
@@ -359,7 +360,7 @@ def build_commandline(uri,
             cmd += "--cdrom %s " % cdrom
         elif location:
             cmd += "--location %s " % location
-            if is_qemu and extra and not(virt_pxe_boot) and not(disable_extra):
+            if is_qemu and extra and not (virt_pxe_boot) and not (disable_extra):
                 cmd += ("--extra-args=\"%s\" " % (extra))
         elif importpath:
             cmd += "--import "
@@ -381,7 +382,7 @@ def build_commandline(uri,
     if breed and breed != "other":
         if os_version and os_version != "other":
             if breed == "suse":
-                suse_version_re = re.compile("^(opensuse[0-9]+)\.([0-9]+)$")
+                suse_version_re = re.compile(r"^(opensuse[0-9]+)\.([0-9]+)$")
                 if suse_version_re.match(os_version):
                     os_version = suse_version_re.match(os_version).groups()[0]
             # make sure virt-install knows about our os_version,
@@ -445,7 +446,7 @@ def build_commandline(uri,
     cmd += "--wait %d " % int(wait)
     if noreboot:
         cmd += "--noreboot "
-    if osimport and not(import_exists):
+    if osimport and not (import_exists):
         cmd += "--import "
     cmd += "--noautoconsole "
 

@@ -42,7 +42,7 @@ import subprocess
 import shutil
 import sys
 import time
-from .cexceptions import KX, InfoException
+from .cexceptions import InfoException
 
 VIRT_STATE_NAME_MAP = {
     0: "running",
