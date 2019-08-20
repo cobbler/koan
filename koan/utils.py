@@ -26,17 +26,20 @@ from __future__ import print_function
 import os
 import random
 import re
-import traceback
 import tempfile
+import traceback
+
 try:  # python 2
     import urllib2
     import xmlrpclib
     import ethtool
+
     ethtool_available = True
 except ImportError:  # python 3
     import urllib.request as urllib2
     import xmlrpc.client as xmlrpclib
     import netifaces
+
     ethtool_available = False
 import subprocess
 import shutil
@@ -61,12 +64,11 @@ def setupLogging(appname):
     """
     set up logging ... code borrowed/adapted from virt-manager
     """
-    import logging
     import logging.handlers
 
     dateFormat = "%a, %d %b %Y %H:%M:%S"
     fileFormat = "[%(asctime)s " + appname + \
-        " %(process)d] %(levelname)s (%(module)s:%(lineno)d) %(message)s"
+                 " %(process)d] %(levelname)s (%(module)s:%(lineno)d) %(message)s"
     streamFormat = "%(asctime)s %(levelname)-8s %(message)s"
     filename = "/var/log/koan/koan.log"
 
@@ -448,7 +450,6 @@ def get_network_info():
 
 
 def connect_to_server(server=None, port=None):
-
     if server is None:
         server = os.environ.get("COBBLER_SERVER", "")
     if server == "":
@@ -521,7 +522,6 @@ def libvirt_enable_autostart(domain_name):
 
 
 def make_floppy(autoinst):
-
     (fd, floppy_path) = tempfile.mkstemp(
         suffix='.floppy', prefix='tmp', dir="/tmp")
     print("- creating floppy image at %s" % floppy_path)
@@ -569,6 +569,7 @@ def sync_file(ofile, nfile, uid, gid, mode):
     shutil.copy(nfile, ofile)
     os.chmod(ofile, mode)
     os.chown(ofile, uid, gid)
+
 
 # class ServerProxy(xmlrpclib.ServerProxy):
 #
