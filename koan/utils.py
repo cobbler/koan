@@ -330,7 +330,7 @@ def check_dist():
     """
     Determines what distro we're running under (with the distro module).
     """
-    distroname = distro.id()
+    distroname = distro.like()
     if distroname is "debian":
         return distroname
     elif distroname is "suse" or distroname is "sles" or "opensuse" in distroname:
@@ -349,14 +349,13 @@ def os_release():
         str is the name
         int is the version number
     """
-    distroname, version, codename = distro.linux_distribution(full_distribution_name=True)
+    distroname = distro.like()
+    version = distro.version()
 
-    allowed_distros = ["rhel", "centos", "fedora", "debian", "ubuntu"]
+    allowed_distros = ["rhel", "centos", "fedora", "debian", "ubuntu", "suse"]
 
     if distroname in allowed_distros:
         return distroname, float(version)
-    elif distroname is "sles" or "suse" or "opensuse" in distroname:
-        return "suse", float(version)
     else:
         return "unkown", 0.0
 
