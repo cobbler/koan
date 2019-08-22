@@ -31,7 +31,7 @@ qa:
 	@pyflakes *.py bin/koan bin/cobbler-register koan/*.py
 
 	@echo "checking: pep8"
-	@pycodestyle -r --ignore E303,E501 \
+	@pycodestyle -r --ignore E303,E501,W504,E722 \
         *.py bin/koan bin/cobbler-register koan/*.py
 
 authors:
