@@ -25,7 +25,6 @@ from __future__ import print_function
 
 import os
 import random
-import re
 import tempfile
 import traceback
 
@@ -330,34 +329,46 @@ def check_dist():
     """
     Determines what distro we're running under (with the distro module).
     """
-    distroname = distro.like()
-    if distroname is "debian":
-        return distroname
-    elif distroname is "suse" or distroname is "sles" or "opensuse" in distroname:
+    # FIXME: This mimics the old logic but is certanly wrong
+
+    if distro.id() is "debian":
+        return "debian"
+
+    if distro.like() is "suse":
         return "suse"
-    else:
-        # valid for Fedora and all Red Hat / Fedora derivatives
-        return "redhat"
+
+    # valid for Fedora and all Red Hat / Fedora derivatives
+    return "redhat"
 
 
 def os_release():
     """
     This code detects your os with the distro module and return the name and version. If it is not detected correctly it
-    returns "unkown" (str) and "0" (float).
+    returns "unknown" (str) and "0" (float).
     @:returns tuple (str, float)
         WHERE
         str is the name
         int is the version number
     """
-    distroname = distro.like()
+    distroname = distro.id()
+    distrolike = distro.like()
     version = distro.version()
 
-    allowed_distros = ["rhel", "centos", "fedora", "debian", "ubuntu", "suse"]
+    redhat = ["centos", "fedora", "rhel"]
 
-    if distroname in allowed_distros:
+    if distroname in redhat or distrolike in redhat:
+        if distroname in ["centos", "fedora"]:
+            return distroname, float(version)
+        else:
+            return "redhat", float(version)
+
+    if distroname is ["debian", "ubuntu"]:
         return distroname, float(version)
-    else:
-        return "unkown", 0.0
+
+    if distrolike is "suse":
+        return "suse", float(version)
+
+    return "unknown", 0.0
 
 
 def uniqify(lst, purge=None):
