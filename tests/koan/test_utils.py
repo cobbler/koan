@@ -7,7 +7,7 @@ from koan import utils
 
 
 @pytest.mark.parametrize("test_input,expected",
-                         [("suse", "suse"), ("rhel", "redhat"), ("centos", "centos"), ("notexisting", "unkown")])
+                         [("suse", "suse"), ("rhel", "redhat"), ("centos", "centos"), ("notexisting", "unknown")])
 def test_os_release(test_input, expected):
     # Arrange
     distro.linux_distribution = MagicMock(return_value=(test_input, 11, "codename"))
