@@ -1,15 +1,19 @@
 from unittest.mock import MagicMock
+
 import distro
+import pytest
 
 from koan import utils
 
 
-def test_os_release():
+@pytest.mark.parametrize("test_input,expected",
+                         [("suse", "suse"), ("rhel", "redhat"), ("centos", "centos"), ("notexisting", "unkown")])
+def test_os_release(test_input, expected):
     # Arrange
-    distro.linux_distribution = MagicMock(return_value=("suse", 11, "codename"))
+    distro.linux_distribution = MagicMock(return_value=(test_input, 11, "codename"))
 
     # Act
     resname, resnumber = utils.os_release()
 
     # Assert
-    assert resname in ["rhel", "centos", "fedora", "debian", "ubuntu", "suse", "unkown"]
+    assert resname == expected
