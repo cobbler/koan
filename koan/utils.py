@@ -25,9 +25,10 @@ from __future__ import print_function
 
 import os
 import random
-import re
 import tempfile
 import traceback
+
+import distro
 
 try:  # python 2
     import urllib2
@@ -257,7 +258,6 @@ def dict_to_string(hash):
 def nfsmount(input_path):
     # input:  [user@]server:/foo/bar/x.img as string
     # output:  (dirname where mounted, last part of filename) as 2-element tuple
-    # FIXME: move this function to util.py so other modules can use it
     # we have to mount it first
     filename = input_path.split("/")[-1]
     dirpath = "/".join(input_path.split("/")[:-1])
@@ -325,65 +325,34 @@ def get_vm_state(conn, vmid):
     return VIRT_STATE_NAME_MAP.get(state, "unknown")
 
 
-def check_dist():
-    """
-    Determines what distro we're running under.
-    """
-    if os.path.exists("/etc/debian_version"):
-        import lsb_release
-        return lsb_release.get_distro_information()['ID'].lower()
-    elif os.path.exists("/etc/SuSE-release"):
-        return "suse"
-    else:
-        # valid for Fedora and all Red Hat / Fedora derivatives
-        return "redhat"
-
-
 def os_release():
     """
-    This code is borrowed from Cobbler and really shouldn't be repeated.
+    This code detects your os with the distro module and return the name and version. If it is not detected correctly it
+    returns "unknown" (str) and "0" (float).
+    @:returns tuple (str, float)
+        WHERE
+        str is the name
+        int is the version number
     """
-    if check_dist() == "redhat":
-        fh = open("/etc/redhat-release")
-        data = fh.read().lower()
-        if data.find("fedora") != -1:
-            make = "fedora"
-        elif data.find("centos") != -1:
-            make = "centos"
-        else:
-            make = "redhat"
-        release_index = data.find("release")
-        rest = data[release_index + 7:-1]
-        tokens = rest.split(" ")
-        for t in tokens:
-            try:
-                match = re.match('^\d+(?:\.\d+)?', t)
-                if match:
-                    return (make, float(match.group(0)))
-            except ValueError:
-                pass
-        raise KX("failed to detect local OS version from /etc/redhat-release")
+    distroname = distro.id()
+    distrolike = distro.like()
+    version = distro.version()
 
-    elif check_dist() == "debian":
-        import lsb_release
-        release = lsb_release.get_distro_information()['RELEASE']
-        return ("debian", release)
-    elif check_dist() == "ubuntu":
-        version = subprocess.check_output(
-            ("lsb_release", "--release", "--short")).rstrip()
-        make = "ubuntu"
-        return (make, float(version))
-    elif check_dist() in ("suse", "opensuse"):
-        fd = open("/etc/SuSE-release")
-        for line in fd.read().split("\n"):
-            if line.find("VERSION") != -1:
-                version = line.replace("VERSION = ", "")
-            if line.find("PATCHLEVEL") != -1:
-                rest = line.replace("PATCHLEVEL = ", "")
-        make = "suse"
-        return (make, float(version))
-    else:
-        return ("unknown", 0)
+    redhat = ["centos", "fedora", "rhel"]
+
+    if distroname in redhat or distrolike in redhat:
+        if distroname in ["centos", "fedora"]:
+            return distroname, float(version)
+        else:
+            return "redhat", float(version)
+
+    if distroname is ["debian", "ubuntu"]:
+        return distroname, float(version)
+
+    if distrolike is "suse":
+        return "suse", float(version)
+
+    return "unknown", 0.0
 
 
 def uniqify(lst, purge=None):
