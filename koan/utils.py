@@ -325,22 +325,6 @@ def get_vm_state(conn, vmid):
     return VIRT_STATE_NAME_MAP.get(state, "unknown")
 
 
-def check_dist():
-    """
-    Determines what distro we're running under (with the distro module).
-    """
-    # FIXME: This mimics the old logic but is certanly wrong
-
-    if distro.id() is "debian":
-        return "debian"
-
-    if distro.like() is "suse":
-        return "suse"
-
-    # valid for Fedora and all Red Hat / Fedora derivatives
-    return "redhat"
-
-
 def os_release():
     """
     This code detects your os with the distro module and return the name and version. If it is not detected correctly it

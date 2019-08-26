@@ -56,7 +56,7 @@ class KoanConfigure:
         """Constructor. Requires json config object."""
         self.config = json.JSONDecoder().decode(config)
         self.stats = {}
-        self.dist = utils.check_dist()
+        (self.dist, _) = utils.os_release()
 
     def configure_repos(self):
         # Enables the possibility to use different types of repos
