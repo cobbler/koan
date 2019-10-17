@@ -1184,7 +1184,7 @@ class Koan:
                         profile_data,
                         'initrd_local'),
                     "--args",
-                    "\"%s\"" %
+                    "%s" %
                     k_args]
 
                 if not self.no_copy_default:
