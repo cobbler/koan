@@ -621,8 +621,12 @@ class Koan:
             # shouldn't end up here, right?
             profile_data = {}
 
-        if profile_data.get("autoinst", "") != "":
+        if profile_data.get("autoinst", "") == "":
+            # Fall back to kickstart from cobbler < 3.X
+            if profile_data.get("kickstart", "") != "":
+                profile_data["autoinst"] = profile_data["kickstart"]
 
+        if "autoinst" in profile_data:
             # fix URLs
             if profile_data["autoinst"][0] == "/":
                 if not self.system:
