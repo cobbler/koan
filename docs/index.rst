@@ -4,15 +4,18 @@
    contain the root `toctree` directive.
 
 Welcome to Cobbler's documentation!
-===================================
+***********************************
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
-   Release Notes <release-notes>
+   Koan <koan>
+   cobbler-register <cobbler-register>
+   Koan on OpenVZ <koan-on-openvz>
    User Guide <user-guide>
+   Release Notes <release-notes>
 
 Indices and tables
 ==================

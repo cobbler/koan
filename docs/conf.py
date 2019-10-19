@@ -183,8 +183,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'Cobbler.tex', u'Cobbler Documentation',
-   u'Jörgen Maas', 'manual'),
+  ('index', 'Koan.tex', u'Koan Documentation', u'Jörgen Maas', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -213,8 +212,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'cobbler', u'Cobbler Documentation',
-     [u'Jörgen Maas'], 1)
+    ('koan', 'koan', u'Koan Documentation', [u'Jörgen Maas'], 1),
+    ('cobbler-register', 'cobbler-register', u'Cobbler-Register Documentation', [u'Jörgen Maas'], 1)
 ]
 
 # If true, show URL addresses after external links.
