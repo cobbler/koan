@@ -684,7 +684,7 @@ class Koan:
                         "/bin/uname -r",
                         stdout=subprocess.PIPE,
                         shell=True)
-                    uname_str = cmd.communicate()[0]
+                    uname_str = cmd.communicate()[0].decode()
                     if uname_str.find("xen") != -1:
                         self.virt_type = "xenpv"
                     elif os.path.exists("/usr/bin/qemu-img"):
@@ -707,7 +707,7 @@ class Koan:
                     "uname -r",
                     stdout=subprocess.PIPE,
                     shell=True)
-                uname_str = cmd.communicate()[0]
+                uname_str = cmd.communicate()[0].decode()
                 # correct kernel on dom0?
                 if uname_str < "2.6.37" and uname_str.find("xen") == -1:
                     raise InfoException(
@@ -1953,7 +1953,7 @@ class Koan:
             vgnames = subprocess.Popen(
                 args,
                 shell=True,
-                stdout=subprocess.PIPE).communicate()[0]
+                stdout=subprocess.PIPE).communicate()[0].decode()
             print(vgnames)
 
             if vgnames.find(vgname) == -1:
@@ -1965,7 +1965,7 @@ class Koan:
             args = "LANG=C vgs --noheadings -o vg_free --units g %s" % vgname
             print(args)
             cmd = subprocess.Popen(args, stdout=subprocess.PIPE, shell=True)
-            freespace_str = cmd.communicate()[0]
+            freespace_str = cmd.communicate()[0].decode()
             freespace_str = freespace_str.split("\n")[0].strip()
             freespace_str = freespace_str.lower().replace(
                 "g",
@@ -1990,7 +1990,7 @@ class Koan:
                 lvs_str = subprocess.Popen(
                     args,
                     stdout=subprocess.PIPE,
-                    shell=True).communicate()[0]
+                    shell=True).communicate()[0].decode()
                 print(lvs_str)
 
                 # have to create it?
