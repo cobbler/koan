@@ -1,10 +1,7 @@
-.. Cobbler documentation master file, created by
-   sphinx-quickstart on Sat Aug 23 06:59:22 2014.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to Cobbler's documentation!
+Welcome to Koans's documentation!
 ***********************************
+
+koan - kickstart over a network, client side helper for cobbler
 
 Contents:
 
