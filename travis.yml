@@ -15,3 +15,10 @@ before_script:
 script:
   - make qa
   - pytest
+notifications:
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/911941efe0dfc645466f
+    on_success: always  # options: [always|never|change] default: always
+    on_failure: always  # options: [always|never|change] default: always
+    on_start: never     # options: [always|never|change] default: always
