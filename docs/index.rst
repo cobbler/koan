@@ -1,10 +1,7 @@
-.. Cobbler documentation master file, created by
-   sphinx-quickstart on Sat Aug 23 06:59:22 2014.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to Cobbler's documentation!
+Welcome to Koans's documentation!
 ***********************************
+
+koan - kickstart over a network, client side helper for cobbler
 
 Contents:
 
@@ -14,7 +11,11 @@ Contents:
    Koan <koan>
    cobbler-register <cobbler-register>
    Koan on OpenVZ <koan-on-openvz>
-   User Guide <user-guide>
+   Koan with ISO's <koan-with-isos>
+   Installing virtual guests <installing-virtual-guests>
+   Reinstallation <reinstallation>
+   Virtual Networking Setup <virtual-networking-setup>
+   VMWare <vmware>
    Release Notes <release-notes>
 
 Indices and tables
