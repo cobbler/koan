@@ -393,6 +393,9 @@ class Koan:
         self.server = None
         self.system = None
         self.profile = None
+        self.image = None
+        self.live_cd = None
+        self.list_items = None
         self.list_profiles = None
         self.list_systems = None
         self.is_virt = None
@@ -400,11 +403,13 @@ class Koan:
         self.is_update_config = None
         self.summary = None
         self.is_replace = None
+        self.is_display = None
         self.port = None
         self.static_interface = None
         self.virt_name = None
         self.virt_type = None
         self.virt_path = None
+        self.virt_bridge = None
         self.force_path = None
         self.qemu_disk_type = None
         self.qemu_net_type = None
@@ -414,6 +419,12 @@ class Koan:
         self.virtinstall_wait = None
         self.virtinstall_noreboot = None
         self.virtinstall_osimport = None
+        self.gfx_type = None
+        self.add_reinstall_entry = None
+        self.kopts_override = None
+        self.use_kexec = None
+        self.should_poll = None
+        self.embed_autoinst = None
 
         # This option adds the --copy-default argument to /sbin/grubby
         # which uses the default boot entry in the grub.conf
