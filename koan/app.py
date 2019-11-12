@@ -871,7 +871,14 @@ class Koan:
             else:
                 print("warning: autoinst found but no install_tree found")
         except:
-            pass
+            if profile_data["breed"] == "suse":
+                options = profile_data["kernel_options"].split(" ")
+                for opt in options:
+                    if opt.startswith("install="):
+                        profile_data["install_tree"] = opt.replace("install=", "")
+                        break
+            else:
+                pass
 
     def list(self, what):
         if what not in ["images", "profiles", "systems", "distros", "repos"]:

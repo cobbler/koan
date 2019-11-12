@@ -10,7 +10,9 @@ from koan import utils
                          [("suse", "suse"), ("rhel", "redhat"), ("centos", "centos"), ("notexisting", "unknown")])
 def test_os_release(test_input, expected):
     # Arrange
-    distro.linux_distribution = MagicMock(return_value=(test_input, 11, "codename"))
+    distro.id = MagicMock(return_value=test_input)
+    distro.like = MagicMock(return_value=test_input)
+    distro.version = MagicMock(return_value=11)
 
     # Act
     resname, resnumber = utils.os_release()
