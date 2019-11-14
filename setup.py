@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License
 along with zenossctl. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from distutils.core import setup
+from setuptools import setup
 
 VERSION = "2.9.0"
 
@@ -29,6 +29,14 @@ setup(
     packages=['koan'],
     license='GPLv2',
     scripts=['bin/koan', 'bin/cobbler-register'],
+    install_requires=[
+        'simplejson',
+        'ethtool',
+        'distro',
+        'libvirt-python',
+        'netifaces',
+    ],
+    extras_require={'lint': ['pyflakes', 'pycodestyle'], 'test': ['pytest', 'nose']},
     # data_files=[('/etc/zenossctl', ['config/zenossctl.json'])],
 )
 

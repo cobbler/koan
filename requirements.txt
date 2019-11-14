@@ -1,7 +1,0 @@
-simplejson
-ethtool
-pyflakes
-pycodestyle
-distro
-libvirt-python
-netifaces
