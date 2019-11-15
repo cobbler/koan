@@ -59,11 +59,13 @@ BuildArchitectures: noarch
 
 %if %{use_python3}
 BuildRequires: python3
+BuildRequires: python3-setuptools
 Requires: python3
 Requires: python3-netifaces
 Requires: python3-simplejson
 %else
 BuildRequires: python >= 2.3
+BuildRequires: python-setuptools
 Requires: python >= 2.3
 Requires: python-ethtool
 Requires: python-simplejson

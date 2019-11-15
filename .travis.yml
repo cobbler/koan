@@ -16,8 +16,7 @@ addons:
       - libvirt-dev
       - gcc
 before_script:
-  - pip3 install pyflakes pycodestyle
-  - pip3 install -r requirements-test.txt
+  - pip3 install .[lint,test]
 script:
   - make qa
   - pytest
