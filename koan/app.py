@@ -224,6 +224,7 @@ def main():
         "-g",
         "--graphics",
         dest="gfx_type",
+        default="vnc",
         help="specify the graphics type: vnc, sdl, spice, none"
     )
     p.add_option(
