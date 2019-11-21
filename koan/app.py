@@ -468,7 +468,7 @@ class Koan:
         if not os.getuid() == 0:
             if self.is_virt:
                 print("warning: running as non root")
-            else:
+            elif not self.is_display:
                 print("this operation requires root access")
                 return 3
 
