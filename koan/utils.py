@@ -108,7 +108,7 @@ def urlread(url):
             cmd = ["mount", "-t", "nfs", "-o", "ro", ndir, nfsdir]
             subprocess_call(cmd)
             fd = open(nfsfile)
-            data = fd.read().decode()
+            data = fd.read()
             fd.close()
             cmd = ["umount", nfsdir]
             subprocess_call(cmd)
@@ -120,7 +120,7 @@ def urlread(url):
     elif url[0:4] == "http":
         try:
             fd = urllib2.urlopen(url)
-            data = fd.read().decode()
+            data = fd.read()
             fd.close()
             return data
         except:
@@ -129,7 +129,7 @@ def urlread(url):
     elif url[0:4] == "file":
         try:
             fd = open(url[5:])
-            data = fd.read().decode()
+            data = fd.read()
             fd.close()
             return data
         except:
