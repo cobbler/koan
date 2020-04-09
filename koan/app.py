@@ -802,8 +802,7 @@ class Koan:
             else:
                 url = profile_data["autoinst"]
 
-            raw = utils.urlread(url)
-            lines = raw.splitlines()
+            lines = utils.urlread(url).decode().splitlines()
 
             method_re = re.compile(r"(?P<urlcmd>\s*url\s.*)|(?P<nfscmd>\s*nfs\s.*)")
 
