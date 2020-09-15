@@ -30,10 +30,10 @@ a patch being worked on to support nearly all VMware variants)
 - enter your free serial number when requested
 - make sure the VMware service is enabled and started
 
-Then do some minimal cobbler setup:
+Then do some minimal Cobbler setup:
 
-- add cobbler profiles and cobbler system records to taste
-- cobbler must be set up to be your PXE infrastructure, which it should be doing already hopefully
+- add Cobbler profiles and Cobbler system records to taste
+- Cobbler must be set up to be your PXE infrastructure, which it should be doing already hopefully
 - "cobbler system add" a new system and specify a mac address in the range of 00:50:56:00:00:00 to 00:50:56:3F:FF:FF
   (VMWare's allowed range).
 
@@ -50,9 +50,9 @@ Then, on the guest OS, run the following:
 What Happens
 ############
 
-Koan will ask cobbler for the RAM and Disk needs associated with "foosball", or rather, the profile associated with
+Koan will ask Cobbler for the RAM and Disk needs associated with "foosball", or rather, the profile associated with
 "foosball". It will then automatically create your VMware configuration file (vmx) and disk image, and set that image up
 so that the rest of the installation happens over PXE.
 
 Thus the installation is in tandem between PXE and the VMware libraries, though all of the profile data is still managed
-by cobbler.
+by Cobbler.

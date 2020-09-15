@@ -2,11 +2,11 @@
 Koan with ISO's
 ***************
 
-While most of cobbler installing is about enabling scripted network installation, can also define image objects which
+While most of Cobbler installing is about enabling scripted network installation, can also define image objects which
 track ISOs that Koan can find and see. Currently this only works when using Koan with QEMU/KVM for installation (sorry,
 no Xen or VMware support yet). This can be used, for instance, to install Windows via Koan.
 
-For this to work best, the ISO must be available by the same NFS path on all hosts. It need not be mounted and cobbler
+For this to work best, the ISO must be available by the same NFS path on all hosts. It need not be mounted and Cobbler
 nor Koan will copy it.
 
 .. code-block:: shell
@@ -21,12 +21,12 @@ And on the Koan side, just run:
     koan --virt --image=image_name --server=cobbler.example.org
 
 Koan will then mount the NFS location and begin a fully virtualized installation using the virtual metadata and info
-stored in cobbler.
+stored in Cobbler.
 
-You may remember that cobbler has objects like "distros" and "profiles". Images are another type of object, but act
+You may remember that Cobbler has objects like "distros" and "profiles". Images are another type of object, but act
 similarly.
 
-System objects in cobbler may also attach to an image instead of a profile, though not all attributes of the system
+System objects in Cobbler may also attach to an image instead of a profile, though not all attributes of the system
 apply to an image -- for instance, we may care about the number of interfaces, but the networking configuration
 automagic that normally happens as part of a kickstart can't happen for an image based install.
 

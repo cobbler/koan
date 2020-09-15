@@ -1,7 +1,7 @@
 Koan
 ****
 
-Koan - kickstart over a network, client side helper for cobbler
+Koan - kickstart over a network, client side helper for Cobbler
 
 Synopsis
 ########
@@ -16,13 +16,13 @@ Description
 Koan stands for "kickstart-over-a-network" and is a client-side helper program for use with Cobbler. Koan allows for
 both network provisioning of new virtualized guests (Xen, QEMU/KVM, VMware) and re-installation of an existing system.
 
-When invoked, Koan requests install information from a remote cobbler boot server, it then kicks off installations based
-on what is retrieved from cobbler and fed in on the Koan command line. The examples below show the various use cases.
+When invoked, Koan requests install information from a remote Cobbler boot server, it then kicks off installations based
+on what is retrieved from Cobbler and fed in on the Koan command line. The examples below show the various use cases.
 
 Listing remote Cobbler objects
 ##############################
 
-To browse remote objects on a cobbler server and see what you can install using Koan, run one of the following commands:
+To browse remote objects on a Cobbler server and see what you can install using Koan, run one of the following commands:
 
 .. code-block:: shell
 
@@ -60,7 +60,7 @@ Installing virtualized systems
 ##############################
 
 Using ``--virt`` will install virtual machines as defined by Cobbler. There are various overrides you can use if not
-everything in cobbler is defined as you like it.
+everything in Cobbler is defined as you like it.
 
 .. code-block:: shell
 
@@ -115,8 +115,8 @@ The FQDN (Fully Qualified Domain Name) maps to the system's hostname field.
 Environment variables
 #####################
 
-Koan respects the COBBLER_SERVER variable to specify the cobbler server to use. This is a convenient way to avoid using
-the ``--server`` option for each command. This variable is set automatically on systems installed via cobbler, assuming
+Koan respects the COBBLER_SERVER variable to specify the Cobbler server to use. This is a convenient way to avoid using
+the ``--server`` option for each command. This variable is set automatically on systems installed via Cobbler, assuming
 standard kickstart templates are used. If you need to change this on an installed system, edit
 ``/etc/profile.d/cobbler.{csh,sh}``.
 

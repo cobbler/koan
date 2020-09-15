@@ -41,7 +41,7 @@ Bugfixes
 * Some class/method names have been changed to make the code more intuitive for developers.
 * Remove ``root=`` argument in Koan when using grubby and replace-self to avoid booting the current OS.
 * Exit with an error if the cobblerd executable can't be found (#1108, #1135).
-* Fix cobbler sync bug by xmlrpclib returning NoneType object.
+* Fix Cobbler sync bug by xmlrpclib returning NoneType object.
 * Dont send the Puppet environment when system status is empty (#560).
 * Cobbler-web kept only the most recent interface change (#687).
 * Fix broken gitdate, gitstamp values in ``/etc/cobbler/version``.

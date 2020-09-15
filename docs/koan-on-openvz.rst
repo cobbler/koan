@@ -14,7 +14,7 @@ How to use it?
 ##############
 
 Because OpenVZ container is in nature chrooted environment we use Cobbler + Koan to create this on OpenVZ-enabled node.
-For cobbler and Koan in case of OpenVZ all operations is similar - we should define distros, automated installation
+For Cobbler and Koan in case of OpenVZ all operations is similar - we should define distros, automated installation
 files, profiles, systems and so on with some additions.
 Now we do all operations only for RHEL/CentOS 6. It may be suitable for recent Fedoras, but we do nothing for other
 distributions.

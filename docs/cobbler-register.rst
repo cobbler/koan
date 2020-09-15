@@ -1,7 +1,7 @@
 Cobbler-Register
 ****************
 
-cobbler-register - create a cobbler system record
+cobbler-register - create a Cobbler system record
 
 Synopsis
 ########
@@ -13,22 +13,22 @@ Synopsis
 Description
 ###########
 
-Running cobbler-register on a system will create a cobbler system record for that system on a remote cobbler server. No
+Running cobbler-register on a system will create a Cobbler system record for that system on a remote Cobbler server. No
 changes will be made on the system itself.
 
 Details
 #######
 
-When installing new machines into a cobbler managed datacenter/lab, it helps to not have to manually enter in the
+When installing new machines into a Cobbler managed datacenter/lab, it helps to not have to manually enter in the
 network information for those systems. Using ``cobbler-register`` either from a kickstart or a live environment (or even
-SSH) can help seed the cobbler database.
+SSH) can help seed the Cobbler database.
 
 Network information is discovered automatically for all physical interfaces. ``cobbler-register`` will attempt to
-discover the hostname, though if `localhost.localdomain` is found, it will have to use some other data for the cobbler
+discover the hostname, though if `localhost.localdomain` is found, it will have to use some other data for the Cobbler
 system record. This is probably not what you want, so specify ``--fqdn`` in this instance to override that registration
 value.
 
-For this to work, the ``register_new_installs`` setting must be enabled on the remote cobbler server.
+For this to work, the ``register_new_installs`` setting must be enabled on the remote Cobbler server.
 
 When the remote system record is created, for safety reasons, it will be set in Cobbler to be "netboot disabled". Use
 ``cobbler system edit --name=foo --netboot-enabled=1`` to set the machine to reinstall, where "foo" is the name of the
@@ -37,8 +37,8 @@ new system record.
 Environment variables
 #####################
 
-cobbler-register respects the `COBBLER_SERVER` variable to specify the cobbler server to use. This is a convenient way
-to avoid using the ``--server`` option. This variable is set automatically on systems installed via cobbler, assuming
+cobbler-register respects the `COBBLER_SERVER` variable to specify the Cobbler server to use. This is a convenient way
+to avoid using the ``--server`` option. This variable is set automatically on systems installed via Cobbler, assuming
 standard kickstart templates are used. If you need to change this on an installed system, edit
 ``/etc/profile.d/cobbler.{csh,sh}``.
 

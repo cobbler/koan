@@ -36,7 +36,7 @@ Basics
 
 The configuration in this section is adapted from `here <http://watzmann.net/blog/2007/04/networking-with-kvm-and-libvirt.html>`_.
 We're going to be ignoring the parts in that article about using virt-install as we want to use Koan -- we want to make our
-virtualized configurations be managed server side, by Cobbler -- and to take advantage of things that cobbler provides for us,
+virtualized configurations be managed server side, by Cobbler -- and to take advantage of things that Cobbler provides for us,
 like syslog setup, templating, remote profile browsing, etc.
 
 So here's the short rundown of what you need to do to create a bridge if you do not already have one. Once you do this
