@@ -3,14 +3,14 @@ Koan
 
 Koan - kickstart over a network, client side helper for cobbler
 
-SYNOPSIS
+Synopsis
 ########
 
 .. code-block:: shell
 
     koan --server=hostname [--list=type] [--virt|--replace-self|--display] [--profile=name] [--system=name] [--image=name] [--add-reinstall-entry] [--virt-name=name] [--virt-path=path] [--virt-type=type] [--nogfx] [--static-interface=name] [--kexec]
 
-DESCRIPTION
+Description
 ###########
 
 Koan stands for "kickstart-over-a-network" and is a client-side helper program for use with Cobbler. Koan allows for
@@ -19,7 +19,7 @@ both network provisioning of new virtualized guests (Xen, QEMU/KVM, VMware) and 
 When invoked, Koan requests install information from a remote cobbler boot server, it then kicks off installations based
 on what is retrieved from cobbler and fed in on the Koan command line. The examples below show the various use cases.
 
-LISTING REMOTE COBBLER OBJECTS
+Listing remote Cobbler objects
 ##############################
 
 To browse remote objects on a cobbler server and see what you can install using Koan, run one of the following commands:
@@ -30,8 +30,8 @@ To browse remote objects on a cobbler server and see what you can install using 
     koan --server=cobbler.example.org --list=systems
     koan --server=cobbler.example.org --list=images
 
-LEARNING MORE ABOUT REMOTE COBBLER OBJECTS
-##########################################
+Learn more about Cobbler objects
+################################
 
 To learn more about what you are about to install, run one of the following commands:
 
@@ -41,7 +41,7 @@ To learn more about what you are about to install, run one of the following comm
     koan --server=cobbler.example.org --display --system=name
     koan --server=cobbler.example.org --display --image=name
 
-REINSTALLING EXISTING SYSTEMS
+Reinstalling existing systems
 #############################
 
 Using --replace-self will reinstall the existing system the next time you reboot.
@@ -56,7 +56,7 @@ but will not make it automatically pick that option on the next boot.
 Also the flag --kexec can be appended, which will launch the installer without needing to reboot.  Not
 all kernels support this option.
 
-INSTALLING VIRTUALIZED SYSTEMS
+Installing virtualized systems
 ##############################
 
 Using ``--virt`` will install virtual machines as defined by Cobbler. There are various overrides you can use if not
@@ -96,7 +96,7 @@ Additionally use ``--static-interface=eth0`` to supply which interface to use to
 installer will boot from this virtual interface. Leaving off ``--static-interface`` will result in an unsuccessful
 network installation.
 
-CONFIGURATION MANAGEMENT
+Configuration management
 ########################
 
 Using ``--update-config`` will update a system configuration as defined by Cobbler.
@@ -112,7 +112,7 @@ configured system defined by Cobbler.
 
 The FQDN (Fully Qualified Domain Name) maps to the system's hostname field.
 
-ENVIRONMENT VARIABLES
+Environment variables
 #####################
 
 Koan respects the COBBLER_SERVER variable to specify the cobbler server to use. This is a convenient way to avoid using
@@ -120,12 +120,12 @@ the ``--server`` option for each command. This variable is set automatically on 
 standard kickstart templates are used. If you need to change this on an installed system, edit
 ``/etc/profile.d/cobbler.{csh,sh}``.
 
-ADDITIONAL
+Additional
 ##########
 
 Reading the Koan manpage, https://cobbler.github.io or this readthedocs project is highly recommended.
 
-AUTHOR
+Author
 ######
 
 Michael DeHaan <michael.dehaan AT gmail>
