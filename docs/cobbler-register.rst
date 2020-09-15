@@ -45,7 +45,7 @@ standard kickstart templates are used. If you need to change this on an installe
 ADDITIONAL
 ##########
 
-Reading the koan manpage, www.cobbler.github.io or this Readthedocs-Project is highly recommended.
+Reading the Koan manpage, www.cobbler.github.io or this Readthedocs-Project is highly recommended.
 
 AUTHOR
 ######

@@ -1,7 +1,7 @@
 Koan
 ****
 
-koan - kickstart over a network, client side helper for cobbler
+Koan - kickstart over a network, client side helper for cobbler
 
 SYNOPSIS
 ########
@@ -13,16 +13,16 @@ SYNOPSIS
 DESCRIPTION
 ###########
 
-Koan stands for "kickstart-over-a-network" and is a client-side helper program for use with Cobbler.  koan allows for
+Koan stands for "kickstart-over-a-network" and is a client-side helper program for use with Cobbler. Koan allows for
 both network provisioning of new virtualized guests (Xen, QEMU/KVM, VMware) and re-installation of an existing system.
 
-When invoked, koan requests install information from a remote cobbler boot server, it then kicks off installations based
-on what is retrieved from cobbler and fed in on the koan command line. The examples below show the various use cases.
+When invoked, Koan requests install information from a remote cobbler boot server, it then kicks off installations based
+on what is retrieved from cobbler and fed in on the Koan command line. The examples below show the various use cases.
 
 LISTING REMOTE COBBLER OBJECTS
-##########
+##############################
 
-To browse remote objects on a cobbler server and see what you can install using koan, run one of the following commands:
+To browse remote objects on a cobbler server and see what you can install using Koan, run one of the following commands:
 
 .. code-block:: shell
 
@@ -123,7 +123,7 @@ standard kickstart templates are used. If you need to change this on an installe
 ADDITIONAL
 ##########
 
-Reading the koan manpage, www.cobbler.github.io or this readthedocs project is highly recommended.
+Reading the Koan manpage, https://cobbler.github.io or this readthedocs project is highly recommended.
 
 AUTHOR
 ######

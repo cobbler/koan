@@ -2,19 +2,19 @@
 Installing virtual guests
 *************************
 
-The main feature of koan is contact the cobbler server, learn about a configuration from Cobbler, and make that
+The main feature of Koan is contact the cobbler server, learn about a configuration from Cobbler, and make that
 virtualized installation happen.  One other feature is [KoanDoesReinstall reinstallation of existing systems] but
 perhaps the more important one is how to do virtualized installs.
 
-Koan is its own seperate tool, a seperate package from cobbler, that is designed for use with a remote cobbler server.
+Koan is its own separate tool, a separate package from cobbler, that is designed for use with a remote cobbler server.
 (The same folks that work on cobbler work on koan and it's available from the same repositories)
 
 .. code-block:: shell
 
     yum install koan
 
-It is a very small tool and generally does not always need to be updated when cobbler is updated, but keeping koan
-updated ensures you have all the latest features available. In general, the major release numbers of Cobbler and koan
+It is a very small tool and generally does not always need to be updated when cobbler is updated, but keeping Koan
+updated ensures you have all the latest features available. In general, the major release numbers of Cobbler and Koan
 should match, but it's not so important if the minor release numbers don't match.
 
 Example of installing a VM using a profile virtually
@@ -37,7 +37,7 @@ Overrides
 
 Koan is designed to install things as set up in cobbler to ensure installs are consistent and repeatable.
 
-Often though, users of koan may not be cobbler server administrators or may want to install a VM on a test system -- so
+Often though, users of Koan may not be cobbler server administrators or may want to install a VM on a test system -- so
 they'll want to override some things as stored in cobbler. Koan allows an extensive system of overrides to tweak what
 Cobbler tells us about how a particular cobbler profile should be installed.
 
