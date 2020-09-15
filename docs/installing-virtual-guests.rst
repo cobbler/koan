@@ -7,7 +7,7 @@ virtualized installation happen.  One other feature is [KoanDoesReinstall reinst
 perhaps the more important one is how to do virtualized installs.
 
 Koan is its own separate tool, a separate package from cobbler, that is designed for use with a remote cobbler server.
-(The same folks that work on cobbler work on koan and it's available from the same repositories)
+(The same folks that work on cobbler work on Koan and it's available from the same repositories)
 
 .. code-block:: shell
 

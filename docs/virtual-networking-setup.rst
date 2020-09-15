@@ -29,7 +29,7 @@ bridge in order to get Koan to work. You do this by modifying the network config
 using the Koan parameter ``--virt-bridge=bridgename``.
 
 (As we mentioned, if you use virbr0, it's a fake bridge, so be aware you won't be able to ssh into your guests...
-However koan can use that if you REALLY want to)
+However Koan can use that if you REALLY want to)
 
 Basics
 ######

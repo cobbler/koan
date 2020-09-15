@@ -1,5 +1,5 @@
 ***********************
-VMWare support for koan
+VMWare support for Koan
 ***********************
 
 One goal of Cobbler is to abstract out all your installation types. Basically the idea is create a profile one, use it
