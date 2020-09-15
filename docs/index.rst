@@ -1,7 +1,7 @@
 Welcome to Koans's documentation!
 ***********************************
 
-koan - kickstart over a network, client side helper for cobbler
+Koan - kickstart over a network, client side helper for cobbler
 
 Contents:
 
