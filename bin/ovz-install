@@ -22,7 +22,7 @@
 PROFILE_NAME=$1
 KICKSTART_URL=$2
 ROOTDIR=$3
-if [ -z $PROFILE_NAME -o -z $ROOTDIR -o -z $KICKSTART_URL ] ; then
+if [ -z "$PROFILE_NAME" -o -z "$ROOTDIR" -o -z "$KICKSTART_URL" ] ; then
     echo "Some arguments missing!"
     echo "Usage: $0 system_name kickstart_url private_dir"
     echo "Exiting..."
