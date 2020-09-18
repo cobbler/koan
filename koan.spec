@@ -95,7 +95,6 @@ BuildRequires:  epel-rpm-macros
 %{?python_enable_dependency_generator}
 %if ! (%{defined python_enable_dependency_generator} || %{defined python_disable_dependency_generator})
 Requires:       python%{python_pkgversion}-distro
-Requires:       python%{python_pkgversion}-ethtool
 Requires:       python%{python_pkgversion}-netifaces
 Requires:       python%{python_pkgversion}-simplejson
 %if 0%{?suse_version}

@@ -27,21 +27,10 @@ import os
 import random
 import tempfile
 import traceback
-
 import distro
-
-try:  # python 2
-    import urllib2
-    import xmlrpclib
-    import ethtool
-
-    ethtool_available = True
-except ImportError:  # python 3
-    import urllib.request as urllib2
-    import xmlrpc.client as xmlrpclib
-    import netifaces
-
-    ethtool_available = False
+import urllib.request
+import xmlrpc.client
+import netifaces
 import subprocess
 import shutil
 import sys
@@ -119,7 +108,7 @@ def urlread(url):
 
     elif url[0:4] == "http":
         try:
-            fd = urllib2.urlopen(url)
+            fd = urllib.request.urlopen(url)
             data = fd.read()
             fd.close()
             return data
@@ -371,25 +360,16 @@ def uniqify(lst, purge=None):
 def get_network_info():
     interfaces = {}
     # get names
-    if ethtool_available:
-        inames = ethtool.get_devices()
-    else:
-        inames = netifaces.interfaces()
+    inames = netifaces.interfaces()
 
     for iname in inames:
-        if ethtool_available:
-            mac = ethtool.get_hwaddr(iname)
-        else:
-            mac = netifaces.ifaddresses(iname)[netifaces.AF_LINK][0]['addr']
+        mac = netifaces.ifaddresses(iname)[netifaces.AF_LINK][0]['addr']
 
         if mac == "00:00:00:00:00:00":
             mac = "?"
 
         try:
-            if ethtool_available:
-                ip = ethtool.get_ipaddr(iname)
-            else:
-                ip = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]['addr']
+            ip = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]['addr']
             if ip == "127.0.0.1":
                 ip = "?"
         except:
@@ -399,10 +379,7 @@ def get_network_info():
         module = ""
 
         try:
-            if ethtool_available:
-                nm = ethtool.get_netmask(iname)
-            else:
-                nm = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]['netmask']
+            nm = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]['netmask']
         except:
             nm = "?"
 
@@ -540,19 +517,9 @@ def sync_file(ofile, nfile, uid, gid, mode):
     os.chown(ofile, uid, gid)
 
 
-# class ServerProxy(xmlrpclib.ServerProxy):
-#
-#    def __init__(self, url=None):
-#        try:
-#            xmlrpclib.ServerProxy.__init__(self, url, allow_none=True)
-#        except:
-# for RHEL3's xmlrpclib -- cobblerd should strip Nones anyway
-#            xmlrpclib.ServerProxy.__init__(self, url)
-
-
 def __try_connect(url):
     try:
-        xmlrpc_server = xmlrpclib.Server(url)
+        xmlrpc_server = xmlrpc.client.ServerProxy(url)
         xmlrpc_server.ping()
         return xmlrpc_server
     except:

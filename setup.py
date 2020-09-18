@@ -31,7 +31,6 @@ setup(
     scripts=['bin/koan', 'bin/cobbler-register'],
     install_requires=[
         'simplejson',
-        'ethtool',
         'distro',
         'libvirt-python',
         'netifaces',
