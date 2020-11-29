@@ -23,8 +23,8 @@ setup(
     description='Kickstart over a Network Client for Cobbler',
     long_description='This client can initiate and prepare a reinstallation of your operation system with the help of'
                      'cobbler.',
-    author='xxx',
-    author_email='xxx',
+    author='Team Cobbler',
+    author_email='cobbler.project@gmail.com',
     url='http://www.github.com/cobbler/koan',
     packages=['koan'],
     license='GPLv2',
@@ -35,7 +35,10 @@ setup(
         'libvirt-python',
         'netifaces',
     ],
-    extras_require={'lint': ['pyflakes', 'pycodestyle'], 'test': ['pytest', 'nose']},
+    extras_require={
+        'lint': ['pyflakes', 'pycodestyle'],
+        'test': ['pytest', 'nose']
+    },
     # data_files=[('/etc/zenossctl', ['config/zenossctl.json'])],
 )
 
