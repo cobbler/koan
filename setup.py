@@ -25,7 +25,7 @@ setup(
                      'cobbler.',
     author='Team Cobbler',
     author_email='cobbler.project@gmail.com',
-    url='http://www.github.com/cobbler/koan',
+    url='https://www.github.com/cobbler/koan',
     packages=['koan'],
     license='GPLv2',
     scripts=['bin/koan', 'bin/cobbler-register'],
@@ -39,7 +39,4 @@ setup(
         'lint': ['pyflakes', 'pycodestyle'],
         'test': ['pytest', 'nose']
     },
-    # data_files=[('/etc/zenossctl', ['config/zenossctl.json'])],
 )
-
-# EOF
