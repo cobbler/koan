@@ -9,10 +9,15 @@ on:
       - master
 
 jobs:
-  run_tests:
+  run_qa:
     runs-on: ubuntu-20.04
+    container: registry.opensuse.org/opensuse/tumbleweed:latest
     steps:
+      - name: Install pre reqs
+        run: zypper -n in git tar
       - uses: actions/checkout@v2
+      - name: Install package deps
+        run: zypper -n in --no-recommends python36-wheel python36-pip python36-libvirt-python make
       - name: Install dependencies
         run: pip3 install .[lint,test]
       - name: Run Linters
