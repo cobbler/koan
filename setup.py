@@ -37,6 +37,6 @@ setup(
     ],
     extras_require={
         'lint': ['pyflakes', 'pycodestyle'],
-        'test': ['pytest', 'nose']
+        'test': ['pytest', 'nose', 'pytest-cov']
     },
 )
