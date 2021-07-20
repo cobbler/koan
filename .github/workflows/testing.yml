@@ -1,0 +1,26 @@
+name: Testing Koan
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  run_tests:
+    runs-on: ubuntu-20.04
+    container: registry.opensuse.org/opensuse/tumbleweed:latest
+    steps:
+      - name: Install pre reqs
+        run: zypper -n in git tar
+      - uses: actions/checkout@v2
+      - name: Install package deps
+        run: zypper -n in --no-recommends python36 python36-base python36-wheel python36-pip python36-libvirt-python python36-codecov make
+      - name: Install dependencies
+        run: pip3 install .[lint,test]
+      - name: Run tests
+        run: pytest --cov=./koan
+      - name: Upload report to codecov
+        run: codecov
