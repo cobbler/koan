@@ -1,9 +1,11 @@
+import subprocess
 from unittest.mock import MagicMock
 
 import distro
 import pytest
 
 from koan import utils
+from tests.conftest import does_not_raise
 
 
 @pytest.mark.parametrize("test_input,expected",
@@ -21,28 +23,51 @@ def test_os_release(test_input, expected):
     assert resname == expected
 
 
-def test_is_uefi_system():
+@pytest.mark.parametrize("os_path_return", [
+    (True),
+    (False)
+])
+def test_is_uefi_system(os_path_return, mocker):
     # Arrange
+    mocker.patch("os.path.exists", return_value=os_path_return)
+
     # Act
     result = utils.is_uefi_system()
 
     # Assert
-    assert result
+    assert result is os_path_return
 
 
-def test_get_grub2_mkrelpath_executable():
+@pytest.mark.parametrize("shutil_which_return,expected_exception", [
+    ("/usr/bin/grub2-mkrelpath", does_not_raise()),
+    (None, pytest.raises(RuntimeError))
+])
+def test_get_grub2_mkrelpath_executable(shutil_which_return, expected_exception, mocker):
     # Arrange
+    mocker.patch("shutil.which", return_value=shutil_which_return)
+
     # Act
-    result = utils.get_grub2_mkrelpath_executable()
+    with expected_exception:
+        result = utils.get_grub2_mkrelpath_executable()
 
-    # Assert
-    assert result == "/usr/bin/grub2-mkrelpath"
+        # Assert
+        assert result == shutil_which_return
 
 
-def test_get_grub_real_path():
+@pytest.mark.parametrize("mocked_process_result,mocked_os_path_exists,expected_exception", [
+    (subprocess.CompletedProcess(args="", returncode=0, stdout="Test\n"), True, does_not_raise()),
+    (subprocess.CompletedProcess(args="", returncode=1, stdout="Test\n"), True, pytest.raises(RuntimeError)),
+    (None, False, pytest.raises(FileNotFoundError))
+])
+def test_get_grub_real_path(mocked_process_result, mocked_os_path_exists, expected_exception, mocker):
     # Arrange
-    # Act
-    result = utils.get_grub_real_path("/bin/sh")
+    mocker.patch("subprocess.run", return_value=mocked_process_result)
+    mocker.patch("os.path.exists", return_value=mocked_os_path_exists)
+    mocker.patch("koan.utils.get_grub2_mkrelpath_executable", return_value="/bin/sh")
 
-    # Assert
-    assert result == "/@/.snapshots/1/snapshot/usr/bin/bash"
+    # Act
+    with expected_exception:
+        result = utils.get_grub_real_path("/bin/sh")
+
+        # Assert
+        assert result == mocked_process_result.stdout.strip()
