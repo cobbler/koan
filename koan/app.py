@@ -1125,9 +1125,8 @@ class Koan:
 
     def replace(self):
         """
-        Handle morphing an existing system through downloading new
-        kernel, new initrd, and installing a autoinst in the initrd,
-        then manipulating grub.
+        Handle morphing an existing system through downloading new kernel, new initrd, and installing a autoinst in the
+        initrd, then manipulating grub.
         """
         try:
             shutil.rmtree("/var/spool/koan")
@@ -1269,8 +1268,8 @@ class Koan:
 
             elif use_grub2:
                 # Use grub2 for --replace-self
-                kernel_local = self.safe_load(profile_data, 'kernel_local')
-                initrd_local = self.safe_load(profile_data, 'initrd_local')
+                kernel_local = utils.get_grub_real_path(self.safe_load(profile_data, 'kernel_local'))
+                initrd_local = utils.get_grub_real_path(self.safe_load(profile_data, 'initrd_local'))
 
                 # Set name for grub2 menuentry
                 if self.add_reinstall_entry:
@@ -1294,24 +1293,23 @@ class Koan:
                         grub_default_file]
 
                 # Create grub2 menuentry
+                linux_cmd = "linux"
+                initrd_cmd = "initrd"
+                if utils.is_uefi_system():
+                    linux_cmd = "linuxefi"
+                    initrd_cmd = "initrdefi"
                 grub_entry = """
-                . "$pkgdatadir/grub-mkconfig_lib"
-
-rel_kernel=`make_system_path_relative_to_its_root {kernel}`
-rel_initrd=`make_system_path_relative_to_its_root {initrd}`
-
 cat <<EOF
 menuentry "{name}" {{
-    linux $rel_kernel {args}
-    initrd $rel_initrd
+    {linux_cmd} {kernel} {args}
+    {initrd_cmd} {initrd}
 }}
 EOF
-                """.format(name=name, kernel=kernel_local, args=k_args, initrd=initrd_local)
+""".format(name=name, kernel=kernel_local, args=k_args, initrd=initrd_local, linux_cmd=linux_cmd, initrd_cmd=initrd_cmd)
 
                 # Save grub2 menuentry
-                fd = open(grub_file, "w")
-                fd.write(grub_entry)
-                fd.close()
+                with open(grub_file, "w") as grub_config_file:
+                    grub_config_file.write(grub_entry)
                 os.chmod(grub_file, 0o755)
 
                 # Set default grub entry for reboot
