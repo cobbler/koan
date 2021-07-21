@@ -24,8 +24,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301  USA
 """
 
-from __future__ import print_function
-
 import errno
 import os
 import random
@@ -261,7 +259,8 @@ def main():
         "--kexec",
         dest="use_kexec",
         action="store_true",
-        help="Instead of writing a new bootloader config when using --replace-self, just kexec the new kernel and initrd"
+        help="Instead of writing a new bootloader config when using --replace-self, just kexec the new kernel and "
+             "initrd "
     )
     p.add_option(
         "",
@@ -275,7 +274,8 @@ def main():
         "--embed",
         dest="embed_autoinst",
         action="store_true",
-        help="When used with  --replace-self, embed the autoinst in the initrd to overcome potential DHCP timeout issues. (seldom needed)"
+        help="When used with  --replace-self, embed the autoinst in the initrd to overcome potential DHCP timeout "
+             "issues. (seldom needed) "
     )
     p.add_option(
         "",
@@ -287,7 +287,8 @@ def main():
         "",
         "--qemu-net-type",
         dest="qemu_net_type",
-        help="when used with --virt_type=qemu, select type of network device to use: e1000, ne2k_pci, pcnet, rtl8139, virtio"
+        help="when used with --virt_type=qemu, select type of network device to use: e1000, ne2k_pci, pcnet, rtl8139, "
+             "virtio "
     )
     p.add_option(
         "",
