@@ -383,6 +383,11 @@ def build_commandline(uri,
                 suse_version_re = re.compile(r"^(opensuse[0-9]+)\.([0-9]+)$")
                 if suse_version_re.match(os_version):
                     os_version = suse_version_re.match(os_version).groups()[0]
+                elif os_version == "generic26":
+                    os_version = "sles11"
+                elif os_version.endswith("generic"):
+                    os_version = os_version.replace("generic", "")
+
             # make sure virt-install knows about our os_version,
             # otherwise default it to virtio26 or generic26
             # found = False
