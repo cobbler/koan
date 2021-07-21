@@ -1150,6 +1150,10 @@ class Koan:
                 if not os.path.exists("/usr/sbin/update-grub"):
                     raise InfoException("grub2 is not installed")
                 use_grub2 = True
+            elif make == "suse":
+                if not os.path.exists("/usr/sbin/grub2-install"):
+                    raise InfoException("grub2 is not installed")
+                use_grub2 = True
             else:
                 if not os.path.exists("/sbin/grubby"):
                     raise InfoException("grubby is not installed")
@@ -1276,10 +1280,13 @@ class Koan:
 
                 # Set paths for Ubuntu/Debian
                 # TODO: Add support for other distros when they ship grub2
-                if make in ['ubuntu', 'debian']:
+                if make in ['ubuntu', 'debian', 'suse']:
                     grub_file = "/etc/grub.d/42_koan"
                     grub_default_file = "/etc/default/grub"
-                    cmd = ["update-grub"]
+                    if make in ['suse']:
+                        cmd = ['/sbin/update-bootloader', '--refresh']
+                    else:
+                        cmd = ["update-grub"]
                     default_cmd = [
                         'sed',
                         '-i',
@@ -1288,13 +1295,18 @@ class Koan:
 
                 # Create grub2 menuentry
                 grub_entry = """
-                cat <<EOF
-                menuentry "%s" {
-                    linux %s %s
-                    initrd %s
-                }
-                EOF
-                """ % (name, kernel_local, k_args, initrd_local)
+                . "$pkgdatadir/grub-mkconfig_lib"
+
+rel_kernel=`make_system_path_relative_to_its_root {kernel}`
+rel_initrd=`make_system_path_relative_to_its_root {initrd}`
+
+cat <<EOF
+menuentry "{name}" {{
+    linux $rel_kernel {args}
+    initrd $rel_initrd
+}}
+EOF
+                """.format(name=name, kernel=kernel_local, args=k_args, initrd=initrd_local)
 
                 # Save grub2 menuentry
                 fd = open(grub_file, "w")

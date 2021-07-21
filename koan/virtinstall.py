@@ -131,7 +131,7 @@ def _sanitize_nics(nics, bridge, profile_bridge, network_count):
         counter = counter + 1
         intf = nics[iname]
 
-        if (intf["interface_type"] in ("bond", "bridge", "bonded_bridge_slave") or
+        if (intf.get("interface_type", "") in ("bond", "bridge", "bonded_bridge_slave") or
                 vlanpattern.match(iname) or iname.find(":") != -1):
             continue
 
@@ -352,14 +352,14 @@ def build_commandline(uri,
         elif oldstyle_accelerate:
             cmd += "--accelerate "
 
-        if virt_pxe_boot or is_xen:
+        if virt_pxe_boot:
             cmd += "--pxe "
         elif cdrom:
             cmd += "--cdrom %s " % cdrom
         elif location:
             cmd += "--location %s " % location
-            if is_qemu and extra and not (virt_pxe_boot) and not (disable_extra):
-                cmd += ("--extra-args=\"%s\" " % (extra))
+            if (is_qemu or is_xen) and extra and not virt_pxe_boot and not disable_extra:
+                cmd += ("--extra-args=\"%s\" " % extra)
         elif importpath:
             cmd += "--import "
             import_exists = True
@@ -383,6 +383,11 @@ def build_commandline(uri,
                 suse_version_re = re.compile(r"^(opensuse[0-9]+)\.([0-9]+)$")
                 if suse_version_re.match(os_version):
                     os_version = suse_version_re.match(os_version).groups()[0]
+                elif os_version == "generic26":
+                    os_version = "sles11"
+                elif os_version.endswith("generic"):
+                    os_version = os_version.replace("generic", "")
+
             # make sure virt-install knows about our os_version,
             # otherwise default it to virtio26 or generic26
             # found = False
@@ -395,12 +400,8 @@ def build_commandline(uri,
                 # compatibility in virt-install grumble grumble.
                 os_version = os_version + ".0"
             else:
-                if "virtio26" in supported_variants:
-                    os_version = "virtio26"
-                else:
-                    os_version = "generic26"
-                print("- warning: virt-install doesn't know this os_version, "
-                      "defaulting to %s" % os_version)
+                os_version = "generic26"
+                print("- warning: virt-install doesn't know this os_version, defaulting to %s" % os_version)
             cmd += "--os-variant %s " % os_version
         else:
             distro = "unix"
