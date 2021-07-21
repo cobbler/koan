@@ -1150,6 +1150,10 @@ class Koan:
                 if not os.path.exists("/usr/sbin/update-grub"):
                     raise InfoException("grub2 is not installed")
                 use_grub2 = True
+            elif make == "suse":
+                if not os.path.exists("/usr/sbin/grub2-install"):
+                    raise InfoException("grub2 is not installed")
+                use_grub2 = True
             else:
                 if not os.path.exists("/sbin/grubby"):
                     raise InfoException("grubby is not installed")
@@ -1276,10 +1280,13 @@ class Koan:
 
                 # Set paths for Ubuntu/Debian
                 # TODO: Add support for other distros when they ship grub2
-                if make in ['ubuntu', 'debian']:
+                if make in ['ubuntu', 'debian', 'suse']:
                     grub_file = "/etc/grub.d/42_koan"
                     grub_default_file = "/etc/default/grub"
-                    cmd = ["update-grub"]
+                    if make in ['suse']:
+                        cmd = ['/sbin/update-bootloader', '--refresh']
+                    else:
+                        cmd = ["update-grub"]
                     default_cmd = [
                         'sed',
                         '-i',
