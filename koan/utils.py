@@ -621,4 +621,4 @@ def get_grub_real_path(path: str):
         capture_output=True)
     if command_result.returncode != 0:
         raise RuntimeError("Command executed did return non-zero exit code!")
-    return command_result.stdout
+    return command_result.stdout.strip()
