@@ -400,12 +400,8 @@ def build_commandline(uri,
                 # compatibility in virt-install grumble grumble.
                 os_version = os_version + ".0"
             else:
-                if "virtio26" in supported_variants:
-                    os_version = "virtio26"
-                else:
-                    os_version = "generic26"
-                print("- warning: virt-install doesn't know this os_version, "
-                      "defaulting to %s" % os_version)
+                os_version = "generic26"
+                print("- warning: virt-install doesn't know this os_version, defaulting to %s" % os_version)
             cmd += "--os-variant %s " % os_version
         else:
             distro = "unix"
