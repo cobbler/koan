@@ -352,14 +352,14 @@ def build_commandline(uri,
         elif oldstyle_accelerate:
             cmd += "--accelerate "
 
-        if virt_pxe_boot or is_xen:
+        if virt_pxe_boot:
             cmd += "--pxe "
         elif cdrom:
             cmd += "--cdrom %s " % cdrom
         elif location:
             cmd += "--location %s " % location
-            if is_qemu and extra and not (virt_pxe_boot) and not (disable_extra):
-                cmd += ("--extra-args=\"%s\" " % (extra))
+            if (is_qemu or is_xen) and extra and not virt_pxe_boot and not disable_extra:
+                cmd += ("--extra-args=\"%s\" " % extra)
         elif importpath:
             cmd += "--import "
             import_exists = True
