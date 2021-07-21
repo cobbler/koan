@@ -24,9 +24,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 class KoanException(Exception):
 
     def __init__(self, value, *args):
-        self.value = value % args
-        # this is a hack to work around some odd exception handling
-        # in older pythons
+        if args:
+            self.value = value % args
+        else:
+            self.value = value
+        # this is a hack to work around some odd exception handling in older pythons
         self.from_koan = 1
 
     def __str__(self):
