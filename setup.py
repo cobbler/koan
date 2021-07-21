@@ -30,7 +30,6 @@ setup(
     license='GPLv2',
     scripts=['bin/koan', 'bin/cobbler-register'],
     install_requires=[
-        'simplejson',
         'distro',
         'libvirt-python',
         'netifaces',

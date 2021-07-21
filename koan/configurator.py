@@ -22,8 +22,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 module for configuring repos, packages and files
 """
 
-from __future__ import print_function
-
 import filecmp
 import shutil
 from . import utils
@@ -34,7 +32,7 @@ import sys
 import time
 import pwd
 import grp
-import simplejson as json
+import json
 
 try:
     import yum
@@ -82,7 +80,7 @@ class KoanConfigure:
             else:
                 self.stats['repos_status'] = "Success: Repos in sync"
         else:
-            print("  %s not found, creating..." % (old_repo))
+            print("  %s not found, creating..." % old_repo)
             open(old_repo, 'w').close()
             utils.sync_file(old_repo, new_repo, 0, 0, 644)
             self.stats['repos_status'] = "Success: Repos in sync"
