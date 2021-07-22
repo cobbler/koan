@@ -336,7 +336,7 @@ def os_release():
     if distroname is ["debian", "ubuntu"]:
         return distroname, float(version)
 
-    if distrolike == "suse":
+    if "suse" in distrolike:
         return "suse", float(version)
 
     return "unknown", 0.0
