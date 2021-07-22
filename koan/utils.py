@@ -618,7 +618,8 @@ def get_grub_real_path(path: str):
     command_result = subprocess.run(
         [get_grub2_mkrelpath_executable(), path],
         encoding=sys.getdefaultencoding(),
-        capture_output=True)
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
     if command_result.returncode != 0:
         raise RuntimeError("Command executed did return non-zero exit code!")
     return command_result.stdout.strip()
