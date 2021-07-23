@@ -8,6 +8,9 @@ from koan.virtinstall import build_commandline
 from koan.virtinstall import create_image_file
 
 
+# FIXME: This is not yet converted to pytest
+
+
 def setup():
     try:
         from virtinst import version as vi_version

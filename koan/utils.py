@@ -316,7 +316,7 @@ def os_release():
     """
     This code detects your os with the distro module and return the name and version. If it is not detected correctly it
     returns "unknown" (str) and "0" (float).
-    @:returns tuple (str, float)
+    :returns tuple (str, float)
         WHERE
         str is the name
         int is the version number
@@ -333,10 +333,10 @@ def os_release():
         else:
             return "redhat", float(version)
 
-    if distroname is ["debian", "ubuntu"]:
+    if distroname in ["debian", "ubuntu"]:
         return distroname, float(version)
 
-    if distrolike == "suse":
+    if "suse" in distrolike:
         return "suse", float(version)
 
     return "unknown", 0.0
@@ -571,3 +571,55 @@ def check_version_greater_or_equal(version1, version2):
         if a < b:
             return False
     return True
+
+
+def is_uefi_system() -> bool:
+    """
+    Helper function to check if the system we are currently running on is being booted by UEFI or a BIOS.
+
+    :return: True if ``/sys/firmware/efi`` exists, otherwise False.
+    """
+    if os.path.exists("/sys/firmware/efi"):
+        return True
+    return False
+
+
+def get_grub2_mkrelpath_executable() -> str:
+    """
+    Searches through the path for the mkrelpath executable of GRUB2.
+
+    :raises RuntimeError: In case the executable could not be found.
+    :return: The path to the executable
+    """
+    executable_path = ""
+    binary_names = ["grub2-mkrelpath", "grub-mkrelpath"]
+    for possible_name in binary_names:
+        tmp_result = shutil.which(possible_name)
+        if tmp_result is not None:
+            executable_path = tmp_result
+            break
+    if not executable_path:
+        raise RuntimeError("The executable for making a GRUB2 real path was not found. Tried executable names: \"%s\""
+                           % str(binary_names))
+    return executable_path
+
+
+def get_grub_real_path(path: str):
+    """
+    This function provides a wrapper to get the real path of a file to be able to write this to a grub config file.
+
+    :param path: The path which should be converted.
+    :raises FileNotFoundError: In case the path specifed did not exist.
+    :raises RuntimeError: In case the executable did return a non-zero exitcode.
+    :return: The value of ``path`` or the real path converted by ``grub2-mkrelpath``.
+    """
+    if not os.path.exists(path):
+        raise FileNotFoundError("Path specified did not exist on the filesystem.")
+    command_result = subprocess.run(
+        [get_grub2_mkrelpath_executable(), path],
+        encoding=sys.getdefaultencoding(),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
+    if command_result.returncode != 0:
+        raise RuntimeError("Command executed did return non-zero exit code!")
+    return command_result.stdout.strip()
