@@ -1,6 +1,8 @@
 
 TOP_DIR:=$(shell pwd)
 DESTDIR=/
+PYFLAKES = $(shell { command -v pyflakes-3 || command -v pyflakes3 || command -v pyflakes; }  2> /dev/null)
+PYCODESTYLE := $(shell { command -v pycodestyle-3 || command -v pycodestyle3 || command -v pycodestyle; } 2> /dev/null)
 
 
 all: clean build
@@ -27,12 +29,20 @@ doc:
 	@cd docs; make html > /dev/null 2>&1
 
 qa:
-	@echo "checking: pyflakes"
-	@pyflakes *.py bin/koan bin/cobbler-register koan/*.py
+ifeq ($(strip $(PYFLAKES)),)
+	@echo "No pyflakes found"
+else
+	@echo "checking: pyflakes ${PYFLAKES}"
+	@${PYFLAKES} *.py bin/koan bin/cobbler-register koan/*.py
+endif
 
-	@echo "checking: pep8"
-	@pycodestyle -r --ignore E303,E501,W504,E722 \
+ifeq ($(strip $(PYCODESTYLE)),)
+	@echo "No pycodestyle found"
+else
+	@echo "checking: pycodestyle"
+	@${PYCODESTYLE} -r --ignore E303,E501,W504,E722 \
         *.py bin/koan bin/cobbler-register koan/*.py
+endif
 
 authors:
 	@echo "creating: AUTHORS"
@@ -41,34 +51,30 @@ authors:
 
 sdist: authors
 	@echo "creating: sdist"
-	@python setup.py sdist > /dev/null
+	@python3 setup.py sdist > /dev/null
 
 release: clean qa authors sdist doc
 	@echo "creating: release artifacts"
 	@mkdir release
 	@cp dist/*.gz release/
 	@cp koan.spec release/
-	@cp debian/koan.dsc release/
-	@cp debian/changelog release/debian.changelog
-	@cp debian/control release/debian.control
-	@cp debian/rules release/debian.rules
 
 nosetests:
 	PYTHONPATH=./koan/ nosetests -v -w tests/cli/ 2>&1 | tee test.log
 
 build:
-	python setup.py build -f
+	python3 setup.py build -f
 
 # Debian/Ubuntu requires an additional parameter in setup.py
 install: build
 	if [ -e /etc/debian_version ]; then \
-		python setup.py install --root $(DESTDIR) -f --install-layout=deb; \
+		python3 setup.py install --root $(DESTDIR) -f --install-layout=deb; \
 	else \
-		python setup.py install --root $(DESTDIR) -f; \
+		python3 setup.py install --root $(DESTDIR) -f; \
 	fi
 
 savestate:
-	python setup.py -v savestate --root $(DESTDIR); \
+	python3 setup.py -v savestate --root $(DESTDIR); \
 
 rpms: release
 	mkdir -p rpm-build
@@ -82,6 +88,16 @@ rpms: release
 	--define "_sourcedir  %{_topdir}" \
 	-ba koan.spec
 
+# Only build a binary package
+debs: release ## Runs the target release and then creates via debbuild the debs in a directory called deb-build.
+	mkdir -p deb-build
+	mkdir -p deb-build/{BUILD,BUILDROOT,DEBS,SDEBS,SOURCES}
+	cp dist/*.gz deb-build/
+	debbuild --define "_topdir %(pwd)/deb-build" \
+	--define "_builddir %{_topdir}" \
+	--define "_specdir %{_topdir}" \
+	--define "_sourcedir  %{_topdir}" \
+	-vv -bb koan.spec
 
 .PHONY: tags
 tags:

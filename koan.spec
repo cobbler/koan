@@ -23,7 +23,7 @@
 %{!?__python2: %global __python2 /usr/bin/python2}
 %{!?__python3: %global __python3 /usr/bin/python3}
 
-%if %{_vendor} == "debbuild"
+%if "%{_vendor}" == "debbuild"
 %global pyinstflags --no-compile -O0
 %global pytargetflags --install-layout=deb
 %global develsuffix dev
@@ -55,7 +55,7 @@ Version:        2.9.0
 Release:        1%{?dist}
 Summary:        Kickstart over a network
 
-%if %{_vendor} == "debbuild"
+%if "%{_vendor}" == "debbuild"
 Packager:       Cobbler Developers <cobbler@lists.fedorahosted.org>
 Group:          admin
 %else
@@ -96,7 +96,6 @@ BuildRequires:  epel-rpm-macros
 %if ! (%{defined python_enable_dependency_generator} || %{defined python_disable_dependency_generator})
 Requires:       python%{python_pkgversion}-distro
 Requires:       python%{python_pkgversion}-netifaces
-Requires:       python%{python_pkgversion}-simplejson
 %if 0%{?suse_version}
 # SUSE distributions have messed up naming of this module
 %if 0%{?suse_version} < 1500
@@ -108,7 +107,7 @@ Requires:       python%{python_pkgversion}-libvirt-python
 Requires:       python%{python_pkgversion}-libvirt
 %endif
 %endif
-%if %{_vendor} == "debbuild"
+%if "%{_vendor}" == "debbuild"
 Requires:       virtinst
 %else
 Requires:       virt-install
@@ -142,7 +141,7 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 %endif
 %license COPYING
-%doc README
+%doc README.md
 %{_bindir}/koan
 %{_bindir}/cobbler-register
 
@@ -154,7 +153,7 @@ rm -rf %{buildroot}
 %license COPYING
 %{python_sitelib}/koan*
 
-%if %{_vendor} == "debbuild"
+%if "%{_vendor}" == "debbuild"
 %post -n python%{python_pkgversion}-koan
 # Do late-stage bytecompilation, per debian policy
 py%{python_pkgversion}compile -p python%{python_pkgversion}-koan
