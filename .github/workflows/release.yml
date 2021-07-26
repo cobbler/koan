@@ -1,0 +1,37 @@
+name: Publish Python distributions to TestPyPI
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-n-publish:
+    name: Build and publish Python distributions to TestPyPI
+    runs-on: ubuntu-latest
+    container: registry.opensuse.org/opensuse/tumbleweed:latest
+    steps:
+      - name: Install pre reqs
+        run: zypper -n in git tar
+      - uses: actions/checkout@v2
+      - name: Install package deps
+        run: >-
+          zypper -n in --no-recommends
+          python38
+          python38-base
+          python38-wheel
+          python38-build
+          python38-setuptools
+          python38-pip
+          python38-libvirt-python
+          python38-Sphinx
+          make
+      - name: Install dependencies
+        run: pip3 install .[lint,test,docs]
+      - name: Build a binary wheel and a source tarball
+        run: make release
+      - name: Publish distribution to Test PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
