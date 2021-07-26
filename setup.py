@@ -36,6 +36,7 @@ setup(
     ],
     extras_require={
         'lint': ['pyflakes', 'pycodestyle'],
-        'test': ['pytest', 'nose', 'pytest-cov', 'pytest-mock']
+        'test': ['pytest', 'nose', 'pytest-cov', 'pytest-mock'],
+        'docs': ['Sphinx', 'sphinx-rtd-theme']
     },
 )

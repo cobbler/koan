@@ -23,9 +23,10 @@ jobs:
           python36-build
           python36-pip
           python36-libvirt-python
+          python36-Sphinx
           make
       - name: Install dependencies
-        run: pip3 install .[lint,test]
+        run: pip3 install .[lint,test,docs]
       - name: Fetch date for version bump
         run: echo "new_version=$(date +'%Y%m%d%H%M')" >> $GITHUB_ENV
       - name: Replace version in setup.py
