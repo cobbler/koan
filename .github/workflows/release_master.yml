@@ -17,14 +17,14 @@ jobs:
       - name: Install package deps
         run: >-
           zypper -n in --no-recommends
-          python36
-          python36-base
-          python36-wheel
-          python36-build
-          python36-setuptools
-          python36-pip
-          python36-libvirt-python
-          python36-Sphinx
+          python38
+          python38-base
+          python38-wheel
+          python38-build
+          python38-setuptools
+          python38-pip
+          python38-libvirt-python
+          python38-Sphinx
           make
       - name: Install dependencies
         run: pip3 install .[lint,test,docs]
