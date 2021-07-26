@@ -13,7 +13,10 @@ clean:
 	@rm -f *.pyc
 	@rm -f koan/*.pyc
 	@echo "cleaning: build artifacts"
-	@rm -rf build rpm-build release
+	@rm -rf build
+	@rm -rf rpm-build/*
+	@rm -rf deb-build/*
+	@rm -rf release
 	@rm -rf dist
 	@rm -f MANIFEST AUTHORS
 	@rm -f docs/*.1.gz
