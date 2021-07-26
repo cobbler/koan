@@ -21,6 +21,7 @@ jobs:
           python36-base
           python36-wheel
           python36-build
+          python36-setuptools
           python36-pip
           python36-libvirt-python
           python36-Sphinx
