@@ -16,13 +16,13 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install package deps
         run: >-
-          zypper -n in --no-recommends \
-          python36 \
-          python36-base \
-          python36-wheel \
-          python36-build \
-          python36-pip \
-          python36-libvirt-python \
+          zypper -n in --no-recommends
+          python36
+          python36-base
+          python36-wheel
+          python36-build
+          python36-pip
+          python36-libvirt-python
           make
       - name: Install dependencies
         run: pip3 install .[lint,test]
