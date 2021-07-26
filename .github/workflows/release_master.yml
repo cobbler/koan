@@ -1,0 +1,39 @@
+name: Publish Python distributions to TestPyPI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-n-publish:
+    name: Build and publish Python distributions to TestPyPI
+    runs-on: ubuntu-latest
+    container: registry.opensuse.org/opensuse/tumbleweed:latest
+    steps:
+      - name: Install pre reqs
+        run: zypper -n in git tar
+      - uses: actions/checkout@v2
+      - name: Install package deps
+        run: >-
+          zypper -n in --no-recommends \
+          python36 \
+          python36-base \
+          python36-wheel \
+          python36-build \
+          python36-pip \
+          python36-libvirt-python \
+          make
+      - name: Install dependencies
+        run: pip3 install .[lint,test]
+      - name: Fetch date for version bump
+        run: echo "new_version=$(date +'%Y%m%d%H%M')" >> $GITHUB_ENV
+      - name: Replace version in setup.py
+        run: sed -i '/VERSION = "[0-9].[0-9].[0-9]/s/.$/.'${{ env.new_version }}'"/g' setup.py
+      - name: Build a binary wheel and a source tarball
+        run: make release
+      - name: Publish distribution to Test PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
