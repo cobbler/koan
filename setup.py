@@ -15,7 +15,7 @@ along with zenossctl. If not, see <http://www.gnu.org/licenses/>.
 
 from setuptools import setup
 
-VERSION = "2.9.0"
+VERSION = "3.0.1"
 
 setup(
     name='koan',
