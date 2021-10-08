@@ -13,7 +13,6 @@
 #
 
 # If they aren't provided by a system installed macro, define them
-%{!?__python2: %global __python2 /usr/bin/python2}
 %{!?__python3: %global __python3 /usr/bin/python3}
 
 %if "%{_vendor}" == "debbuild"
@@ -26,16 +25,10 @@
 %global develsuffix devel
 %endif
 
-%if %{with use_python2}
-%global __python %{__python2}
-%global py_shbang_opts %{py2_shbang_opts}
-%global python_pkgversion %{nil}
-%else
 %global __python %{__python3}
 %global py_shbang_opts %{py3_shbang_opts}
 %{!?python3_pkgversion: %global python3_pkgversion 3}
 %global python_pkgversion %{python3_pkgversion}
-%endif
 
 %{!?py_build: %global py_build CFLAGS="%{optflags}" %{__python} setup.py build}
 %{!?py_install: %global py_install %{__python} setup.py install %{?pyinstflags} --skip-build --root %{buildroot} --prefix=%{_prefix} %{?pytargetflags}}
@@ -58,24 +51,8 @@ Group:          Development/Libraries
 License:        GPL-2.0-or-later
 URL:            https://github.com/cobbler/koan
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
-
-%if 0%{?suse_version} && 0%{?suse_version} < 1315
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-%else
 BuildArch:      noarch
-%endif
 
-Requires:       python%{python_pkgversion}-koan = %{version}-%{release}
-
-%description
-Koan stands for kickstart-over-a-network and allows for both network
-installation of new virtualized guests and reinstallation of an existing
-system. For use with a boot-server configured with Cobbler.
-
-
-%package -n python%{python_pkgversion}-koan
-Summary:        koan python%{python_pkgversion} module
-%{?python_provide:%python_provide python%{python_pkgversion}-koan}
 BuildRequires:  python%{python_pkgversion}-%{develsuffix}
 BuildRequires:  python%{python_pkgversion}-setuptools
 %if 0%{?rhel}
@@ -91,14 +68,15 @@ Requires:       python%{python_pkgversion}-libvirt-python
 Requires:       python%{python_pkgversion}-libvirt
 %endif
 %if "%{_vendor}" == "debbuild"
-Requires:       virtinst
+Recommends:     virtinst
 %else
-Requires:       virt-install
+Recommends:     virt-install
 %endif
 
-%description -n python%{python_pkgversion}-koan
-This package provides the Python module code for Koan.
-
+%description
+Koan stands for kickstart-over-a-network and allows for both network
+installation of new virtualized guests and reinstallation of an existing
+system. For use with a boot-server configured with Cobbler.
 
 %prep
 %setup -q
@@ -118,19 +96,16 @@ pathfix.py -pni "%{__python} %{py_shbang_opts}" bin
 %doc README.md
 %{_bindir}/koan
 %{_bindir}/cobbler-register
-
-%files -n python%{python_pkgversion}-koan
-%license COPYING
 %{python_sitelib}/koan*
 
 %if "%{_vendor}" == "debbuild"
-%post -n python%{python_pkgversion}-koan
+%post
 # Do late-stage bytecompilation, per debian policy
-py%{python_pkgversion}compile -p python%{python_pkgversion}-koan
+py%{python_pkgversion}compile -p %{name}
 
-%preun -n python%{python_pkgversion}-koan
+%preun
 # Ensure all __pycache__ files are deleted, per debian policy
-py%{python_pkgversion}clean -p python%{python_pkgversion}-koan
+py%{python_pkgversion}clean -p %{name}
 %endif
 
 

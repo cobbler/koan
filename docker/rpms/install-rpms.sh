@@ -15,9 +15,9 @@ IMAGE=koan:$TAG
 
 # Launch container and install Koan
 echo "==> Start container ..."
-docker run -d --name koan -v "$PWD/rpm-build:/usr/src/cobbler/rpm-build" "$IMAGE" /bin/bash
+docker run -d --name koan -v "$PWD/rpm-build:/usr/src/koan/rpm-build" "$IMAGE" /bin/bash
 echo "==> Install fresh RPMs ..."
-docker exec -it koan bash -c 'rpm -Uvh rpm-build/cobbler-*.noarch.rpm'
+docker exec -it koan bash -c 'rpm -Uvh rpm-build/koan-*.noarch.rpm'
 
 # Does not work because of wrong exit code. Koan has not help or version switch which means we need to skip this for now
 #echo "==> Show Koan version ..."
