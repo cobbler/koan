@@ -5,19 +5,12 @@
 # - Fedora: 30, 31, Rawhide
 # - CentOS + EPEL: 7, 8
 # - SLE: 11sp4, 12sp3, 15sp1
-# - OpenSuSE: Leap 15.1, Tumbleweed
+# - openSUSE: Leap 15.1, Tumbleweed
 # - Debian: 9, 10
 # - Ubuntu: 16.04, 18.04
 #
 # If it doesn't build on the Open Build Service (OBS) it's a bug.
 #
-
-
-%if 0%{?suse_version} && 0%{?suse_version} < 1500
-%bcond_without use_python2
-%else
-%bcond_with use_python2
-%endif
 
 # If they aren't provided by a system installed macro, define them
 %{!?__python2: %global __python2 /usr/bin/python2}
@@ -51,7 +44,7 @@
 %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
 
 Name:           koan
-Version:        3.0.1
+Version:        3.0.2
 Release:        1%{?dist}
 Summary:        Kickstart over a network
 
@@ -82,9 +75,6 @@ system. For use with a boot-server configured with Cobbler.
 
 %package -n python%{python_pkgversion}-koan
 Summary:        koan python%{python_pkgversion} module
-%if 0%{?suse_version} && 0%{?suse_version} < 1315
-Group:          Development/Libraries/Python
-%endif
 %{?python_provide:%python_provide python%{python_pkgversion}-koan}
 BuildRequires:  python%{python_pkgversion}-%{develsuffix}
 BuildRequires:  python%{python_pkgversion}-setuptools
@@ -92,20 +82,13 @@ BuildRequires:  python%{python_pkgversion}-setuptools
 # We need these to build this properly, and OBS doesn't pull them in by default for EPEL
 BuildRequires:  epel-rpm-macros
 %endif
-%{?python_enable_dependency_generator}
-%if ! (%{defined python_enable_dependency_generator} || %{defined python_disable_dependency_generator})
 Requires:       python%{python_pkgversion}-distro
 Requires:       python%{python_pkgversion}-netifaces
 %if 0%{?suse_version}
 # SUSE distributions have messed up naming of this module
-%if 0%{?suse_version} < 1500
-Requires:       libvirt-python%{python_pkgversion}
-%else
 Requires:       python%{python_pkgversion}-libvirt-python
-%endif
 %else
 Requires:       python%{python_pkgversion}-libvirt
-%endif
 %endif
 %if "%{_vendor}" == "debbuild"
 Requires:       virtinst
@@ -130,26 +113,13 @@ pathfix.py -pni "%{__python} %{py_shbang_opts}" bin
 %install
 %py_install
 
-%if 0%{?suse_version} && 0%{?suse_version} < 1315
-%clean
-rm -rf %{buildroot}
-%endif
-
 %files
-%if 0%{?suse_version} && 0%{?suse_version} < 1315
-%{!?_licensedir:%global license %doc}
-%defattr(-,root,root,-)
-%endif
 %license COPYING
 %doc README.md
 %{_bindir}/koan
 %{_bindir}/cobbler-register
 
 %files -n python%{python_pkgversion}-koan
-%if 0%{?suse_version} && 0%{?suse_version} < 1315
-%{!?_licensedir:%global license %doc}
-%defattr(-,root,root,-)
-%endif
 %license COPYING
 %{python_sitelib}/koan*
 
