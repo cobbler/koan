@@ -641,7 +641,7 @@ class Koan:
 
         if "autoinst" in profile_data:
             # fix URLs
-            if profile_data["autoinst"][0] == "/":
+            if profile_data["autoinst"][0] == "/" or os.path.dirname(profile_data["autoinst"]) == '':
                 if not self.system:
                     profile_data["autoinst"] = "http://%s/cblr/svc/op/ks/profile/%s" % (
                         profile_data['http_server'], profile_data['name'])
