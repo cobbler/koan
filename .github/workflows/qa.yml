@@ -10,15 +10,28 @@ on:
 
 jobs:
   run_qa:
-    runs-on: ubuntu-20.04
-    container: registry.opensuse.org/opensuse/tumbleweed:latest
+    runs-on: ubuntu-latest
     steps:
-      - name: Install pre reqs
-        run: zypper -n in git tar
       - uses: actions/checkout@v2
-      - name: Install package deps
-        run: zypper -n in --no-recommends python36-wheel python36-pip python36-libvirt-python make
+      - name: Install pre reqs
+        run: >-
+          sudo apt-get install -y
+          git
+          tar
+          python3-wheel
+          python3-pip
+          python3-libvirt
+          make
       - name: Install dependencies
         run: pip3 install .[lint,test]
       - name: Run Linters
         run: make qa
+  black:
+    name: runner/black formatter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: psf/black@stable
+        with:
+          options: "--check --safe --verbose"
+          version: "22.3.0"

@@ -42,10 +42,10 @@ VIRT_STATE_NAME_MAP = {
     3: "paused",
     4: "shutdown",
     5: "shutdown",
-    6: "crashed"
+    6: "crashed",
 }
 
-VALID_DRIVER_TYPES = ['raw', 'qcow', 'qcow2', 'vmdk', 'qed']
+VALID_DRIVER_TYPES = ["raw", "qcow", "qcow2", "vmdk", "qed"]
 
 
 def setupLogging(appname):
@@ -55,23 +55,23 @@ def setupLogging(appname):
     import logging.handlers
 
     dateFormat = "%a, %d %b %Y %H:%M:%S"
-    fileFormat = "[%(asctime)s " + appname + \
-                 " %(process)d] %(levelname)s (%(module)s:%(lineno)d) %(message)s"
+    fileFormat = (
+        "[%(asctime)s "
+        + appname
+        + " %(process)d] %(levelname)s (%(module)s:%(lineno)d) %(message)s"
+    )
     streamFormat = "%(asctime)s %(levelname)-8s %(message)s"
     filename = "/var/log/koan/koan.log"
 
     rootLogger = logging.getLogger()
     rootLogger.setLevel(logging.DEBUG)
-    fileHandler = logging.handlers.RotatingFileHandler(filename, "a",
-                                                       1024 * 1024, 5)
+    fileHandler = logging.handlers.RotatingFileHandler(filename, "a", 1024 * 1024, 5)
 
-    fileHandler.setFormatter(logging.Formatter(fileFormat,
-                                               dateFormat))
+    fileHandler.setFormatter(logging.Formatter(fileFormat, dateFormat))
     rootLogger.addHandler(fileHandler)
 
     streamHandler = logging.StreamHandler(sys.stderr)
-    streamHandler.setFormatter(logging.Formatter(streamFormat,
-                                                 dateFormat))
+    streamHandler.setFormatter(logging.Formatter(streamFormat, dateFormat))
     streamHandler.setLevel(logging.DEBUG)
     rootLogger.addHandler(streamHandler)
 
@@ -212,7 +212,7 @@ def input_string_or_dict(options, delim=None, allow_multiples=True):
             del new_dict[""]
         return new_dict
     elif isinstance(options, type({})):
-        options.pop('', None)
+        options.pop("", None)
         return options
     else:
         raise InfoException("invalid input type: %s" % type(options))
@@ -248,10 +248,8 @@ def nfsmount(input_path):
     # we have to mount it first
     filename = input_path.split("/")[-1]
     dirpath = "/".join(input_path.split("/")[:-1])
-    tempdir = tempfile.mkdtemp(suffix='.mnt', prefix='koan_', dir='/tmp')
-    mount_cmd = [
-        "/bin/mount", "-t", "nfs", "-o", "ro", dirpath, tempdir
-    ]
+    tempdir = tempfile.mkdtemp(suffix=".mnt", prefix="koan_", dir="/tmp")
+    mount_cmd = ["/bin/mount", "-t", "nfs", "-o", "ro", dirpath, tempdir]
     print("- running: %s" % mount_cmd)
     rc = subprocess.call(mount_cmd)
     if not rc == 0:
@@ -361,13 +359,13 @@ def get_network_info():
     inames = netifaces.interfaces()
 
     for iname in inames:
-        mac = netifaces.ifaddresses(iname)[netifaces.AF_LINK][0]['addr']
+        mac = netifaces.ifaddresses(iname)[netifaces.AF_LINK][0]["addr"]
 
         if mac == "00:00:00:00:00:00":
             mac = "?"
 
         try:
-            ip = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]['addr']
+            ip = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]["addr"]
             if ip == "127.0.0.1":
                 ip = "?"
         except:
@@ -377,7 +375,7 @@ def get_network_info():
         module = ""
 
         try:
-            nm = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]['netmask']
+            nm = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]["netmask"]
         except:
             nm = "?"
 
@@ -386,7 +384,7 @@ def get_network_info():
             "mac_address": mac,
             "netmask": nm,
             "bridge": bridge,
-            "module": module
+            "module": module,
         }
 
     # print interfaces
@@ -429,14 +427,18 @@ def create_xendomains_symlink(name):
 
     # Make sure symlink does not already exist.
     if os.path.exists(dst):
-        print("Could not create %s symlink. File already exists in this "
-              "location." % dst)
+        print(
+            "Could not create %s symlink. File already exists in this "
+            "location." % dst
+        )
         return False
 
     # Verify that the destination is writable
     if not os.access(os.path.dirname(dst), os.W_OK):
-        print("Could not create %s symlink. Please check write permissions "
-              "and ownership." % dst)
+        print(
+            "Could not create %s symlink. Please check write permissions "
+            "and ownership." % dst
+        )
         return False
 
     # check that xen config file exists and create symlink
@@ -444,13 +446,13 @@ def create_xendomains_symlink(name):
         os.symlink(src, dst)
         return True
     else:
-        print("Could not create %s symlink, source file %s is "
-              "missing." % (dst, src))
+        print("Could not create %s symlink, source file %s is " "missing." % (dst, src))
         return False
 
 
 def libvirt_enable_autostart(domain_name):
     import libvirt
+
     try:
         conn = libvirt.open("qemu:///system")
         conn.listDefinedDomains()
@@ -460,14 +462,11 @@ def libvirt_enable_autostart(domain_name):
         raise InfoException("libvirt could not find domain %s" % domain_name)
 
     if not domain.autostart:
-        raise InfoException(
-            "Could not enable autostart on domain %s." %
-            domain_name)
+        raise InfoException("Could not enable autostart on domain %s." % domain_name)
 
 
 def make_floppy(autoinst):
-    (fd, floppy_path) = tempfile.mkstemp(
-        suffix='.floppy', prefix='tmp', dir="/tmp")
+    (fd, floppy_path) = tempfile.mkstemp(suffix=".floppy", prefix="tmp", dir="/tmp")
     print("- creating floppy image at %s" % floppy_path)
 
     # create the floppy image file
@@ -485,7 +484,7 @@ def make_floppy(autoinst):
         raise InfoException("mkdosfs failed")
 
     # mount the floppy
-    mount_path = tempfile.mkdtemp(suffix=".mnt", prefix='tmp', dir="/tmp")
+    mount_path = tempfile.mkdtemp(suffix=".mnt", prefix="tmp", dir="/tmp")
     cmd = "mount -o loop -t vfat %s %s" % (floppy_path, mount_path)
     print("- %s" % cmd)
     rc = os.system(cmd)
@@ -509,7 +508,7 @@ def make_floppy(autoinst):
 
 
 def sync_file(ofile, nfile, uid, gid, mode):
-    subprocess.call(['/usr/bin/diff', ofile, nfile])
+    subprocess.call(["/usr/bin/diff", ofile, nfile])
     shutil.copy(nfile, ofile)
     os.chmod(ofile, mode)
     os.chown(ofile, uid, gid)
@@ -534,9 +533,7 @@ def create_qemu_image_file(path, size, driver_type):
         subprocess_call(cmd)
     except:
         traceback.print_exc()
-        raise InfoException(
-            "Image file create failed: %s" % " ".join(cmd)
-        )
+        raise InfoException("Image file create failed: %s" % " ".join(cmd))
 
 
 def random_mac():
@@ -547,11 +544,15 @@ def random_mac():
     VMWare. Last 3 fields are random.
     return: MAC address string
     """
-    mac = [0x00, 0x50, 0x56,
-           random.randint(0x00, 0x3f),
-           random.randint(0x00, 0xff),
-           random.randint(0x00, 0xff)]
-    return ':'.join(map(lambda x: "%02x" % x, mac))
+    mac = [
+        0x00,
+        0x50,
+        0x56,
+        random.randint(0x00, 0x3F),
+        random.randint(0x00, 0xFF),
+        random.randint(0x00, 0xFF),
+    ]
+    return ":".join(map(lambda x: "%02x" % x, mac))
 
 
 def generate_timestamp():
@@ -599,8 +600,10 @@ def get_grub2_mkrelpath_executable() -> str:
             executable_path = tmp_result
             break
     if not executable_path:
-        raise RuntimeError("The executable for making a GRUB2 real path was not found. Tried executable names: \"%s\""
-                           % str(binary_names))
+        raise RuntimeError(
+            'The executable for making a GRUB2 real path was not found. Tried executable names: "%s"'
+            % str(binary_names)
+        )
     return executable_path
 
 
@@ -619,7 +622,8 @@ def get_grub_real_path(path: str):
         [get_grub2_mkrelpath_executable(), path],
         encoding=sys.getdefaultencoding(),
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
+        stderr=subprocess.PIPE,
+    )
     if command_result.returncode != 0:
         raise RuntimeError("Command executed did return non-zero exit code!")
     return command_result.stdout.strip()

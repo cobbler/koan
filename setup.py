@@ -18,25 +18,25 @@ from setuptools import setup
 VERSION = "3.0.2"
 
 setup(
-    name='koan',
+    name="koan",
     version=VERSION,
-    description='Kickstart over a Network Client for Cobbler',
-    long_description='This client can initiate and prepare a reinstallation of your operation system with the help of'
-                     'cobbler.',
-    author='Team Cobbler',
-    author_email='cobbler.project@gmail.com',
-    url='https://www.github.com/cobbler/koan',
-    packages=['koan'],
-    license='GPLv2',
-    scripts=['bin/koan', 'bin/cobbler-register'],
+    description="Kickstart over a Network Client for Cobbler",
+    long_description="This client can initiate and prepare a reinstallation of your operation system with the help of"
+    "cobbler.",
+    author="Team Cobbler",
+    author_email="cobbler.project@gmail.com",
+    url="https://www.github.com/cobbler/koan",
+    packages=["koan"],
+    license="GPLv2",
+    scripts=["bin/koan", "bin/cobbler-register"],
     install_requires=[
-        'distro',
-        'libvirt-python',
-        'netifaces',
+        "distro",
+        "libvirt-python",
+        "netifaces",
     ],
     extras_require={
-        'lint': ['pyflakes', 'pycodestyle'],
-        'test': ['pytest', 'nose', 'pytest-cov', 'pytest-mock'],
-        'docs': ['Sphinx', 'sphinx-rtd-theme']
+        "lint": ["pyflakes", "pycodestyle", "black==22.3.0"],
+        "test": ["pytest", "nose", "pytest-cov", "pytest-mock"],
+        "docs": ["Sphinx", "sphinx-rtd-theme"],
     },
 )

@@ -40,7 +40,8 @@ from .cexceptions import InfoException
 # python-virtinst (and now the new virt-install rpm).
 # virt-install 1.0.1 responds to --version on stderr. WTF? Check both.
 rc, response, stderr_response = utils.subprocess_get_response(
-    shlex.split('virt-install --version'), True, True)
+    shlex.split("virt-install --version"), True, True
+)
 if rc == 0:
     if response:
         virtinst_version = response
@@ -71,20 +72,22 @@ except:
         # This will fail on EL7+, gobble stderr to avoid confusing error
         # messages from being output
         rc, response, stderr_respose = utils.subprocess_get_response(
-            shlex.split('virt-install --os-variant list'), False, True)
-        variants = response.split('\n')
+            shlex.split("virt-install --os-variant list"), False, True
+        )
+        variants = response.split("\n")
         for variant in variants:
             supported_variants.add(variant.split()[0])
     except:
         try:
             # maybe on newer os using osinfo-query?
             rc, response = utils.subprocess_get_response(
-                shlex.split('osinfo-query -f short-id os'))
-            variants = response.split('\n')
+                shlex.split("osinfo-query -f short-id os")
+            )
+            variants = response.split("\n")
             for variant in variants:
                 supported_variants.add(variant.strip())
             # osinfo-query does not list virtio26, add it here for fallback
-            supported_variants.add('virtio26')
+            supported_variants.add("virtio26")
         except:
             # okay, probably on old os and we'll just use generic26
             pass
@@ -131,8 +134,11 @@ def _sanitize_nics(nics, bridge, profile_bridge, network_count):
         counter = counter + 1
         intf = nics[iname]
 
-        if (intf.get("interface_type", "") in ("bond", "bridge", "bonded_bridge_slave") or
-                vlanpattern.match(iname) or iname.find(":") != -1):
+        if (
+            intf.get("interface_type", "") in ("bond", "bridge", "bonded_bridge_slave")
+            or vlanpattern.match(iname)
+            or iname.find(":") != -1
+        ):
             continue
 
         mac = intf["mac_address"]
@@ -141,8 +147,7 @@ def _sanitize_nics(nics, bridge, profile_bridge, network_count):
             intf_bridge = intf["virt_bridge"]
             if intf_bridge == "":
                 if profile_bridge == "":
-                    raise InfoException(
-                        "virt-bridge setting is not defined in cobbler")
+                    raise InfoException("virt-bridge setting is not defined in cobbler")
                 intf_bridge = profile_bridge
 
         else:
@@ -169,27 +174,29 @@ def create_image_file(disks=None, **kwargs):
         utils.create_qemu_image_file(path, size, driver_type)
 
 
-def build_commandline(uri,
-                      name=None,
-                      ram=None,
-                      disks=None,
-                      uuid=None,
-                      extra=None,
-                      vcpus=None,
-                      profile_data=None,
-                      arch=None,
-                      gfx_type=None,
-                      fullvirt=False,
-                      bridge=None,
-                      virt_type=None,
-                      virt_auto_boot=False,
-                      virt_pxe_boot=False,
-                      qemu_driver_type=None,
-                      qemu_net_type=None,
-                      qemu_machine_type=None,
-                      wait=0,
-                      noreboot=False,
-                      osimport=False):
+def build_commandline(
+    uri,
+    name=None,
+    ram=None,
+    disks=None,
+    uuid=None,
+    extra=None,
+    vcpus=None,
+    profile_data=None,
+    arch=None,
+    gfx_type=None,
+    fullvirt=False,
+    bridge=None,
+    virt_type=None,
+    virt_auto_boot=False,
+    virt_pxe_boot=False,
+    qemu_driver_type=None,
+    qemu_net_type=None,
+    qemu_machine_type=None,
+    wait=0,
+    noreboot=False,
+    osimport=False,
+):
     # Set flags for CLI arguments based on the virtinst_version
     # tuple above. Older versions of python-virtinst don't have
     # a version easily accessible, so it will be None and we can
@@ -205,8 +212,10 @@ def build_commandline(uri,
     oldstyle_accelerate = False
 
     if not virtinst_version:
-        print("- warning: old virt-install detected, a lot of features will "
-              "be disabled")
+        print(
+            "- warning: old virt-install detected, a lot of features will "
+            "be disabled"
+        )
         disable_autostart = True
         disable_boot_opt = True
         disable_virt_type = True
@@ -239,7 +248,8 @@ def build_commandline(uri,
         # is libvirt new enough?
         if not utils.check_version_greater_or_equal(virtinst_version, "0.2.0"):
             raise InfoException(
-                "need python-virtinst >= 0.2 or virt-install package to do installs for qemu/kvm (depending on your OS)")
+                "need python-virtinst >= 0.2 or virt-install package to do installs for qemu/kvm (depending on your OS)"
+            )
 
     floppy = None
     cdrom = None
@@ -275,7 +285,8 @@ def build_commandline(uri,
         # images don't need to source this
         if "install_tree" not in profile_data:
             raise InfoException(
-                "Cannot find install source in autoinst file, aborting.")
+                "Cannot find install source in autoinst file, aborting."
+            )
 
         if not profile_data["install_tree"].endswith("/"):
             profile_data["install_tree"] = profile_data["install_tree"] + "/"
@@ -283,10 +294,12 @@ def build_commandline(uri,
         location = profile_data["install_tree"]
 
     disks = _sanitize_disks(disks)
-    nics = _sanitize_nics(profile_data.get("interfaces"),
-                          bridge,
-                          profile_data.get("virt_bridge"),
-                          profile_data.get("network_count"))
+    nics = _sanitize_nics(
+        profile_data.get("interfaces"),
+        bridge,
+        profile_data.get("virt_bridge"),
+        profile_data.get("network_count"),
+    )
     if not nics:
         # for --profile you get one NIC, go define a system if you want more.
         # FIXME: can mac still be sent on command line in this case?
@@ -295,8 +308,7 @@ def build_commandline(uri,
             bridge = profile_data["virt_bridge"]
 
         if bridge == "":
-            raise InfoException(
-                "virt-bridge setting is not defined in cobbler")
+            raise InfoException("virt-bridge setting is not defined in cobbler")
         nics = [(bridge, None)]
 
     kernel = profile_data.get("kernel_local")
@@ -358,8 +370,13 @@ def build_commandline(uri,
             cmd += "--cdrom %s " % cdrom
         elif location:
             cmd += "--location %s " % location
-            if (is_qemu or is_xen) and extra and not virt_pxe_boot and not disable_extra:
-                cmd += ("--extra-args=\"%s\" " % extra)
+            if (
+                (is_qemu or is_xen)
+                and extra
+                and not virt_pxe_boot
+                and not disable_extra
+            ):
+                cmd += '--extra-args="%s" ' % extra
         elif importpath:
             cmd += "--import "
             import_exists = True
@@ -369,13 +386,16 @@ def build_commandline(uri,
     else:
         cmd += "--paravirt "
         if not disable_boot_opt:
-            cmd += ("--boot kernel=%s,initrd=%s,kernel_args=\"%s\" " %
-                    (kernel, initrd, extra))
+            cmd += '--boot kernel=%s,initrd=%s,kernel_args="%s" ' % (
+                kernel,
+                initrd,
+                extra,
+            )
         else:
             if location:
                 cmd += "--location %s " % location
                 if extra:
-                    cmd += "--extra-args=\"%s\" " % extra
+                    cmd += '--extra-args="%s" ' % extra
 
     if breed and breed != "other":
         if os_version and os_version != "other":
@@ -401,7 +421,10 @@ def build_commandline(uri,
                 os_version = os_version + ".0"
             else:
                 os_version = "generic26"
-                print("- warning: virt-install doesn't know this os_version, defaulting to %s" % os_version)
+                print(
+                    "- warning: virt-install doesn't know this os_version, defaulting to %s"
+                    % os_version
+                )
             cmd += "--os-variant %s " % os_version
         else:
             distro = "unix"
@@ -417,8 +440,9 @@ def build_commandline(uri,
         cmd += "--disk path=%s " % importpath
 
     for path, size, driver_type in disks:
-        print("- adding disk: %s of size %s (driver type=%s)" %
-              (path, size, driver_type))
+        print(
+            "- adding disk: %s of size %s (driver type=%s)" % (path, size, driver_type)
+        )
         cmd += "--disk path=%s" % (path)
         if str(size) != "0":
             cmd += ",size=%s" % size
