@@ -17,7 +17,7 @@ jobs:
         run: zypper -n in git tar
       - uses: actions/checkout@v2
       - name: Install package deps
-        run: zypper -n in --no-recommends python36 python36-base python36-wheel python36-pip python36-libvirt-python python36-codecov make
+        run: zypper -n in --no-recommends python3 python3-base python3-wheel python3-pip python3-libvirt-python python3-codecov make
       - name: Install dependencies
         run: pip3 install .[lint,test]
       - name: Run tests
