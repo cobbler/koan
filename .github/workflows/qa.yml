@@ -27,7 +27,7 @@ jobs:
       - name: Run Linters
         run: make qa
   black:
-    name: runner/black formatter
+    name: black formatter
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
