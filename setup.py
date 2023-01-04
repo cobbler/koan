@@ -35,7 +35,7 @@ setup(
         "netifaces",
     ],
     extras_require={
-        "lint": ["pyflakes", "pycodestyle", "black==22.3.0"],
+        "lint": ["pyflakes", "black==22.3.0"],
         "test": ["pytest", "nose", "pytest-cov", "pytest-mock"],
         "docs": ["Sphinx", "sphinx-rtd-theme"],
     },
