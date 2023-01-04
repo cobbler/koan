@@ -17,7 +17,7 @@ tags
 
 # Python Folders/Files
 venv/
-cobbler.egg-info
+koan.egg-info
 
 # docs
 docs/*.gz
@@ -38,6 +38,4 @@ test.log
 
 # IDE Config Folders
 .idea/
-
-# Docs
-docs/_build
+.vscode/
