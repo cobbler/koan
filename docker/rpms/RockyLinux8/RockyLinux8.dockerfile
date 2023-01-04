@@ -1,6 +1,6 @@
 # vim: ft=dockerfile
 
-FROM centos:8
+FROM rockylinux:8
 
 RUN dnf makecache && \
     dnf install -y epel-release dnf-utils && \

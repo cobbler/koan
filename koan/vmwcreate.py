@@ -58,10 +58,8 @@ memsize = "%(MEMORY)s"
 # ide1:0.filename = "%(PATH_TO_ISO)s"
 
 
-
 def make_disk(disksize, image):
-    cmd = "vmware-vdiskmanager -c -a lsilogic -s %sGb -t 0 %s" % (
-        disksize, image)
+    cmd = "vmware-vdiskmanager -c -a lsilogic -s %sGb -t 0 %s" % (disksize, image)
     print("- %s" % cmd)
     rc = os.system(cmd)
     if rc != 0:
@@ -73,7 +71,7 @@ def make_vmx(path, vmdk_image, image_name, mac_address, memory):
         "VMDK_IMAGE": vmdk_image,
         "IMAGE_NAME": image_name,
         "MAC_ADDRESS": mac_address.lower(),
-        "MEMORY": memory
+        "MEMORY": memory,
     }
     templated = TEMPLATE % template_params
     fd = open(path, "w+")
@@ -98,22 +96,24 @@ def start_vm(vmx_file):
         raise VirtCreateException("vm start failed")
 
 
-def start_install(name=None,
-                  ram=None,
-                  disks=None,
-                  mac=None,
-                  uuid=None,
-                  extra=None,
-                  vcpus=None,
-                  profile_data=None,
-                  arch=None,
-                  gfx_type=None,
-                  fullvirt=True,
-                  bridge=None,
-                  virt_type=None,
-                  virt_auto_boot=False,
-                  qemu_driver_type=None,
-                  qemu_net_type=None):
+def start_install(
+    name=None,
+    ram=None,
+    disks=None,
+    mac=None,
+    uuid=None,
+    extra=None,
+    vcpus=None,
+    profile_data=None,
+    arch=None,
+    gfx_type=None,
+    fullvirt=True,
+    bridge=None,
+    virt_type=None,
+    virt_auto_boot=False,
+    qemu_driver_type=None,
+    qemu_net_type=None,
+):
 
     if "file" in profile_data:
         raise InfoException("vmware does not work with --image yet")
@@ -143,8 +143,7 @@ def start_install(name=None,
         os.makedirs(VMX_DIR)
 
     if len(disks) != 1:
-        raise VirtCreateException(
-            "vmware support is limited to 1 virtual disk")
+        raise VirtCreateException("vmware support is limited to 1 virtual disk")
 
     disksize = disks[0][1]
 

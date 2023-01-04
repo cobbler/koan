@@ -3,22 +3,22 @@ name: Building Koan packages
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
-  build-centos8-rpms:
-    runs-on: ubuntu-20.04
+  build-rockylinux-rpms:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build a CentOS 8 Package
+      - name: Build a RockyLinux 8 Package
         shell: 'script -q -e -c "bash {0}"'
         run: |
-          ./docker/rpms/build-and-install-rpms.sh el8 docker/rpms/CentOS_8/CentOS8.dockerfile
+          ./docker/rpms/build-and-install-rpms.sh rl8 docker/rpms/RockyLinux8/RockyLinux8.dockerfile
   build-fedora34-rpms:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build a Fedora 34 Package
@@ -26,7 +26,7 @@ jobs:
         run: |
           ./docker/rpms/build-and-install-rpms.sh fc34 docker/rpms/Fedora_34/Fedora34.dockerfile
   build-opensuse-leap-rpms:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build a openSUSE Leap 15.3 Package
@@ -34,7 +34,7 @@ jobs:
         run: |
           ./docker/rpms/build-and-install-rpms.sh opensuse-leap docker/rpms/openSUSE_Leap_15.3/openSUSE_Leap_15.3.dockerfile
   build-opensuse-tumbleweed-rpms:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build a openSUSE Tumbleweed Package
@@ -42,7 +42,7 @@ jobs:
         run: |
           ./docker/rpms/build-and-install-rpms.sh opensuse-tumbleweed docker/rpms/openSUSE_Tumbleweed/openSUSE_TW.dockerfile
   build-debian-debs:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build a Debian 10 Package

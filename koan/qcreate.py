@@ -31,8 +31,8 @@ from koan import virtinstall
 
 
 def start_install(*args, **kwargs):
-    if 'arch' in kwargs.keys():
-        kwargs['arch'] = None  # use host arch for kvm acceleration
+    if "arch" in kwargs.keys():
+        kwargs["arch"] = None  # use host arch for kvm acceleration
     # Use kvm acceleration if available
     try:
         import libvirt
@@ -43,12 +43,14 @@ def start_install(*args, **kwargs):
     capabilities = parseString(conn.getCapabilities())
     for domain in capabilities.getElementsByTagName("domain"):
         attributes = dict(domain.attributes.items())
-        if 'type' in attributes.keys() and attributes['type'] == 'kvm':
-            kwargs['virt_type'] = 'kvm'
+        if "type" in attributes.keys() and attributes["type"] == "kvm":
+            kwargs["virt_type"] = "kvm"
             break
 
     virtinstall.create_image_file(*args, **kwargs)
     cmd = virtinstall.build_commandline("qemu:///system", *args, **kwargs)
-    rc, result, result_stderr = utils.subprocess_get_response(cmd, ignore_rc=True, get_stderr=True)
+    rc, result, result_stderr = utils.subprocess_get_response(
+        cmd, ignore_rc=True, get_stderr=True
+    )
     if rc != 0:
         raise InfoException("command failed (%s): %s %s" % (rc, result, result_stderr))

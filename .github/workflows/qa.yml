@@ -3,22 +3,27 @@ name: Linting Koan
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
-  run_qa:
-    runs-on: ubuntu-20.04
-    container: registry.opensuse.org/opensuse/tumbleweed:latest
+  pyflakes:
+    name: pyflakes formatter
+    runs-on: ubuntu-latest
     steps:
-      - name: Install pre reqs
-        run: zypper -n in git tar
       - uses: actions/checkout@v2
-      - name: Install package deps
-        run: zypper -n in --no-recommends python36-wheel python36-pip python36-libvirt-python make
-      - name: Install dependencies
-        run: pip3 install .[lint,test]
-      - name: Run Linters
-        run: make qa
+      - name: Install deps
+        run: sudo apt-get install -y python3-pyflakes
+      - name: Run pyflakes
+        run: pyflakes3 *.py bin/koan bin/cobbler-register koan/*.py
+  black:
+    name: black formatter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: psf/black@stable
+        with:
+          options: "--check --safe --verbose"
+          version: "22.3.0"

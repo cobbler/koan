@@ -22,7 +22,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 
 class KoanException(Exception):
-
     def __init__(self, value, *args):
         if args:
             self.value = value % args

@@ -43,35 +43,31 @@ def main():
         "--server",
         dest="server",
         default=os.environ.get("COBBLER_SERVER", ""),
-        help="attach to this cobbler server"
+        help="attach to this cobbler server",
     )
     p.add_option(
         "-f",
         "--fqdn",
         dest="hostname",
         default="",
-        help="override the discovered hostname"
+        help="override the discovered hostname",
     )
     p.add_option(
-        "-p",
-        "--port",
-        dest="port",
-        default="80",
-        help="cobbler port (default 80)"
+        "-p", "--port", dest="port", default="80", help="cobbler port (default 80)"
     )
     p.add_option(
         "-P",
         "--profile",
         dest="profile",
         default="",
-        help="assign this profile to this system"
+        help="assign this profile to this system",
     )
     p.add_option(
         "-b",
         "--batch",
         dest="batch",
         action="store_true",
-        help="indicates this is being run from a script"
+        help="indicates this is being run from a script",
     )
 
     (options, args) = p.parse_args()
@@ -102,7 +98,6 @@ def main():
 
 
 class Register:
-
     def __init__(self):
         """
         Constructor.  Arguments will be filled in by optparse...
@@ -137,12 +132,11 @@ class Register:
         else:
             hostname = socket.getfqdn()
             if hostname == "localhost.localdomain":
-                if self.hostname == '*AUTO*':
+                if self.hostname == "*AUTO*":
                     hostname = ""
                     sysname = str(time.time())
                 else:
-                    raise InfoException(
-                        "must specify --fqdn, could not discover")
+                    raise InfoException("must specify --fqdn, could not discover")
             if sysname == "":
                 sysname = hostname
 
@@ -160,13 +154,12 @@ class Register:
                 matched_profile = True
                 break
 
-        reg_info['name'] = sysname
-        reg_info['profile'] = self.profile
-        reg_info['hostname'] = hostname
+        reg_info["name"] = sysname
+        reg_info["profile"] = self.profile
+        reg_info["hostname"] = hostname
 
         if not matched_profile:
-            raise InfoException(
-                "no such remote profile, see 'koan --list-profiles'")
+            raise InfoException("no such remote profile, see 'koan --list-profiles'")
 
         if not self.batch:
             self.conn.register_new_system(reg_info)
@@ -174,8 +167,7 @@ class Register:
         else:
             try:
                 self.conn.register_new_system(reg_info)
-                print("- registration successful, new system name: %s"
-                      % sysname)
+                print("- registration successful, new system name: %s" % sysname)
             except:
                 traceback.print_exc()
                 print("- registration failed, ignoring because of --batch")

@@ -15,17 +15,17 @@ RUN zypper install -y          \
     make                       \
     rpm-build                  \
     virt-install               \
-    python38                   \
-    python38-base              \
-    python38-devel             \
-    python38-wheel             \
-    python38-build             \
-    python38-setuptools        \
-    python38-pip               \
-    python38-libvirt-python    \
-    python38-distro            \
-    python38-netifaces         \
-    python38-Sphinx
+    python3                    \
+    python3-base               \
+    python3-devel              \
+    python3-wheel              \
+    python3-build              \
+    python3-setuptools         \
+    python3-pip                \
+    python3-libvirt-python     \
+    python3-distro             \
+    python3-netifaces          \
+    python3-Sphinx
 
 # Build RPMs
 COPY . /usr/src/koan

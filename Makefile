@@ -2,7 +2,7 @@
 TOP_DIR:=$(shell pwd)
 DESTDIR=/
 PYFLAKES = $(shell { command -v pyflakes-3 || command -v pyflakes3 || command -v pyflakes; }  2> /dev/null)
-PYCODESTYLE := $(shell { command -v pycodestyle-3 || command -v pycodestyle3 || command -v pycodestyle; } 2> /dev/null)
+BLACK := $(shell { command -v black; } 2> /dev/null)
 
 
 all: clean build
@@ -39,12 +39,11 @@ else
 	@${PYFLAKES} *.py bin/koan bin/cobbler-register koan/*.py
 endif
 
-ifeq ($(strip $(PYCODESTYLE)),)
-	@echo "No pycodestyle found"
+ifeq ($(strip $(BLACK)),)
+	@echo "No black found"
 else
-	@echo "checking: pycodestyle"
-	@${PYCODESTYLE} -r --ignore E303,E501,W504,E722 \
-        *.py bin/koan bin/cobbler-register koan/*.py
+	@echo "checking: black"
+	@${BLACK} --verbose --safe .
 endif
 
 authors:
