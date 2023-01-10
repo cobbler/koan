@@ -1,4 +1,3 @@
-
 TOP_DIR:=$(shell pwd)
 DESTDIR=/
 PYFLAKES = $(shell { command -v pyflakes-3 || command -v pyflakes3 || command -v pyflakes; }  2> /dev/null)
@@ -55,7 +54,11 @@ sdist: authors
 	@echo "creating: sdist"
 	@python3 setup.py sdist > /dev/null
 
-release: clean qa authors sdist doc
+bdist: authors
+	@echo "creating: bdist"
+	@python3 setup.py sdist bdist_wheel
+
+release: clean qa authors sdist bdist doc
 	@echo "creating: release artifacts"
 	@mkdir release
 	@cp dist/*.gz release/
