@@ -1,6 +1,6 @@
 # vim: ft=dockerfile
 
-FROM fedora:34
+FROM fedora:36
 
 RUN dnf makecache
 
@@ -11,6 +11,8 @@ RUN dnf install -y           \
     rpm-build                \
     virt-install             \
     python3-devel            \
+    python3-wheel            \
+    python3-build            \
     python3-setuptools       \
     python3-sphinx           \
     python3-sphinx_rtd_theme \

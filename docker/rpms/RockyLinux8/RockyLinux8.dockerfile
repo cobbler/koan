@@ -24,6 +24,7 @@ RUN touch /var/lib/rpm/* &&   \
     virt-install              \
     python3-devel             \
     python3-setuptools        \
+    python3-wheel             \
     python3-sphinx            \
     python3-distro            \
     python3-netifaces         \
