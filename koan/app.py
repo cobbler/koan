@@ -1486,7 +1486,12 @@ EOF
             elif breed is not None and breed == "debian" or breed == "ubuntu":
                 kextra = "auto-install/enable=true priority=critical url=" + autoinst
             else:
-                kextra = "ks=" + autoinst
+                if (os_version[0:4] == "rhel" and int(os_version[4:]) <= 6) or (
+                    os_version[0:6] == "fedora" and int(os_version[6:]) <= 16
+                ):
+                    kextra = "ks=" + autoinst
+                else:
+                    kextra = "inst.ks=" + autoinst
 
         if options != "":
             kextra = kextra + " " + options
@@ -1541,7 +1546,12 @@ EOF
             if breed == "suse":
                 hashv["netdevice"] = self.static_interface
             else:
-                hashv["ksdevice"] = self.static_interface
+                if (os_version[0:4] == "rhel" and int(os_version[4:]) <= 6) or (
+                    os_version[0:6] == "fedora" and int(os_version[6:]) <= 16
+                ):
+                    hashv["ksdevice"] = self.static_interface
+                else:
+                    hashv["inst.ksdevice"] = self.static_interface
             newdracut = False
             if breed == "redhat" and (
                 (os_version[0:4] == "rhel" and int(os_version[4:]) >= 7)
@@ -1598,7 +1608,12 @@ EOF
                     hashv["dns"] = ",".join(dns)
 
         if replace_self and self.embed_autoinst:
-            hashv["ks"] = "file:ks.cfg"
+            if (os_version[0:4] == "rhel" and int(os_version[4:]) <= 6) or (
+                os_version[0:6] == "fedora" and int(os_version[6:]) <= 16
+            ):
+                hashv["ks"] = "file:ks.cfg"
+            else:
+                hashv["inst.ks"] = "file:ks.cfg"
 
         if self.kopts_override is not None:
             hash2 = utils.input_string_or_dict(self.kopts_override)
