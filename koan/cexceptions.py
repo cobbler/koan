@@ -47,8 +47,11 @@ class InfoException(Exception):
     Custom exception for tracking of fatal errors.
     """
 
-    def __init__(self, value, **args):
-        self.value = value % args
+    def __init__(self, value, *args):
+        if args:
+            self.value = value % args
+        else:
+            self.value = value
         self.from_koan = 1
 
     def __str__(self):
