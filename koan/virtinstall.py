@@ -456,7 +456,10 @@ def build_commandline(
         cmd += "--disk path=%s,device=floppy " % floppy
 
     for bridge, mac in nics:
-        cmd += "--network bridge=%s" % bridge
+        if bridge == "none":
+            cmd += "--network none"
+        else:
+            cmd += "--network bridge=%s" % bridge
         if net_model and not disable_net_model:
             cmd += ",model=%s" % net_model
         if mac:
