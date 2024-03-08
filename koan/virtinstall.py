@@ -146,9 +146,8 @@ def _sanitize_nics(nics, bridge, profile_bridge, network_count):
         if not bridge:
             intf_bridge = intf["virt_bridge"]
             if intf_bridge == "":
-                if profile_bridge == "":
-                    raise InfoException("virt-bridge setting is not defined in cobbler")
-                intf_bridge = profile_bridge
+                if profile_bridge != "":
+                    intf_bridge = profile_bridge
 
         else:
             if bridge.find(",") == -1:
@@ -157,7 +156,8 @@ def _sanitize_nics(nics, bridge, profile_bridge, network_count):
                 bridges = bridge.split(",")
                 intf_bridge = bridges[counter]
 
-        ret.append((intf_bridge, mac))
+        if intf_bridge != "":
+            ret.append((intf_bridge, mac))
 
     return ret
 
@@ -308,8 +308,9 @@ def build_commandline(
             bridge = profile_data["virt_bridge"]
 
         if bridge == "":
-            raise InfoException("virt-bridge setting is not defined in cobbler")
-        nics = [(bridge, None)]
+            nics = [("none", None)]
+        else:
+            nics = [(bridge, None)]
 
     kernel = profile_data.get("kernel_local")
     initrd = profile_data.get("initrd_local")
