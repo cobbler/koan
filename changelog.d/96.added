@@ -1,0 +1,1 @@
+Allow setting virt-bridge to "none" or empty to disable all network configuration
