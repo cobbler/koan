@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Install pre reqs
         run: zypper -n in git tar
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install package deps
         run: zypper -n in --no-recommends python3-devel python3-wheel python3-pip python3-libvirt-python python3-codecov gcc make
       - name: Install dependencies
