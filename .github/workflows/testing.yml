@@ -19,7 +19,7 @@ jobs:
       - name: Install package deps
         run: zypper -n in --no-recommends python3-devel python3-wheel python3-pip python3-libvirt-python python3-codecov gcc make
       - name: Install dependencies
-        run: pip3 install .[lint,test]
+        run: pip3 install --break-system-packages .[lint,test]
       - name: Run tests
         run: pytest --cov=./koan
       - name: Upload report to codecov
