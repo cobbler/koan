@@ -69,14 +69,17 @@ try:
             supported_variants.add(variant)
 except:
     try:
-        # This will fail on EL7+, gobble stderr to avoid confusing error
-        # messages from being output
+        # Gobble stderr to avoid confusing error messages from being output if this fails
+        # This method has the advantage over osinfo-query of gettting aliases like debianbookworm
         rc, response, stderr_respose = utils.subprocess_get_response(
             shlex.split("virt-install --os-variant list"), False, True
         )
         variants = response.split("\n")
         for variant in variants:
-            supported_variants.add(variant.split()[0])
+            # This strips out trailing comments after the list
+            if re.match(r"^[a-z]", variant):
+                # Each line can be a , separated list of aliases
+                supported_variants.update(variant.split(', '))
     except:
         try:
             # maybe on newer os using osinfo-query?
