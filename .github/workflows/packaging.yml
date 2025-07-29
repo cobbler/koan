@@ -20,7 +20,7 @@ jobs:
         run: |
           ./docker/rpms/build-and-install-rpms.sh rl8 docker/rpms/RockyLinux8/RockyLinux8.dockerfile
       - name: Archive RPMs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: rpms-rockylinux
           path: |
@@ -34,7 +34,7 @@ jobs:
         run: |
           ./docker/rpms/build-and-install-rpms.sh fc36 docker/rpms/Fedora/Fedora.dockerfile
       - name: Archive RPMs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: rpms-fedora
           path: |
@@ -53,7 +53,7 @@ jobs:
         run: |
           file-rename -v -d -e 's/koan-(\d+\.\d+\.\d+)-1\.(\w+)\.rpm/koan-$1-1.leap.$2.rpm/' rpm-build/*.rpm
       - name: Archive RPMs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: rpms-opensuse-leap
           path: |
@@ -72,7 +72,7 @@ jobs:
         run: |
           file-rename -v -d -e 's/koan-(\d+\.\d+\.\d+)-1\.(\w+)\.rpm/koan-$1-1.tw.$2.rpm/' rpm-build/*.rpm
       - name: Archive RPMs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: rpms-opensuse-tumbleweed
           path: |
@@ -86,7 +86,7 @@ jobs:
         run: |
           ./docker/debs/build-and-install-debs.sh deb10 docker/debs/debian/Debian10.dockerfile
       - name: Archive DEBs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: debs-debian
           path: |
@@ -123,7 +123,7 @@ jobs:
       - name: Show tree
         run: tree
       - name: Archive Wheel
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: wheel
           path: |
@@ -142,7 +142,7 @@ jobs:
     ]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         name: Download all built artifacts
         with:
           path: artifacts
