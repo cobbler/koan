@@ -24,11 +24,11 @@ clean:
 	@rm -f *.tmp
 	@rm -f *.log
 	@echo "cleaning: documentation"
-	@cd docs; make clean > /dev/null 2>&1
+	@cd docs; make clean
 
 doc:
 	@echo "creating: documentation"
-	@cd docs; make html > /dev/null 2>&1
+	@cd docs; make html
 
 qa:
 ifeq ($(strip $(PYFLAKES)),)
@@ -52,7 +52,7 @@ authors:
 
 sdist: authors
 	@echo "creating: sdist"
-	@python3 setup.py sdist > /dev/null
+	@python3 setup.py sdist
 
 bdist: authors
 	@echo "creating: bdist"
