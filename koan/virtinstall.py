@@ -89,10 +89,8 @@ except:
             variants = response.split("\n")
             for variant in variants:
                 supported_variants.add(variant.strip())
-            # osinfo-query does not list virtio26, add it here for fallback
-            supported_variants.add("virtio26")
         except:
-            # okay, probably on old os and we'll just use generic26
+            # okay, probably on old os and we'll just use generic
             pass
 
 
@@ -407,13 +405,13 @@ def build_commandline(
                 suse_version_re = re.compile(r"^(opensuse[0-9]+)\.([0-9]+)$")
                 if suse_version_re.match(os_version):
                     os_version = suse_version_re.match(os_version).groups()[0]
-                elif os_version == "generic26":
+                elif os_version == "generic":
                     os_version = "sles11"
                 elif os_version.endswith("generic"):
                     os_version = os_version.replace("generic", "")
 
             # make sure virt-install knows about our os_version,
-            # otherwise default it to virtio26 or generic26
+            # otherwise default it to generic
             # found = False
             if os_version in supported_variants:
                 pass  # os_version is correct
@@ -424,7 +422,7 @@ def build_commandline(
                 # compatibility in virt-install grumble grumble.
                 os_version = os_version + ".0"
             else:
-                os_version = "generic26"
+                os_version = "generic"
                 print(
                     "- warning: virt-install doesn't know this os_version, defaulting to %s"
                     % os_version
