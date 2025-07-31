@@ -54,7 +54,7 @@ DISPLAY_PARAMS = [
     "distro",
     "profile",
     "autoinst",
-    "ks_meta",
+    "autoinstall_meta",
     "install_tree",
     "kernel",
     "initrd",
@@ -829,27 +829,13 @@ class Koan:
 
     def get_install_tree_from_profile_data(self, profile_data):
         """
-        Split ks_meta to obtain the tree path. Generate the install_tree
-           using the http_server and the tree obtained from splitting ks_meta
+        Get the tree path from autoinstall_meta. Generate the install_tree
+           using the http_server and the tree.
 
         """
 
         try:
-            tree = profile_data["ks_meta"].split()
-            # Ensure we only take the tree in case ks_meta args are passed
-            # First check for tree= in ks_meta arguments
-            meta_re = re.compile("tree=")
-            tree_found = ""
-            for entry in tree:
-                if meta_re.match(entry):
-                    tree_found = entry.split("=")[-1]
-                    break
-
-            if tree_found == "":
-                # assume tree information as first argument
-                tree = tree.split()[0]
-            else:
-                tree = tree_found
+            tree = profile_data["autoinstall_meta"]["tree"]
             tree_re = re.compile("(https?|ftp|nfs):")
             # Next check for installation tree on remote server
             if tree_re.match(tree):

@@ -35,7 +35,7 @@ def start_install(*args, **kwargs):
             % (vzcfgvalidate, vzctl)
         )
 
-    # params, that can be defined/redefined through ks_meta
+    # params, that can be defined/redefined through autoinstall_meta
     keys_for_meta = [
         "KMEMSIZE",  # "14372700:14790164",
         "LOCKEDPAGES",  # "2048:2048",
@@ -82,26 +82,25 @@ def start_install(*args, **kwargs):
     CTID = None
     vz_meta = {}
 
-    # get all vz_ parameters from ks_meta
-    for item in kwargs["profile_data"]["ks_meta"].split():
-        var = item.split("=")
-        if var[0].startswith("vz_"):
-            vz_meta[var[0].replace("vz_", "").upper()] = var[1]
+    # get all vz_ parameters from autoinstall_meta
+    for key, value in kwargs["profile_data"]["autoinstall_meta"]:
+        if key.startswith("vz_"):
+            vz_meta[key.replace("vz_", "").upper()] = value
 
     if "CTID" in vz_meta and vz_meta["CTID"]:
         try:
             CTID = int(vz_meta["CTID"])
             del vz_meta["CTID"]
         except ValueError:
-            print("Invalid CTID in ks_meta. Exiting...")
+            print("Invalid CTID in autoinstall_meta. Exiting...")
             return 1
     else:
-        raise OVZCreateException('Mandatory "vz_ctid" parameter not found in ks_meta!')
+        raise OVZCreateException('Mandatory "vz_ctid" parameter not found in autoinstall_meta!')
 
     confiname = "/etc/vz/conf/%d.conf" % CTID
 
     # this is the minimal config. we can define additional parameters or
-    # override some of them in ks_meta
+    # override some of them in autoinstall_meta
     min_config = {
         "PHYSPAGES": "0:%sM" % physpages,
         "SWAPPAGES": "0:1G",
