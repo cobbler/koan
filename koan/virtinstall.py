@@ -79,7 +79,7 @@ except:
             # This strips out trailing comments after the list
             if re.match(r"^[a-z]", variant):
                 # Each line can be a , separated list of aliases
-                supported_variants.update(variant.split(', '))
+                supported_variants.update(variant.split(", "))
     except:
         try:
             # maybe on newer os using osinfo-query?

@@ -95,7 +95,9 @@ def start_install(*args, **kwargs):
             print("Invalid CTID in autoinstall_meta. Exiting...")
             return 1
     else:
-        raise OVZCreateException('Mandatory "vz_ctid" parameter not found in autoinstall_meta!')
+        raise OVZCreateException(
+            'Mandatory "vz_ctid" parameter not found in autoinstall_meta!'
+        )
 
     confiname = "/etc/vz/conf/%d.conf" % CTID
 
