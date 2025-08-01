@@ -3,8 +3,8 @@
 FROM registry.opensuse.org/opensuse/leap:15.6
 
 # ENV Variables we are using.
-ENV container docker
-ENV DISTRO SUSE
+ENV container=docker
+ENV DISTRO=SUSE
 
 # Update Leap to most current packages
 RUN zypper update -y

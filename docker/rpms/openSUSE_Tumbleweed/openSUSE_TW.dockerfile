@@ -3,8 +3,8 @@
 FROM registry.opensuse.org/opensuse/tumbleweed:latest
 
 # ENV Variables we are using.
-ENV container docker
-ENV DISTRO SUSE
+ENV container=docker
+ENV DISTRO=SUSE
 
 # Runtime & dev dependencies
 RUN zypper install -y          \
