@@ -2,7 +2,7 @@ TOP_DIR:=$(shell pwd)
 DESTDIR=/
 PYFLAKES = $(shell { command -v pyflakes-3 || command -v pyflakes3 || command -v pyflakes; }  2> /dev/null)
 BLACK := $(shell { command -v black; } 2> /dev/null)
-
+PYTHON=/usr/bin/python3
 
 all: clean build
 
@@ -52,11 +52,11 @@ authors:
 
 sdist: authors
 	@echo "creating: sdist"
-	@python3 setup.py sdist
+	${PYTHON} setup.py sdist
 
 bdist: authors
 	@echo "creating: bdist"
-	@python3 setup.py sdist bdist_wheel
+	${PYTHON} setup.py sdist bdist_wheel
 
 release: clean qa authors sdist bdist doc
 	@echo "creating: release artifacts"
@@ -68,18 +68,18 @@ nosetests:
 	PYTHONPATH=./koan/ nosetests -v -w tests/cli/ 2>&1 | tee test.log
 
 build:
-	python3 setup.py build -f
+	${PYTHON} setup.py build -f
 
 # Debian/Ubuntu requires an additional parameter in setup.py
 install: build
 	if [ -e /etc/debian_version ]; then \
-		python3 setup.py install --root $(DESTDIR) -f --install-layout=deb; \
+		${PYTHON} setup.py install --root $(DESTDIR) -f --install-layout=deb; \
 	else \
-		python3 setup.py install --root $(DESTDIR) -f; \
+		${PYTHON} setup.py install --root $(DESTDIR) -f; \
 	fi
 
 savestate:
-	python3 setup.py -v savestate --root $(DESTDIR); \
+	${PYTHON} setup.py -v savestate --root $(DESTDIR); \
 
 rpms: release
 	mkdir -p rpm-build
