@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build a RockyLinux 8 Package
+      - name: Build a RockyLinux 9 Package
         shell: 'script -q -e -c "bash {0}"'
         run: |
-          ./docker/rpms/build-and-install-rpms.sh rl8 docker/rpms/RockyLinux8/RockyLinux8.dockerfile
+          ./docker/rpms/build-and-install-rpms.sh rl9 docker/rpms/RockyLinux9/RockyLinux9.dockerfile
       - name: Archive RPMs
         uses: actions/upload-artifact@v4
         with:

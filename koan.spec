@@ -3,7 +3,7 @@
 #
 # Supported/tested build targets:
 # - Fedora: 30, 31, Rawhide
-# - CentOS + EPEL: 7, 8
+# - CentOS + EPEL: 9
 # - SLE: 11sp4, 12sp3, 15sp1
 # - openSUSE: Leap 15.6, Tumbleweed
 # - Debian: 9, 10
