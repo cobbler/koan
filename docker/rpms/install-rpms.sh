@@ -2,8 +2,7 @@
 # Utility script to run Docker container without building the RPMs,
 # just install them. So make sure they are in rpm-build dir!
 
-if [ "$1" == "--with-tests" ]
-then
+if [ "$1" == "--with-tests" ]; then
     RUN_TESTS=true
     shift
 else
@@ -23,8 +22,7 @@ docker exec -it koan bash -c 'rpm -Uvh rpm-build/koan-*.noarch.rpm'
 #echo "==> Show Koan version ..."
 #docker exec -it koan bash -c 'koan version'
 
-if $RUN_TESTS
-then
+if $RUN_TESTS; then
     echo "==> Running tests ..."
     docker exec -it koan bash -c 'pip3 install coverage distro setuptools sphinx requests netifaces'
     docker exec -it koan bash -c 'pip3 install pyflakes pycodestyle pytest pytest-cov codecov'
