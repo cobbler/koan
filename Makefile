@@ -78,9 +78,6 @@ install: build
 		${PYTHON} -m build --root $(DESTDIR) -f; \
 	fi
 
-savestate:
-	${PYTHON} setup.py -v savestate --root $(DESTDIR); \
-
 rpms: release
 	mkdir -p rpm-build
 	cp dist/*.gz rpm-build/
