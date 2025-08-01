@@ -1,6 +1,6 @@
 # vim: ft=dockerfile
 
-FROM registry.opensuse.org/opensuse/leap:15.3
+FROM registry.opensuse.org/opensuse/leap:15.6
 
 # ENV Variables we are using.
 ENV container docker
@@ -19,7 +19,7 @@ RUN zypper install -y         \
     python3-base              \
     python3-devel             \
     python3-wheel             \
-    #python3-build             \ <-- Not available on Leap 15.3
+    #python3-build             \ <-- Not available on Leap 15.6
     python3-setuptools        \
     python3-pip               \
     python3-libvirt-python    \
