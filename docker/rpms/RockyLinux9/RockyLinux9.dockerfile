@@ -1,10 +1,11 @@
 # vim: ft=dockerfile
 
-FROM rockylinux:8
+FROM rockylinux:9
 
 RUN dnf makecache && \
     dnf install -y epel-release dnf-utils && \
-    dnf config-manager --set-enabled powertools && \
+    dnf config-manager --set-enabled crb && \
+    dnf config-manager --set-enabled highavailability && \
     dnf makecache
 
 # overlay2 bug with yum/dnf
@@ -22,10 +23,13 @@ RUN touch /var/lib/rpm/* &&   \
     rpm-build                 \
     epel-rpm-macros           \
     virt-install              \
+    fdupes                    \
     python3-devel             \
+    python3-build             \
     python3-setuptools        \
     python3-wheel             \
     python3-sphinx            \
+    python3-sphinx_rtd_theme  \
     python3-distro            \
     python3-netifaces         \
     python3-libvirt

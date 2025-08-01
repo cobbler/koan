@@ -2,12 +2,12 @@
 
 FROM debian:11
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 # TERM=screen is fairly neutral and works with xterm for example, for others
 # you might need to pass -e TERM=<terminal>, like rxvt-unicode.
-ENV TERM screen
-ENV OSCODENAME bullseye
+ENV TERM=screen
+ENV OSCODENAME=bullseye
 
 # Add repo for debbuild and install all packages required
 # hadolint ignore=DL3008,DL3015,DL4006
@@ -21,6 +21,7 @@ RUN apt-get update -qq && \
     debbuild-macros \
     wget \
     pycodestyle \
+    python3-dev \
     python3-pyflakes \
     python3-coverage \
     python3-wheel   \

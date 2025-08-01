@@ -3,8 +3,7 @@
 
 set -euo pipefail
 
-if [ "$1" == "--with-tests" ]
-then
+if [ "$1" == "--with-tests" ]; then
     RUN_TESTS=true
     shift
 else
@@ -36,8 +35,7 @@ docker exec -it koan bash -c 'dpkg -i deb-build/DEBS/all/koan*.deb'
 #echo "==> Wait 5 sec. and show Koan version ..."
 #docker exec -it koan bash -c 'koan'
 
-if $RUN_TESTS
-then
+if $RUN_TESTS; then
     # Almost all of these requirement are already satisfied in the Dockerfiles!
     echo "==> Running tests ..."
     docker exec -it koan bash -c 'pip3 install coverage distro setuptools sphinx netaddr distro'

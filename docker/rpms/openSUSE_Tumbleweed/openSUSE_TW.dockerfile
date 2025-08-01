@@ -3,11 +3,8 @@
 FROM registry.opensuse.org/opensuse/tumbleweed:latest
 
 # ENV Variables we are using.
-ENV container docker
-ENV DISTRO SUSE
-
-# Update Leap to most current packages
-RUN zypper dup -y
+ENV container=docker
+ENV DISTRO=SUSE
 
 # Runtime & dev dependencies
 RUN zypper install -y          \
@@ -15,6 +12,7 @@ RUN zypper install -y          \
     make                       \
     rpm-build                  \
     virt-install               \
+    fdupes                     \
     python3                    \
     python3-base               \
     python3-devel              \
@@ -25,7 +23,8 @@ RUN zypper install -y          \
     python3-libvirt-python     \
     python3-distro             \
     python3-netifaces          \
-    python3-Sphinx
+    python3-Sphinx             \
+    python3-sphinx_rtd_theme
 
 # Build RPMs
 COPY . /usr/src/koan
