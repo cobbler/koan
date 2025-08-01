@@ -52,11 +52,11 @@ authors:
 
 sdist: authors
 	@echo "creating: sdist"
-	${PYTHON} setup.py sdist
+	${PYTHON} -m build --sdist
 
 bdist: authors
 	@echo "creating: bdist"
-	${PYTHON} setup.py sdist bdist_wheel
+	${PYTHON} -m build
 
 release: clean qa authors sdist bdist doc
 	@echo "creating: release artifacts"
@@ -68,14 +68,14 @@ nosetests:
 	PYTHONPATH=./koan/ nosetests -v -w tests/cli/ 2>&1 | tee test.log
 
 build:
-	${PYTHON} setup.py build -f
+	${PYTHON} -m pip wheel -f .
 
 # Debian/Ubuntu requires an additional parameter in setup.py
 install: build
 	if [ -e /etc/debian_version ]; then \
-		${PYTHON} setup.py install --root $(DESTDIR) -f --install-layout=deb; \
+		${PYTHON} -m build --root $(DESTDIR) -f --install-layout=deb; \
 	else \
-		${PYTHON} setup.py install --root $(DESTDIR) -f; \
+		${PYTHON} -m build --root $(DESTDIR) -f; \
 	fi
 
 savestate:
