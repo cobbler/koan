@@ -21,6 +21,7 @@ RUN apt-get update -qq && \
     debbuild-macros \
     wget \
     pycodestyle \
+    python3-dev \
     python3-pyflakes \
     python3-coverage \
     python3-wheel   \

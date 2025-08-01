@@ -10,6 +10,7 @@ RUN dnf install -y           \
     make                     \
     rpm-build                \
     virt-install             \
+    fdupes                   \
     python3-devel            \
     python3-wheel            \
     python3-build            \
