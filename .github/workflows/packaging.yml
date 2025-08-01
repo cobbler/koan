@@ -111,6 +111,7 @@ jobs:
           python3-pip
           python3-libvirt-python
           python3-Sphinx
+          python3-sphinx_rtd_theme
           python3-netifaces
           tree
       - uses: actions/checkout@v4
