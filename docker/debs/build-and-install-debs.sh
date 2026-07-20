@@ -22,7 +22,7 @@ docker build -t "$IMAGE" -f "$DOCKERFILE" .
 # Build DEBs
 echo "==> Build packages ..."
 mkdir -p deb-build tmp
-docker run --rm -ti -v "$PWD/deb-build:/usr/src/koan/deb-build" -v "$PWD/tmp:/var/tmp" "$IMAGE"
+docker run --rm -ti -e SETUPTOOLS_SCM_PRETEND_VERSION -v "$PWD/deb-build:/usr/src/koan/deb-build" -v "$PWD/tmp:/var/tmp" "$IMAGE"
 
 # Launch container and install Koan
 echo "==> Start container ..."
