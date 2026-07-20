@@ -70,7 +70,7 @@ def main():
         help="indicates this is being run from a script",
     )
 
-    (options, args) = p.parse_args()
+    options, args = p.parse_args()
     # if not os.getuid() == 0:
     #    print("koan requires root access")
     #    return 3
@@ -84,7 +84,7 @@ def main():
         k.batch = options.batch
         k.run()
     except Exception as e:
-        (xa, xb, tb) = sys.exc_info()
+        xa, xb, tb = sys.exc_info()
         try:
             getattr(e, "from_koan")
             print(str(e)[1:-1])  # nice exception, no traceback needed

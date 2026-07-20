@@ -466,7 +466,7 @@ def libvirt_enable_autostart(domain_name):
 
 
 def make_floppy(autoinst):
-    (fd, floppy_path) = tempfile.mkstemp(suffix=".floppy", prefix="tmp", dir="/tmp")
+    fd, floppy_path = tempfile.mkstemp(suffix=".floppy", prefix="tmp", dir="/tmp")
     print("- creating floppy image at %s" % floppy_path)
 
     # create the floppy image file

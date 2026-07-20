@@ -291,7 +291,7 @@ def main():
         help="pass the --import argument to virt-install",
     )
 
-    (options, args) = p.parse_args()
+    options, args = p.parse_args()
 
     try:
         k = Koan()
@@ -342,7 +342,7 @@ def main():
         k.run()
 
     except Exception as e:
-        (xa, xb, tb) = sys.exc_info()
+        xa, xb, tb = sys.exc_info()
         try:
             getattr(e, "from_koan")
             print(str(e)[1:-1])  # nice exception, no traceback needed
@@ -562,7 +562,7 @@ class Koan:
         systems = self.get_data("systems")
         for system in systems:
             obj_name = system["name"]
-            for (obj_iname, obj_interface) in system["interfaces"].items():
+            for obj_iname, obj_interface in system["interfaces"].items():
                 mac = obj_interface["mac_address"].upper()
                 ip = obj_interface["ip_address"].upper()
                 for my_mac in mac_criteria:
@@ -804,12 +804,12 @@ class Koan:
                 if match:
                     cmd = match.group("urlcmd")
                     if cmd:
-                        (options, args) = url_parser.parse_args(shlex.split(cmd)[1:])
+                        options, args = url_parser.parse_args(shlex.split(cmd)[1:])
                         profile_data["install_tree"] = options.url
                         break
                     cmd = match.group("nfscmd")
                     if cmd:
-                        (options, args) = nfs_parser.parse_args(shlex.split(cmd)[1:])
+                        options, args = nfs_parser.parse_args(shlex.split(cmd)[1:])
                         profile_data["install_tree"] = "nfs://%s:%s" % (
                             options.server,
                             options.dir,
@@ -1054,7 +1054,7 @@ class Koan:
             autoinst = self.safe_load(profile_data, "autoinst")
             arch = self.safe_load(profile_data, "arch")
 
-            (make, version) = utils.os_release()
+            make, version = utils.os_release()
 
             if (
                 (make == "centos" and version < 7)
@@ -1117,20 +1117,20 @@ class Koan:
         try:
             shutil.rmtree("/var/spool/koan")
         except OSError as xxx_todo_changeme:
-            (err, msg) = xxx_todo_changeme.args
+            err, msg = xxx_todo_changeme.args
             if err != errno.ENOENT:
                 raise
         try:
             os.makedirs("/var/spool/koan")
         except OSError as xxx_todo_changeme1:
-            (err, msg) = xxx_todo_changeme1.args
+            err, msg = xxx_todo_changeme1.args
             if err != errno.EEXIST:
                 raise
 
         def after_download(self, profile_data):
             use_grubby = False
             use_grub2 = False
-            (make, version) = utils.os_release()
+            make, version = utils.os_release()
             if make in ["ubuntu", "debian"]:
                 if not os.path.exists("/usr/sbin/update-grub"):
                     raise InfoException("grub2 is not installed")
@@ -1620,7 +1620,7 @@ EOF
 
         arch = self.safe_load(pd, "arch", "x86")
         kextra = self.calc_kernel_args(pd)
-        (uuid, create_func, fullvirt, can_poll) = self.virt_choose(pd)
+        uuid, create_func, fullvirt, can_poll = self.virt_choose(pd)
 
         virtname = self.calc_virt_name(pd)
 
@@ -1720,10 +1720,8 @@ EOF
             assert imagecreate
         except:
             traceback.print_exc()
-            raise InfoException(
-                "no virtualization support available,\
-                install python-virtinst or virt-install?"
-            )
+            raise InfoException("no virtualization support available,\
+                install python-virtinst or virt-install?")
 
     def virt_choose(self, pd):
         fullvirt = False
