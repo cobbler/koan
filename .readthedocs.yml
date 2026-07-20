@@ -7,6 +7,8 @@ version: 2
 
 build:
   os: ubuntu-22.04
+  apt_packages:
+    - libvirt-dev
   tools:
     python: "3.11"
 
@@ -19,4 +21,7 @@ formats: all
 
 python:
   install:
-    - requirements: docs/requirements.rtd.txt
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs

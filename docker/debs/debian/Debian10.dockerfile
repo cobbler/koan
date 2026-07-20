@@ -34,6 +34,7 @@ RUN apt-get update -qq && \
     python3-pycodestyle \
     python3-pytest \
     python3-setuptools \
+    python3-setuptools-scm \
     python3-sphinx \
     python3-sphinx-rtd-theme \
     python3-tz \

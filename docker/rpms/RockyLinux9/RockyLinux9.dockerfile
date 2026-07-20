@@ -27,6 +27,7 @@ RUN touch /var/lib/rpm/* &&   \
     python3-devel             \
     python3-build             \
     python3-setuptools        \
+    python3-setuptools_scm    \
     python3-wheel             \
     python3-sphinx            \
     python3-sphinx_rtd_theme  \

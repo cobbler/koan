@@ -12,6 +12,7 @@ clean:
 	@rm -f *.pyc
 	@rm -f koan/*.pyc
 	@echo "cleaning: build artifacts"
+	@rm -f koan/_version.py
 	@rm -rf build
 	@rm -rf rpm-build/*
 	@rm -rf deb-build/*
@@ -28,6 +29,11 @@ clean:
 
 doc:
 	@echo "creating: documentation"
+	@if python3 -c "from importlib.metadata import version; from sys import exit; exit(0 if tuple(int(p) for p in version('setuptools_scm').split('.')[:2]) >= (8, 2) else 1)" 2>/dev/null; then \
+		${PYTHON} -m setuptools_scm --force-write-version-files > /dev/null; \
+	else \
+		${PYTHON} setup.py --version > /dev/null 2>&1; \
+	fi
 	@cd docs; make html
 
 qa:

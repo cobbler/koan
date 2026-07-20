@@ -2,4 +2,7 @@
 Main Koan package
 """
 
-__version__ = "3.0.2"
+try:
+    from koan._version import __version__
+except ImportError:
+    __version__ = None

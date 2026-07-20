@@ -1,1 +1,0 @@
-Fix parsing output of `virt-install --os-variant list`

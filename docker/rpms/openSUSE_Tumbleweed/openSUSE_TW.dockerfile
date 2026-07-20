@@ -19,6 +19,7 @@ RUN zypper install -y          \
     python3-wheel              \
     python3-build              \
     python3-setuptools         \
+    python3-setuptools_scm     \
     python3-pip                \
     python3-libvirt-python     \
     python3-distro             \

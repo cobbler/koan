@@ -15,6 +15,7 @@ RUN dnf install -y           \
     python3-wheel            \
     python3-build            \
     python3-setuptools       \
+    python3-setuptools_scm   \
     python3-sphinx           \
     python3-sphinx_rtd_theme \
     python3-distro           \

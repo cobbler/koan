@@ -22,6 +22,7 @@ RUN zypper install -y         \
     python311-wheel           \
     python311-build           \
     python311-setuptools      \
+    python311-setuptools_scm  \
     python311-pip             \
     python311-libvirt-python  \
     python311-distro          \

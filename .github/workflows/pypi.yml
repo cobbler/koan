@@ -8,8 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
+        # setuptools_scm needs full history (incl. tags) to derive the version
         # https://github.com/actions/checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
       - name: Install package deps
         run: >-
           sudo apt-get install -y
@@ -27,12 +30,6 @@ jobs:
           python3-sphinx-rtd-theme
       - name: Install dependencies
         run: pip3 install .[lint,test,docs]
-      - name: Fetch date for version bump
-        run: echo "new_version=$(date +'%Y%m%d%H%M')" >> $GITHUB_ENV
-      - name: Replace version in setup.py
-        if: startsWith(github.ref, 'refs/tags/v') != true && github.ref == 'refs/heads/main'
-        # Only replace the version if we are not on a tag and on main.
-        run: sed -i '/__version__ = "[0-9].[0-9].[0-9]/s/.$/.'${{ env.new_version }}'"/g' koan/__init__.py
       - name: Build a binary wheel and a source tarball
         run: make release
       - name: Publish distribution to Test PyPI

@@ -16,7 +16,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath(".."))
-
+import koan._version as version
 
 # -- Project configuration -----------------------------------------------------
 
@@ -24,10 +24,10 @@ project = "Koan"
 copyright = "2021, The Cobbler Project"
 author = "The Cobbler Project"
 
-# The short X.Y version
-version = "3.0"
 # The full version, including alpha/beta/rc tags
-release = "3.0.2"
+release = version.__version__
+# The short X.Y version
+version = ".".join(release.split(".")[:2])
 
 
 # -- General configuration ---------------------------------------------------

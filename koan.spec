@@ -52,6 +52,7 @@ BuildArch:      noarch
 BuildRequires:  python%{python3_pkgversion}-%{develsuffix}
 BuildRequires:  python%{python3_pkgversion}-pip
 BuildRequires:  python%{python3_pkgversion}-setuptools
+BuildRequires:  python%{python3_pkgversion}-setuptools_scm
 BuildRequires:  python%{python3_pkgversion}-wheel
 %if "%{_vendor}" != "debbuild"
 BuildRequires:  fdupes
@@ -88,6 +89,9 @@ pathfix.py -pni "%{__python} %{py_shbang_opts}" bin
 %endif
 
 %build
+if [ -d "%{_sourcedir}/%{name}-%{version}/.git" ]; then
+    cp -r %{_sourcedir}/%{name}-%{version}/.git %{_builddir}/%{name}-%{version}
+fi
 %if 0%{?fedora} || 0%{?rhel} || 0%{?suse_version}
 %pyproject_wheel
 %else

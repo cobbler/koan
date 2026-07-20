@@ -18,6 +18,7 @@ tags
 # Python Folders/Files
 venv/
 koan.egg-info
+koan/_version.py
 
 # docs
 docs/*.gz

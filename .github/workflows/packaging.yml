@@ -15,8 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
+        # setuptools_scm needs full history (incl. tags) to derive the version
         # https://github.com/actions/checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
       - name: Build a RockyLinux 9 Package
         shell: 'script -q -e -c "bash {0}"'
         run: |
@@ -32,8 +35,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
+        # setuptools_scm needs full history (incl. tags) to derive the version
         # https://github.com/actions/checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
       - name: Build a Fedora Package
         shell: 'script -q -e -c "bash {0}"'
         run: |
@@ -49,8 +55,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
+        # setuptools_scm needs full history (incl. tags) to derive the version
         # https://github.com/actions/checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
       - name: Install System dependencies
         run: sudo apt-get install -y rename
       - name: Build a openSUSE Leap 15 Package
@@ -71,8 +80,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
+        # setuptools_scm needs full history (incl. tags) to derive the version
         # https://github.com/actions/checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
       - name: Install System dependencies
         run: sudo apt-get install -y rename
       - name: Build a openSUSE Tumbleweed Package
@@ -93,8 +105,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
+        # setuptools_scm needs full history (incl. tags) to derive the version
         # https://github.com/actions/checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
       - name: Build a Debian 10 Package
         shell: 'script -q -e -c "bash {0}"'
         run: |
@@ -130,8 +145,11 @@ jobs:
           python3-netifaces
           tree
       - name: Checkout repository
+        # setuptools_scm needs full history (incl. tags) to derive the version
         # https://github.com/actions/checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
       - name: Mark directory as safe for Git
         run: git config --global --add safe.directory /__w/koan/koan
       - name: Install dependencies
@@ -162,8 +180,11 @@ jobs:
       ]
     steps:
       - name: Checkout repository
+        # setuptools_scm needs full history (incl. tags) to derive the version
         # https://github.com/actions/checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
       - name: Download all built artifacts
         # https://github.com/actions/download-artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
