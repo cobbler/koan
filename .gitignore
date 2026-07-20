@@ -20,6 +20,9 @@ venv/
 koan.egg-info
 koan/_version.py
 
+# Node Folders/Files (release tooling)
+node_modules/
+
 # docs
 docs/*.gz
 docs/*.html

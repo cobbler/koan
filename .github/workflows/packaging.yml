@@ -207,4 +207,3 @@ jobs:
             artifacts/rpms-rockylinux/*.rpm
             artifacts/wheel/*.tar.gz
             artifacts/wheel/*.whl
-          body_path: changelog/${{ env.RELEASE_VERSION }}.md
