@@ -85,7 +85,7 @@ system. For use with a boot-server configured with Cobbler.
 %autosetup -p1
 
 %if 0%{?fedora}%{?rhel}
-pathfix.py -pni "%{__python} %{py_shbang_opts}" bin
+%py3_shebang_fix bin
 %endif
 
 %build

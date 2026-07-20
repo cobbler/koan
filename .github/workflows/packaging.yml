@@ -26,12 +26,12 @@ jobs:
         env:
           KOAN_VERSION: ${{ inputs.version }}
         run: sed -ri 's/^(Version:\s*).*/\1'"$KOAN_VERSION"'/' koan.spec
-      - name: Build a RockyLinux 9 Package
+      - name: Build a RockyLinux 10 Package
         shell: 'script -q -e -c "bash {0}"'
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ inputs.version }}
         run: |
-          ./docker/rpms/build-and-install-rpms.sh rl9 docker/rpms/RockyLinux9/RockyLinux9.dockerfile
+          ./docker/rpms/build-and-install-rpms.sh rl10 docker/rpms/RockyLinux10/RockyLinux10.dockerfile
       - name: Archive RPMs
         # https://github.com/actions/upload-artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -58,7 +58,7 @@ jobs:
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ inputs.version }}
         run: |
-          ./docker/rpms/build-and-install-rpms.sh fc36 docker/rpms/Fedora/Fedora.dockerfile
+          ./docker/rpms/build-and-install-rpms.sh fc43 docker/rpms/Fedora/Fedora.dockerfile
       - name: Archive RPMs
         # https://github.com/actions/upload-artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
