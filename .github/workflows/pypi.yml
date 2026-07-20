@@ -30,6 +30,14 @@ jobs:
           python3-sphinx-rtd-theme
       - name: Install dependencies
         run: pip3 install .[lint,test,docs]
+      - name: Pin version without local part
+        # PyPI/TestPyPI reject uploads whose version has a local segment
+        # (e.g. "+gabcdef"), which setuptools_scm appends for non-tag commits.
+        # setuptools_scm is only a build-system requirement, so it isn't
+        # installed into this environment by the step above.
+        run: |
+          pip3 install setuptools_scm
+          echo "SETUPTOOLS_SCM_PRETEND_VERSION=$(python3 -m setuptools_scm | cut -d'+' -f1)" >> $GITHUB_ENV
       - name: Build a binary wheel and a source tarball
         run: make release
       - name: Publish distribution to Test PyPI
