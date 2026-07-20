@@ -102,7 +102,12 @@ python3 -m pip wheel --verbose --progress-bar off --disable-pip-version-check --
 %if 0%{?fedora} || 0%{?rhel} || 0%{?suse_version}
 %pyproject_install
 %else
-python3 -m pip install --verbose --progress-bar off --disable-pip-version-check --root %{buildroot} --no-compile --ignore-installed --no-deps --no-index .
+# Install the wheel %build already produced instead of rebuilding from source:
+# building from "." here would spin up pip's isolated build environment, which
+# then fails to fetch setuptools/wheel because of --no-index. DEB_PYTHON_INSTALL_LAYOUT=deb
+# is required too: Debian's pip ignores --prefix and defaults to the posix_local
+# scheme (/usr/local), which doesn't match what %files (under %{_prefix}) expects.
+DEB_PYTHON_INSTALL_LAYOUT=deb python3 -m pip install --verbose --progress-bar off --disable-pip-version-check --root %{buildroot} --no-compile --ignore-installed --no-deps --no-index ./dist/*.whl
 %endif
 
 %if "%{_vendor}" == "debbuild"

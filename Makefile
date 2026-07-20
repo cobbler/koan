@@ -99,7 +99,10 @@ rpms: release
 # Only build a binary package
 debs: release ## Runs the target release and then creates via debbuild the debs in a directory called deb-build.
 	mkdir -p deb-build
-	mkdir -p deb-build/{BUILD,BUILDROOT,DEBS,SDEBS,SOURCES}
+	# Brace expansion is a bash-ism; Make recipes run under /bin/sh (dash on
+	# Debian), which would otherwise create one literal "{BUILD,...}" dir
+	# instead of these five, and dpkg-deb would then fail to write DEBS/all/*.
+	mkdir -p deb-build/BUILD deb-build/BUILDROOT deb-build/DEBS/all deb-build/SDEBS deb-build/SOURCES
 	cp dist/*.gz deb-build/
 	debbuild --define "_topdir %(pwd)/deb-build" \
 	--define "_builddir %{_topdir}" \

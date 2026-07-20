@@ -144,12 +144,12 @@ jobs:
         env:
           KOAN_VERSION: ${{ inputs.version }}
         run: sed -ri 's/^(Version:\s*).*/\1'"$KOAN_VERSION"'/' koan.spec
-      - name: Build a Debian 10 Package
+      - name: Build a Debian 13 Package
         shell: 'script -q -e -c "bash {0}"'
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ inputs.version }}
         run: |
-          ./docker/debs/build-and-install-debs.sh deb10 docker/debs/debian/Debian10.dockerfile
+          ./docker/debs/build-and-install-debs.sh deb13 docker/debs/debian/Debian13.dockerfile
       - name: Archive DEBs
         # https://github.com/actions/upload-artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

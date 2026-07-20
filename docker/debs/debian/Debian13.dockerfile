@@ -1,6 +1,6 @@
 # vim: ft=dockerfile
 
-FROM debian:11
+FROM debian:13
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -13,8 +13,9 @@ ENV OSCODENAME=bullseye
 # hadolint ignore=DL3008,DL3015,DL4006
 RUN apt-get update -qq && \
     apt-get install -qqy gnupg curl && \
-    /bin/sh -c "echo 'deb http://download.opensuse.org/repositories/Debian:/debbuild/Debian_10/ /' > /etc/apt/sources.list.d/debbuild.list" && \
-    curl -sL http://download.opensuse.org/repositories/Debian:/debbuild/Debian_10/Release.key | apt-key add - && \
+    mkdir -p /etc/apt/keyrings && \
+    curl -sL http://download.opensuse.org/repositories/Debian:/debbuild/Debian_13/Release.key | gpg --dearmor -o /etc/apt/keyrings/debbuild.gpg && \
+    /bin/sh -c "echo 'deb [signed-by=/etc/apt/keyrings/debbuild.gpg] http://download.opensuse.org/repositories/Debian:/debbuild/Debian_13/ /' > /etc/apt/sources.list.d/debbuild.list" && \
     apt-get update -qq && \
     apt-get install -qqy \
     debbuild \
@@ -29,7 +30,6 @@ RUN apt-get update -qq && \
     python3-distro \
     python3-libvirt \
     python3-netifaces \
-    python3-distutils \
     python3-pip \
     python3-pycodestyle \
     python3-pytest \
