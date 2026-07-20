@@ -13,7 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     container: registry.opensuse.org/opensuse/tumbleweed:latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        # https://github.com/actions/checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Install package deps
         run: zypper -n in --no-recommends git tar python3 python3-devel python3-wheel python3-pip python3-libvirt-python gcc make
       - name: Install dependencies
