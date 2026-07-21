@@ -41,7 +41,7 @@ ifeq ($(strip $(PYFLAKES)),)
 	@echo "No pyflakes found"
 else
 	@echo "checking: pyflakes ${PYFLAKES}"
-	@${PYFLAKES} *.py bin/koan bin/cobbler-register koan/*.py
+	@${PYFLAKES} *.py koan/*.py
 endif
 
 ifeq ($(strip $(BLACK)),)

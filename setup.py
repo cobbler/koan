@@ -22,5 +22,10 @@ setup(
         "fallback_version": "3.0.2",
     },
     packages=["koan"],
-    scripts=["bin/koan", "bin/cobbler-register"],
+    entry_points={
+        "console_scripts": [
+            "koan = koan.register:main",
+            "cobbler-register = koan.app:main",
+        ]
+    },
 )
