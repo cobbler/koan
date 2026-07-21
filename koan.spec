@@ -75,23 +75,10 @@ system. For use with a boot-server configured with Cobbler.
 if [ -d "%{_sourcedir}/%{name}-%{version}/.git" ]; then
     cp -r %{_sourcedir}/%{name}-%{version}/.git %{_builddir}/%{name}-%{version}
 fi
-%if 0%{?fedora} || 0%{?rhel} || 0%{?suse_version}
 %pyproject_wheel
-%else
-python3 -m pip wheel --verbose --progress-bar off --disable-pip-version-check --use-pep517 --no-build-isolation --no-deps --wheel-dir ./dist .
-%endif
 
 %install
-%if 0%{?fedora} || 0%{?rhel} || 0%{?suse_version}
 %pyproject_install
-%else
-# Install the wheel %build already produced instead of rebuilding from source:
-# building from "." here would spin up pip's isolated build environment, which
-# then fails to fetch setuptools/wheel because of --no-index. DEB_PYTHON_INSTALL_LAYOUT=deb
-# is required too: Debian's pip ignores --prefix and defaults to the posix_local
-# scheme (/usr/local), which doesn't match what %files (under %{_prefix}) expects.
-DEB_PYTHON_INSTALL_LAYOUT=deb python3 -m pip install --verbose --progress-bar off --disable-pip-version-check --root %{buildroot} --no-compile --ignore-installed --no-deps --no-index ./dist/*.whl
-%endif
 
 %files
 %license COPYING
