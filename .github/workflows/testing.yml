@@ -16,7 +16,7 @@ jobs:
       # git must be present before checkout, or the container image has none and actions/checkout silently falls back to
       # downloading a tarball via the GitHub REST API, which has no .git dir for setuptools_scm to read.
       - name: Install package deps
-        run: zypper -n in --no-recommends git tar python3 python3-devel python3-wheel python3-pip python3-libvirt-python gcc make
+        run: zypper -n in --no-recommends git tar curl python3 python3-devel python3-wheel python3-pip python3-libvirt-python gcc make
       - name: Checkout repository
         # setuptools_scm needs full history (incl. tags) to derive the version
         # https://github.com/actions/checkout
@@ -26,4 +26,9 @@ jobs:
       - name: Install dependencies
         run: pip3 install --break-system-packages .[lint,test]
       - name: Run tests
-        run: pytest --cov=./koan
+        run: pytest --cov=./koan --cov-report=term-missing --cov-report=xml:coverage.xml
+      - name: Upload coverage to Codacy
+        uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699 # v1.3.0
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage.xml
