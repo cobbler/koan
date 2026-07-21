@@ -28,7 +28,10 @@ def test_run_happy_path(mocker):
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
     mock_conn = MagicMock()
-    mock_conn.get_profiles.return_value = [{"name": "other"}, {"name": "webserver"}]
+    mock_conn.get_profiles.return_value = [
+        {"name": "other", "uid": "other-uid"},
+        {"name": "webserver", "uid": "webserver-uid"},
+    ]
     mocker.patch("koan.register.utils.connect_to_server", return_value=mock_conn)
     mocker.patch("koan.register.utils.get_network_info", return_value={"eth0": {}})
     getfqdn = mocker.patch("koan.register.socket.getfqdn")
@@ -50,7 +53,7 @@ def test_run_happy_path(mocker):
         {
             "interfaces": {"eth0": {}},
             "name": "myhost.example.com",
-            "profile": "webserver",
+            "profile": "webserver-uid",
             "hostname": "myhost.example.com",
         }
     )
@@ -60,7 +63,9 @@ def test_run_hostname_auto_with_unresolvable_fqdn(mocker):
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
     mock_conn = MagicMock()
-    mock_conn.get_profiles.return_value = [{"name": "webserver"}]
+    mock_conn.get_profiles.return_value = [
+        {"name": "webserver", "uid": "webserver-uid"}
+    ]
     mocker.patch("koan.register.utils.connect_to_server", return_value=mock_conn)
     mocker.patch("koan.register.utils.get_network_info", return_value={})
     mocker.patch("koan.register.socket.getfqdn", return_value="localhost.localdomain")
@@ -82,7 +87,7 @@ def test_run_hostname_auto_with_unresolvable_fqdn(mocker):
         {
             "interfaces": {},
             "name": str(1234.5678),
-            "profile": "webserver",
+            "profile": "webserver-uid",
             "hostname": "",
         }
     )
@@ -92,7 +97,9 @@ def test_run_hostname_blank_resolves_via_getfqdn(mocker):
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
     mock_conn = MagicMock()
-    mock_conn.get_profiles.return_value = [{"name": "webserver"}]
+    mock_conn.get_profiles.return_value = [
+        {"name": "webserver", "uid": "webserver-uid"}
+    ]
     mocker.patch("koan.register.utils.connect_to_server", return_value=mock_conn)
     mocker.patch("koan.register.utils.get_network_info", return_value={})
     mocker.patch("koan.register.socket.getfqdn", return_value="discovered.example.com")
@@ -113,7 +120,7 @@ def test_run_hostname_blank_resolves_via_getfqdn(mocker):
         {
             "interfaces": {},
             "name": "discovered.example.com",
-            "profile": "webserver",
+            "profile": "webserver-uid",
             "hostname": "discovered.example.com",
         }
     )
@@ -169,7 +176,7 @@ def test_run_profile_not_found_raises(mocker):
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
     mock_conn = MagicMock()
-    mock_conn.get_profiles.return_value = [{"name": "other"}]
+    mock_conn.get_profiles.return_value = [{"name": "other", "uid": "other-uid"}]
     mocker.patch("koan.register.utils.connect_to_server", return_value=mock_conn)
     mocker.patch("koan.register.utils.get_network_info", return_value={})
 
@@ -194,7 +201,9 @@ def test_run_batch_registration_succeeds(mocker):
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
     mock_conn = MagicMock()
-    mock_conn.get_profiles.return_value = [{"name": "webserver"}]
+    mock_conn.get_profiles.return_value = [
+        {"name": "webserver", "uid": "webserver-uid"}
+    ]
     mocker.patch("koan.register.utils.connect_to_server", return_value=mock_conn)
     mocker.patch("koan.register.utils.get_network_info", return_value={})
 
@@ -218,7 +227,9 @@ def test_run_batch_swallows_registration_failure(mocker):
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
     mock_conn = MagicMock()
-    mock_conn.get_profiles.return_value = [{"name": "webserver"}]
+    mock_conn.get_profiles.return_value = [
+        {"name": "webserver", "uid": "webserver-uid"}
+    ]
     mock_conn.register_new_system.side_effect = RuntimeError("boom")
     mocker.patch("koan.register.utils.connect_to_server", return_value=mock_conn)
     mocker.patch("koan.register.utils.get_network_info", return_value={})

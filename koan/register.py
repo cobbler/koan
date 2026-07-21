@@ -68,17 +68,20 @@ class Register:
         # remote end.
 
         avail_profiles = self.conn.get_profiles()
-        matched_profile = False
+        matched_profile_uid = None
         for x in avail_profiles:
             if x.get("name", "") == self.profile:
-                matched_profile = True
+                matched_profile_uid = x.get("uid", "")
                 break
 
         reg_info["name"] = sysname
-        reg_info["profile"] = self.profile
+        # Cobbler >= 4.0's register_new_system assigns this straight into System.profile,
+        # which resolves parents by uid rather than name (like modify_system's "profile"
+        # attribute), so send the uid we just looked up instead of the profile name itself.
+        reg_info["profile"] = matched_profile_uid or self.profile
         reg_info["hostname"] = hostname
 
-        if not matched_profile:
+        if not matched_profile_uid:
             raise InfoException("no such remote profile, see 'koan --list-profiles'")
 
         if not self.batch:

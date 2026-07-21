@@ -16,18 +16,14 @@ import random
 import re
 import shlex
 import shutil
-import socket
 import subprocess
 import sys
 import time
 import traceback
 from optparse import OptionParser
 
-from koan import configurator, utils
+from koan import utils
 from koan.cexceptions import InfoException
-
-COBBLER_REQUIRED = 1.300
-KOAN_CONF_DIR = "/var/lib/koan/config/"
 
 """
 koan --virt [--profile=webserver|--system=name] --server=hostname
@@ -55,6 +51,47 @@ DISPLAY_PARAMS = [
     "virt_pxe_boot",
 ]
 
+_VIRT_OPTION_FIELDS = (
+    "auto_boot",
+    "cpus",
+    "disk_driver",
+    "file_size",
+    "path",
+    "pxe_boot",
+    "ram",
+    "type",
+)
+
+
+def _flatten_virt_options(data: Dict[str, Any]) -> None:
+    """
+    Cobbler >= 4.0 renders Profile/System/Image virtualization attributes as a nested
+    "virt" Options object (data["virt"] = {"ram": ..., "cpus": ..., ...}) instead of flat
+    top-level virt_ram/virt_cpus/etc. keys. Flatten it back into those legacy flat keys
+    in place, since the rest of koan (calc_virt_*, DISPLAY_PARAMS, koan/virt/openvz.py)
+    still expects them. Distro data has no "virt" key at all, which is a legitimate no-op,
+    not an error. Any other shape is a Cobbler-compatibility problem worth failing loudly
+    on, rather than silently falling back to calc_virt_*'s hardcoded defaults.
+    """
+    virt = data.get("virt")
+    if virt is None:
+        return
+    if not isinstance(virt, dict):
+        raise InfoException(
+            "Unexpected type for rendered 'virt' property from Cobbler (expected dict, "
+            "got %s); koan may be incompatible with this Cobbler server version."
+            % type(virt).__name__
+        )
+    missing = [field for field in _VIRT_OPTION_FIELDS if field not in virt]
+    if missing:
+        raise InfoException(
+            "Cobbler server's rendered 'virt' options are missing expected field(s): %s; "
+            "koan may be incompatible with this Cobbler server version."
+            % ", ".join(missing)
+        )
+    for field in _VIRT_OPTION_FIELDS:
+        data["virt_%s" % field] = virt[field]
+
 
 class Koan:
     def __init__(self):
@@ -71,8 +108,6 @@ class Koan:
         self.list_systems = None
         self.is_virt = None
         self.is_update_files = None
-        self.is_update_config = None
-        self.summary = None
         self.is_replace = None
         self.is_display = None
         self.port = None
@@ -120,7 +155,6 @@ class Koan:
             self.is_update_files,
             self.is_display,
             self.list_items,
-            self.is_update_config,
         ):
             if x:
                 found = found + 1
@@ -213,8 +247,6 @@ class Koan:
                 self.replace()
         elif self.is_update_files:
             self.update_files()
-        elif self.is_update_config:
-            self.update_config()
         else:
             self.display()
 
@@ -321,20 +353,34 @@ class Koan:
                 profile_data["autoinst"] = profile_data["kickstart"]
 
         if "autoinst" in profile_data:
+            # Cobbler >= 4.0 renders "autoinst"/"kickstart" as a Template item object (a dict
+            # with uri/template_type/etc.) rather than a path/URL string; such an object only
+            # tells us a template is assigned, not where to fetch its rendered content, so
+            # treat it the same as the legacy relative-path case below and always build the
+            # /cblr/svc URL.
+            is_template_object = isinstance(profile_data["autoinst"], dict)
+
             # fix URLs
             if (
-                profile_data["autoinst"][0] == "/"
+                is_template_object
+                or profile_data["autoinst"][0] == "/"
                 or os.path.dirname(profile_data["autoinst"]) == ""
             ):
                 if not self.system:
-                    profile_data["autoinst"] = "http://%s/cblr/svc/op/ks/profile/%s" % (
-                        profile_data["http_server"],
-                        profile_data["name"],
+                    profile_data["autoinst"] = (
+                        "http://%s/cblr/svc/op/autoinstall/profile/%s"
+                        % (
+                            profile_data["http_server"],
+                            profile_data["name"],
+                        )
                     )
                 else:
-                    profile_data["autoinst"] = "http://%s/cblr/svc/op/ks/system/%s" % (
-                        profile_data["http_server"],
-                        profile_data["name"],
+                    profile_data["autoinst"] = (
+                        "http://%s/cblr/svc/op/autoinstall/system/%s"
+                        % (
+                            profile_data["http_server"],
+                            profile_data["name"],
+                        )
                     )
 
             # If breed is ubuntu/debian we need to source the install tree differently
@@ -481,9 +527,9 @@ class Koan:
         try:
             if profile_data["autoinst"][:4] == "http":
                 if not self.system:
-                    url_fmt = "http://%s/cblr/svc/op/ks/profile/%s"
+                    url_fmt = "http://%s/cblr/svc/op/autoinstall/profile/%s"
                 else:
-                    url_fmt = "http://%s/cblr/svc/op/ks/system/%s"
+                    url_fmt = "http://%s/cblr/svc/op/autoinstall/system/%s"
                 url = url_fmt % (profile_data["http_server"], profile_data["name"])
             else:
                 url = profile_data["autoinst"]
@@ -654,92 +700,6 @@ class Koan:
             utils.subprocess_call(cmd)
 
         return True
-
-    def update_config(self):
-        """
-        Contact the cobbler server and update the system configuration using
-        cobbler's built-in configuration management. Configs are based on
-        a combination of mgmt-classes assigned to the system, profile, and
-        distro.
-        """
-        hostname = socket.gethostname()
-        server = self.xmlrpc_server
-        try:
-            config = server.get_config_data(hostname)
-        except:
-            traceback.print_exc()
-            self.connect_fail()
-
-        default_config_filename = "localconfig.json"
-        node_config_data = KOAN_CONF_DIR + default_config_filename
-        if os.path.isfile(node_config_data):
-            timestamp = utils.generate_timestamp()
-            old_node_config_data = "".join(
-                (KOAN_CONF_DIR, timestamp, "_", default_config_filename)
-            )
-            shutil.copyfile(node_config_data, old_node_config_data)
-        f = open(node_config_data, "w")
-        f.write(config)
-        f.close()
-
-        print("- Starting configuration run for %s" % (hostname))
-        runtime_start = time.time()
-        configure = configurator.KoanConfigure(config)
-        stats = configure.run()
-        runtime_end = time.time()
-
-        if self.summary:
-            pstats = (
-                stats["pkg"]["nsync"],
-                stats["pkg"]["osync"],
-                stats["pkg"]["fail"],
-                stats["pkg"]["runtime"],
-            )
-            dstats = (
-                stats["dir"]["nsync"],
-                stats["dir"]["osync"],
-                stats["dir"]["fail"],
-                stats["dir"]["runtime"],
-            )
-            fstats = (
-                stats["files"]["nsync"],
-                stats["files"]["osync"],
-                stats["files"]["fail"],
-                stats["files"]["runtime"],
-            )
-
-            nsync = pstats[0] + dstats[0] + fstats[0]
-            osync = pstats[1] + dstats[1] + fstats[1]
-            fail = pstats[2] + dstats[2] + fstats[2]
-
-            total_resources = nsync + osync + fail
-            total_runtime = runtime_end - runtime_start
-
-            print("")
-            print("\tResource Report")
-            print("\t-------------------------")
-            print("\t    In Sync: %d" % nsync)
-            print("\tOut of Sync: %d" % osync)
-            print("\t       Fail: %d" % fail)
-            print("\t-------------------------")
-            print("\tTotal Resources: %d" % total_resources)
-            print("\t  Total Runtime: %.02f" % total_runtime)
-
-            for status in ["repos_status"]:
-                if status in stats:
-                    print("")
-                    print("\t%s" % status)
-                    print("\t-------------------------")
-                    print("\t%s" % stats[status])
-                    print("\t-------------------------")
-
-            print("")
-            print("\tResource |In Sync|OO Sync|Failed|Runtime")
-            print("\t----------------------------------------")
-            print("\t      Packages:  %d      %d    %d     %.02f" % pstats)
-            print("\t   Directories:  %d      %d    %d     %.02f" % dstats)
-            print("\t         Files:  %d      %d    %d     %.02f" % fstats)
-            print("")
 
     def kexec_replace(self):
         """
@@ -1087,6 +1047,8 @@ EOF
             self.connect_fail()
         if data == {}:
             raise InfoException("No entry/entries found")
+        if what in ("profile", "system", "image"):
+            _flatten_virt_options(data)
         return data
 
     def get_ips(self, strdata):
