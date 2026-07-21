@@ -218,7 +218,7 @@ def build_commandline(
 
     is_import = uri.startswith("import")
     if is_import:
-        # We use the special value 'import' for imagecreate.py. Since
+        # We use the special value 'import' for koan/virt/image.py. Since
         # it is connection agnostic, just let virt-install choose the
         # best hypervisor.
         uri = ""

@@ -21,7 +21,7 @@ setup(
         "write_to_template": _version_template,
         "fallback_version": "3.0.2",
     },
-    packages=["koan"],
+    packages=["koan", "koan.virt"],
     entry_points={
         "console_scripts": [
             "koan = koan.cli:main",

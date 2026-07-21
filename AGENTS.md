@@ -73,7 +73,7 @@ SPDX comment block, then imports).
 
 ## Architecture
 
-Everything lives in the flat `koan/` package (no subpackages):
+Everything lives in the `koan/` package, mostly flat aside from the `koan/virt/` subpackage:
 
 - **`cli.py`** — `argparse`-based entrypoints for both console scripts. `main()` (koan) builds
   the ~30 flags, copies the parsed `Namespace` onto a fresh `Koan()` instance's attributes 1:1,
@@ -94,7 +94,7 @@ Everything lives in the flat `koan/` package (no subpackages):
     from the Cobbler server and compute kernel/initrd/kernel-options for network installs and
     `--replace-self` (kexec) reinstalls.
   - `virt_net_install()` / `load_virt_modules()` / `virt_choose()` — dispatch to the
-    per-hypervisor `*create.py` module based on `virt_type`.
+    per-hypervisor module in `koan/virt/` based on `virt_type`.
   - The many `calc_virt_*()` methods (`calc_virt_ram`, `calc_virt_disk`-adjacent
     `calc_virt_filesize*`, `calc_virt_mac`, `calc_virt_uuid`, `calc_virt_path*`, ...) resolve
     per-VM settings from Cobbler profile/system data plus command-line overrides plus defaults —
@@ -110,9 +110,9 @@ Everything lives in the flat `koan/` package (no subpackages):
   configuration; `yum` import is optional/best-effort).
 - **`virtinstall.py`** — builds a `virt-install`/libvirt command line (disk/NIC sanitization,
   `build_commandline()`) for KVM/qemu and Xen-via-libvirt guests.
-- **`{xen,qcreate,openvz,vmw,image}create.py`** — one module per hypervisor/guest backend, each
+- **`koan/virt/{xen,qemu,openvz,vmw,image}.py`** — one module per hypervisor/guest backend, each
   exposing a `start_install(*args, **kwargs)` entry point that `app.py` calls into via
-  `virt_choose()`/`load_virt_modules()`. `vmwcreate.py` additionally has helpers to build VMX
+  `virt_choose()`/`load_virt_modules()`. `vmw.py` additionally has helpers to build VMX
   files and register/start guests through VMware. When adding a new virt backend, follow this
   same `start_install(**kwargs)` contract so it plugs into `app.py` unchanged.
 - **`utils.py`** — shared grab-bag: XML-RPC connection to the Cobbler server
