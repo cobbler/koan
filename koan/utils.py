@@ -28,7 +28,7 @@ VIRT_STATE_NAME_MAP = {
     1: "running",
     2: "running",
     3: "paused",
-    4: "shutdown",
+    4: "running",
     5: "shutdown",
     6: "crashed",
 }
