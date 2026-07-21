@@ -273,7 +273,7 @@ def build_commandline(
             # this is not an NFS path
             cdrom = input_path
         else:
-            (tempdir, filename) = utils.nfsmount(input_path)
+            tempdir, filename = utils.nfsmount(input_path)
             cdrom = os.path.join(tempdir, filename)
 
         autoinst = profile_data.get("autoinst", "")

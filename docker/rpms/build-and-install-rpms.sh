@@ -22,11 +22,7 @@ docker build -t "$IMAGE" -f "$DOCKERFILE" .
 # Build RPMs
 echo "==> Build RPMs ..."
 mkdir -p rpm-build
-if [ "$TAG" == "opensuse-leap" ]; then
-    docker run -ti -v "$PWD/rpm-build:/usr/src/koan/rpm-build" "$IMAGE" make PYTHON=/usr/bin/python3.11 rpms
-else
-    docker run -ti -v "$PWD/rpm-build:/usr/src/koan/rpm-build" "$IMAGE"
-fi
+docker run -ti -e SETUPTOOLS_SCM_PRETEND_VERSION -v "$PWD/rpm-build:/usr/src/koan/rpm-build" "$IMAGE"
 
 # Launch container and install koan
 echo "==> Start container ..."

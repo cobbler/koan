@@ -1,6 +1,6 @@
 # vim: ft=dockerfile
 
-FROM registry.opensuse.org/opensuse/leap:15.6
+FROM registry.opensuse.org/opensuse/leap:16.0
 
 # ENV Variables we are using.
 ENV container=docker
@@ -16,19 +16,19 @@ RUN zypper install -y         \
     rpm-build                 \
     virt-install              \
     fdupes                    \
-    python311                 \
-    python311-base            \
-    python311-devel           \
-    python311-wheel           \
-    python311-build           \
-    python311-setuptools      \
-    python311-setuptools_scm  \
-    python311-pip             \
-    python311-libvirt-python  \
-    python311-distro          \
-    python311-netifaces       \
-    python311-Sphinx          \
-    python311-sphinx_rtd_theme
+    python3                   \
+    python3-base              \
+    python3-devel             \
+    python3-wheel             \
+    python3-build             \
+    python3-setuptools        \
+    python3-setuptools_scm    \
+    python3-pip               \
+    python3-libvirt-python    \
+    python3-distro            \
+    python3-netifaces         \
+    python3-Sphinx            \
+    python3-sphinx_rtd_theme
 
 # Build RPMs
 COPY . /usr/src/koan

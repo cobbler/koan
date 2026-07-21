@@ -1,6 +1,6 @@
 # vim: ft=dockerfile
 
-FROM fedora:36
+FROM fedora:43
 
 RUN dnf makecache
 
@@ -16,6 +16,7 @@ RUN dnf install -y           \
     python3-build            \
     python3-setuptools       \
     python3-setuptools_scm   \
+    pyproject-rpm-macros     \
     python3-sphinx           \
     python3-sphinx_rtd_theme \
     python3-distro           \

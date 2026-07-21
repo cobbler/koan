@@ -5,7 +5,7 @@
 # - Fedora: 30, 31, Rawhide
 # - CentOS + EPEL: 9
 # - SLE: 11sp4, 12sp3, 15sp1
-# - openSUSE: Leap 15.6, Tumbleweed
+# - openSUSE: Leap 16.0, Tumbleweed
 # - Debian: 9, 10
 # - Ubuntu: 16.04, 18.04
 #
@@ -33,7 +33,7 @@
 %endif
 
 Name:           koan
-Version:        3.0.2
+Version:        3.1.0
 Release:        1%{?dist}
 Summary:        Kickstart over a network
 
@@ -85,7 +85,7 @@ system. For use with a boot-server configured with Cobbler.
 %autosetup -p1
 
 %if 0%{?fedora}%{?rhel}
-pathfix.py -pni "%{__python} %{py_shbang_opts}" bin
+%py3_shebang_fix bin
 %endif
 
 %build
@@ -102,7 +102,12 @@ python3 -m pip wheel --verbose --progress-bar off --disable-pip-version-check --
 %if 0%{?fedora} || 0%{?rhel} || 0%{?suse_version}
 %pyproject_install
 %else
-python3 -m pip install --verbose --progress-bar off --disable-pip-version-check --root %{buildroot} --no-compile --ignore-installed --no-deps --no-index .
+# Install the wheel %build already produced instead of rebuilding from source:
+# building from "." here would spin up pip's isolated build environment, which
+# then fails to fetch setuptools/wheel because of --no-index. DEB_PYTHON_INSTALL_LAYOUT=deb
+# is required too: Debian's pip ignores --prefix and defaults to the posix_local
+# scheme (/usr/local), which doesn't match what %files (under %{_prefix}) expects.
+DEB_PYTHON_INSTALL_LAYOUT=deb python3 -m pip install --verbose --progress-bar off --disable-pip-version-check --root %{buildroot} --no-compile --ignore-installed --no-deps --no-index ./dist/*.whl
 %endif
 
 %if "%{_vendor}" == "debbuild"

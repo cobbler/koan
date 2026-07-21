@@ -1,6 +1,6 @@
 # vim: ft=dockerfile
 
-FROM rockylinux:9
+FROM rockylinux/rockylinux:10
 
 RUN dnf makecache && \
     dnf install -y epel-release dnf-utils && \
@@ -29,6 +29,7 @@ RUN touch /var/lib/rpm/* &&   \
     python3-setuptools        \
     python3-setuptools_scm    \
     python3-wheel             \
+    pyproject-rpm-macros      \
     python3-sphinx            \
     python3-sphinx_rtd_theme  \
     python3-distro            \

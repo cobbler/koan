@@ -3,6 +3,19 @@
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
-    "@semantic-release/github"
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          "artifacts/debs-debian/*.deb",
+          "artifacts/rpms-fedora/*.rpm",
+          "artifacts/rpms-opensuse-leap/*.rpm",
+          "artifacts/rpms-opensuse-tumbleweed/*.rpm",
+          "artifacts/rpms-rockylinux/*.rpm",
+          "artifacts/wheel/*.tar.gz",
+          "artifacts/wheel/*.whl"
+        ]
+      }
+    ]
   ]
 }

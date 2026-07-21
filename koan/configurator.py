@@ -46,7 +46,6 @@ except:
 
 
 class KoanConfigure:
-
     """
     Used for all configuration methods, used by koan
     to configure repos, files and packages.
@@ -56,7 +55,7 @@ class KoanConfigure:
         """Constructor. Requires json config object."""
         self.config = json.JSONDecoder().decode(config)
         self.stats = {}
-        (self.dist, _) = utils.os_release()
+        self.dist, _ = utils.os_release()
 
     def configure_repos(self):
         # Enables the possibility to use different types of repos

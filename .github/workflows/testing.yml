@@ -13,11 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     container: registry.opensuse.org/opensuse/tumbleweed:latest
     steps:
-      - name: Checkout repository
-        # https://github.com/actions/checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      # git must be present before checkout, or the container image has none and actions/checkout silently falls back to
+      # downloading a tarball via the GitHub REST API, which has no .git dir for setuptools_scm to read.
       - name: Install package deps
         run: zypper -n in --no-recommends git tar python3 python3-devel python3-wheel python3-pip python3-libvirt-python gcc make
+      - name: Checkout repository
+        # setuptools_scm needs full history (incl. tags) to derive the version
+        # https://github.com/actions/checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
       - name: Install dependencies
         run: pip3 install --break-system-packages .[lint,test]
       - name: Run tests
