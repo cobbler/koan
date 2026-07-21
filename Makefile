@@ -84,7 +84,7 @@ install: build
 		${PYTHON} -m build --root $(DESTDIR) -f; \
 	fi
 
-# koan.spec hardcodes Version, which rpmbuild/debbuild use to compute Source0's expected filename before dist/ exists.
+# koan.spec hardcodes Version, which rpmbuild uses to compute Source0's expected filename before dist/ exists.
 # Sync it to the version the sdist we just built actually has (read from its filename, since re-deriving the version via
 # a second setuptools_scm call can disagree with the first once the sdist step leaves the tree dirty), or the expected
 # and actual tarball names diverge whenever HEAD isn't exactly on a release tag.
@@ -103,19 +103,19 @@ rpms: pin-spec-version
 	--define "_sourcedir  %{_topdir}" \
 	-ba koan.spec
 
-# Only build a binary package
-debs: pin-spec-version ## Runs the target release and then creates via debbuild the debs in a directory called deb-build.
-	mkdir -p deb-build
-	# Brace expansion is a bash-ism; Make recipes run under /bin/sh (dash on
-	# Debian), which would otherwise create one literal "{BUILD,...}" dir
-	# instead of these five, and dpkg-deb would then fail to write DEBS/all/*.
-	mkdir -p deb-build/BUILD deb-build/BUILDROOT deb-build/DEBS/all deb-build/SDEBS deb-build/SOURCES
-	cp dist/*.gz deb-build/
-	debbuild --define "_topdir %(pwd)/deb-build" \
-	--define "_builddir %{_topdir}" \
-	--define "_specdir %{_topdir}" \
-	--define "_sourcedir  %{_topdir}" \
-	-vv -bb koan.spec
+# debian/changelog's top entry version is what dpkg-buildpackage uses for the
+# built package; sync it to the same setuptools_scm-derived version CI already
+# threads through via SETUPTOOLS_SCM_PRETEND_VERSION (mirrors pin-spec-version's
+# job for koan.spec's hardcoded Version: field). Native packages (see
+# debian/source/format) must not carry a "-<revision>" suffix, or dpkg-source
+# mistakes the package for a non-native one and looks for an orig tarball.
+debs: authors ## Creates native debs in a directory called deb-build.
+	@VERSION="$${SETUPTOOLS_SCM_PRETEND_VERSION:-$$(${PYTHON} -m setuptools_scm)}"; \
+	DEBFULLNAME="The Cobbler Authors" DEBEMAIL="cobbler.project@gmail.com" \
+	dch --newversion "$$VERSION" --distribution unstable --nomultimaint "Automated build."
+	@debuild -us -uc
+	@mkdir -p deb-build
+	@cp ../koan_* deb-build/
 
 .PHONY: tags
 tags:

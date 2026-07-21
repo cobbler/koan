@@ -131,7 +131,7 @@ jobs:
         with:
           name: debs-debian
           path: |
-            deb-build/DEBS/all/*.deb
+            deb-build/*.deb
   build-wheel:
     name: Build Python Wheel
     runs-on: ubuntu-latest

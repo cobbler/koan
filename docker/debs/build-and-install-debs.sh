@@ -29,7 +29,7 @@ echo "==> Start container ..."
 docker run -t -d --name koan -v "$PWD/deb-build:/usr/src/koan/deb-build" "$IMAGE" /bin/bash
 
 echo "==> Install fresh packages ..."
-docker exec -it koan bash -c 'dpkg -i deb-build/DEBS/all/koan*.deb'
+docker exec -it koan bash -c 'dpkg -i deb-build/koan*.deb'
 
 # Does not work because of wrong exit code. Koan has not help or version switch which means we need to skip this for now
 #echo "==> Wait 5 sec. and show Koan version ..."
