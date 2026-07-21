@@ -67,10 +67,6 @@ system. For use with a boot-server configured with Cobbler.
 %prep
 %autosetup -p1
 
-%if 0%{?fedora}%{?rhel}
-%py3_shebang_fix bin
-%endif
-
 %build
 if [ -d "%{_sourcedir}/%{name}-%{version}/.git" ]; then
     cp -r %{_sourcedir}/%{name}-%{version}/.git %{_builddir}/%{name}-%{version}
