@@ -11,6 +11,8 @@ import os
 import sys
 import traceback
 
+from koan import __version__
+
 from . import utils
 from .app import Koan
 from .cexceptions import InfoException
@@ -29,6 +31,11 @@ def main():
         pass
 
     p = argparse.ArgumentParser()
+    p.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__ or 'unknown'}",
+    )
     p.add_argument(
         "-k", "--kopts", dest="kopts_override", help="append additional kernel options"
     )
