@@ -23,8 +23,8 @@ import time
 import traceback
 from optparse import OptionParser
 
-from . import configurator, utils
-from .cexceptions import InfoException
+from koan import configurator, utils
+from koan.cexceptions import InfoException
 
 COBBLER_REQUIRED = 1.300
 KOAN_CONF_DIR = "/var/lib/koan/config/"
@@ -1412,7 +1412,7 @@ EOF
 
     def load_virt_modules(self):
         try:
-            from . import imagecreate, qcreate, xencreate
+            from koan import imagecreate, qcreate, xencreate
 
             assert xencreate
             assert qcreate
@@ -1428,12 +1428,12 @@ EOF
         if (self.image is not None) and (pd["image_type"] == "virt-clone"):
             fullvirt = True
             uuid = None
-            from . import imagecreate
+            from koan import imagecreate
 
             creator = imagecreate.start_install
         elif self.virt_type in ["xenpv", "xenfv"]:
             uuid = self.get_uuid(self.calc_virt_uuid(pd))
-            from . import xencreate
+            from koan import xencreate
 
             creator = xencreate.start_install
             if self.virt_type == "xenfv":
@@ -1442,12 +1442,12 @@ EOF
         elif self.virt_type in ["qemu", "kvm"]:
             fullvirt = True
             uuid = None
-            from . import qcreate
+            from koan import qcreate
 
             creator = qcreate.start_install
             can_poll = "qemu"
         elif self.virt_type == "vmware":
-            from . import vmwcreate
+            from koan import vmwcreate
 
             uuid = None
             creator = vmwcreate.start_install
@@ -1457,7 +1457,7 @@ EOF
             uuid = None
             creator = vmwwcreate.start_install
         elif self.virt_type == "openvz":
-            from . import openvzcreate
+            from koan import openvzcreate
 
             uuid = None
             creator = openvzcreate.start_install

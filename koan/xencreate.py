@@ -11,7 +11,7 @@ Currently somewhat Xen/paravirt specific, will evolve later.
 # SPDX-FileCopyrightText: Option handling added by Andrew Puch <apuch@redhat.com>
 # SPDX-FileCopyrightText: Simplified for use as library by koan, Michael DeHaan <michael.dehaan AT gmail>
 
-from . import utils, virtinstall
+from koan import utils, virtinstall
 
 
 def start_install(*args, **kwargs):

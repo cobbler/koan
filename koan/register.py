@@ -11,8 +11,8 @@ import socket
 import time
 import traceback
 
-from . import utils
-from .cexceptions import InfoException
+from koan import utils
+from koan.cexceptions import InfoException
 
 # usage: cobbler-register [--server=server] [--fqdn=hostname] --profile=foo
 

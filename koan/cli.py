@@ -11,12 +11,10 @@ import os
 import sys
 import traceback
 
-from koan import __version__
-
-from . import utils
-from .app import Koan
-from .cexceptions import InfoException
-from .register import Register
+from koan import __version__, utils
+from koan.app import Koan
+from koan.cexceptions import InfoException
+from koan.register import Register
 
 
 def main():

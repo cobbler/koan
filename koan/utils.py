@@ -21,7 +21,7 @@ import xmlrpc.client
 import distro
 import netifaces
 
-from .cexceptions import InfoException
+from koan.cexceptions import InfoException
 
 VIRT_STATE_NAME_MAP = {
     0: "running",
