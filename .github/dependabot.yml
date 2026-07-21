@@ -5,9 +5,14 @@ updates:
     schedule:
       interval: "weekly"
     groups:
-      github-actions:
+      dependabot:
+        applies-to: version-updates
         patterns:
-          - "*"
+          - "github/codeql-action/*"
+    commit-message:
+      prefix: "build"
+      prefix-development: "chore"
+      include: "scope"
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -16,3 +21,7 @@ updates:
       npm:
         patterns:
           - "*"
+    commit-message:
+      prefix: "build"
+      prefix-development: "chore"
+      include: "scope"
