@@ -13,7 +13,6 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import time
 import traceback
 import urllib.request
 import xmlrpc.client
@@ -34,6 +33,8 @@ VIRT_STATE_NAME_MAP = {
 }
 
 VALID_DRIVER_TYPES = ["raw", "qcow", "qcow2", "vmdk", "qed"]
+
+MINIMUM_COBBLER_VERSION = (4, 0, 0)
 
 
 def setupLogging(appname):
@@ -379,6 +380,25 @@ def get_network_info():
     return interfaces
 
 
+def __check_cobbler_version(xmlrpc_server, url):
+    version_tuple = None
+    try:
+        version_info = xmlrpc_server.extended_version()
+        version_tuple = tuple(int(x) for x in version_info["version_tuple"])
+    except Exception:
+        version_tuple = None
+
+    if version_tuple is None or version_tuple < MINIMUM_COBBLER_VERSION:
+        found = ".".join(str(x) for x in version_tuple) if version_tuple else "unknown"
+        required = ".".join(str(x) for x in MINIMUM_COBBLER_VERSION)
+        raise InfoException(
+            "Cobbler server at %s reports version %s, which is older than "
+            "the minimum version %s supported by this release of koan. "
+            "Please install a release of koan compatible with your Cobbler "
+            "server." % (url, found, required)
+        )
+
+
 def connect_to_server(server=None, port=None):
     if server is None:
         server = os.environ.get("COBBLER_SERVER", "")
@@ -401,6 +421,7 @@ def connect_to_server(server=None, port=None):
         print("- looking for Cobbler at %s" % url)
         server = __try_connect(url)
         if server is not None:
+            __check_cobbler_version(server, url)
             return server
     raise InfoException("Could not find Cobbler.")
 
@@ -541,10 +562,6 @@ def random_mac():
         random.randint(0x00, 0xFF),
     ]
     return ":".join(map(lambda x: "%02x" % x, mac))
-
-
-def generate_timestamp():
-    return str(int(time.time()))
 
 
 def check_version_greater_or_equal(version1, version2):
