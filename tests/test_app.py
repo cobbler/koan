@@ -1,9 +1,49 @@
+# This file unit-tests koan.app's private (`_`-prefixed) _flatten_virt_options()
+# helper directly, by design.
+# pyright: reportPrivateUsage=false
+
+from typing import Any, Dict
 from unittest.mock import MagicMock, call
 
 import pytest
 
-from koan.app import Koan
+from koan.app import Koan, _flatten_virt_options
 from koan.cexceptions import InfoException
+
+
+def test_net_install_handles_template_object_autoinst(mocker):
+    # Arrange
+    # Cobbler >= 4.0 renders "autoinst"/"kickstart" as a Template item object (a dict with
+    # uri/template_type/etc.) instead of a path/URL string. net_install() must not try to
+    # string-index it (regression test for a KeyError: 0 crash).
+    k = Koan()
+    k.profile = "myprofile"
+    k.system = None
+    k.is_virt = False
+    k.is_display = True
+    profile_data = {
+        "name": "myprofile",
+        "http_server": "cobbler.example.com",
+        "breed": "generic",
+        "kickstart": {
+            "uid": "template-uid",
+            "template_type": "cheetah",
+            "uri": {"schema": "importlib", "path": "/some/template"},
+        },
+    }
+    mocker.patch.object(k, "get_data", return_value=profile_data)
+    mocker.patch.object(k, "get_install_tree_from_autoinst")
+    after_download = MagicMock()
+
+    # Act
+    k.net_install(after_download)
+
+    # Assert
+    assert (
+        profile_data["autoinst"]
+        == "http://cobbler.example.com/cblr/svc/op/autoinstall/profile/myprofile"
+    )
+    after_download.assert_called_once_with(k, profile_data)
 
 
 def test_get_install_tree_from_autoinst_uses_http_server_port(mocker):
@@ -15,7 +55,7 @@ def test_get_install_tree_from_autoinst_uses_http_server_port(mocker):
     k.system = None
     profile_data = {
         "name": "centos7.4-x86_64",
-        "autoinst": "http://192.168.10.112:10080/cblr/svc/op/ks/profile/centos7.4-x86_64",
+        "autoinst": "http://192.168.10.112:10080/cblr/svc/op/autoinstall/profile/centos7.4-x86_64",
         "http_server": "192.168.10.112:10080",
     }
     mock_urlread = mocker.patch("koan.utils.urlread", return_value=b"")
@@ -27,7 +67,7 @@ def test_get_install_tree_from_autoinst_uses_http_server_port(mocker):
     requested_url = mock_urlread.call_args[0][0]
     assert (
         requested_url
-        == "http://192.168.10.112:10080/cblr/svc/op/ks/profile/centos7.4-x86_64"
+        == "http://192.168.10.112:10080/cblr/svc/op/autoinstall/profile/centos7.4-x86_64"
     )
 
 
@@ -230,6 +270,82 @@ def test_calc_virt_name_falls_back_to_time(mocker):
     assert result == "aa_bb_cc"
 
 
+def _nested_virt_options(**overrides: Any) -> Dict[str, Any]:
+    """Build a Cobbler >= 4.0-shaped rendered "virt" Options dict with all fields
+    present, overriding specific fields for the test at hand."""
+    virt = {
+        "auto_boot": False,
+        "cpus": 1,
+        "disk_driver": "raw",
+        "file_size": 0,
+        "path": "",
+        "pxe_boot": False,
+        "ram": 64,
+        "type": "auto",
+    }
+    virt.update(overrides)
+    return virt
+
+
+def test_flatten_virt_options_populates_flat_keys() -> None:
+    # Arrange
+    data: Dict[str, Any] = {
+        "virt": _nested_virt_options(
+            ram=2048,
+            cpus=4,
+            disk_driver="qcow2",
+            file_size=10,
+            path="/var/lib/libvirt/images",
+            pxe_boot=True,
+            auto_boot=True,
+            type="qemu",
+        )
+    }
+
+    # Act
+    _flatten_virt_options(data)
+
+    # Assert
+    assert data["virt_ram"] == 2048
+    assert data["virt_cpus"] == 4
+    assert data["virt_disk_driver"] == "qcow2"
+    assert data["virt_file_size"] == 10
+    assert data["virt_path"] == "/var/lib/libvirt/images"
+    assert data["virt_pxe_boot"] is True
+    assert data["virt_auto_boot"] is True
+    assert data["virt_type"] == "qemu"
+
+
+def test_flatten_virt_options_missing_field_raises() -> None:
+    # Arrange
+    data: Dict[str, Any] = {"virt": {"cpus": 4}}
+
+    # Act / Assert
+    with pytest.raises(InfoException, match="missing expected field.*auto_boot"):
+        _flatten_virt_options(data)
+
+
+def test_flatten_virt_options_wrong_type_raises() -> None:
+    # Arrange
+    data: Dict[str, Any] = {"virt": "not-a-dict"}
+
+    # Act / Assert
+    with pytest.raises(InfoException, match="Unexpected type"):
+        _flatten_virt_options(data)
+
+
+def test_flatten_virt_options_noop_when_virt_absent() -> None:
+    # Arrange
+    # Distro data has no "virt" key at all - this must not be treated as an error.
+    data: Dict[str, Any] = {"name": "d1"}
+
+    # Act
+    _flatten_virt_options(data)
+
+    # Assert
+    assert data == {"name": "d1"}
+
+
 @pytest.mark.parametrize(
     "override,data,expected",
     [
@@ -390,6 +506,99 @@ def test_calc_virt_cpus(data, expected):
     assert result == expected
 
 
+def test_calc_virt_methods_use_nested_virt_data_not_defaults() -> None:
+    # Arrange
+    # This is the regression test for the original bug: Cobbler >= 4.0 sends ONLY the
+    # nested "virt" dict, no flat virt_* keys. Before the fix, every calc_virt_* method
+    # would silently fall back to its hardcoded default here instead of raising or using
+    # the real server value.
+    k = Koan()
+    data: Dict[str, Any] = {
+        "virt": _nested_virt_options(
+            ram=2048,
+            cpus=4,
+            disk_driver="qcow2",
+            auto_boot=True,
+            pxe_boot=True,
+            type="qemu",
+        )
+    }
+    _flatten_virt_options(data)
+
+    # Act / Assert
+    assert k.calc_virt_ram(data) == 2048
+    assert k.calc_virt_cpus(data) == 4
+    assert k.calc_virt_drivers(data) == ["qcow2"]
+    assert k.calc_virt_autoboot(data, False) is True
+    assert k.calc_virt_pxeboot(data, False) is True
+    assert k.safe_load(data, "virt_type", default=None) == "qemu"
+
+
+def test_calc_virt_path_uses_nested_virt_path_not_default() -> None:
+    # Arrange
+    k = Koan()
+    k.virt_path = None
+    k.virt_type = "qemu"
+    k.force_path = True
+    data: Dict[str, Any] = {"virt": _nested_virt_options(path="/custom/images")}
+    _flatten_virt_options(data)
+
+    # Act
+    result = k.calc_virt_path(data, "myguest")
+
+    # Assert
+    # "/custom/images" doesn't exist as a directory in the test environment, so
+    # calc_virt_path2's force_path branch returns the nested-derived location verbatim -
+    # the key assertion is that it's derived from the nested virt.path value at all
+    # (a pre-fix silent-default would have fallen through to the hardcoded
+    # "/var/lib/libvirt/images/myguest-disk0" prefix instead).
+    assert result == ["/custom/images"]
+
+
+def test_virt_net_install_flattens_virt_before_reaching_create_func(
+    mocker: MockerFixture,
+) -> None:
+    # Arrange
+    # koan/virt/openvz.py indexes kwargs["profile_data"]["virt_ram"/"virt_cpus"/
+    # "virt_file_size"/"virt_auto_boot"] directly with no fallback - this proves the
+    # get_data()/_flatten_virt_options() fix protects those crash sites without openvz.py
+    # itself needing to know about Cobbler's nested "virt" shape.
+    k = Koan()
+    k.virt_type = "openvz"
+    k.virt_bridge = None
+    k.virt_auto_boot = False
+    k.virt_pxe_boot = False
+    k.qemu_disk_type = None
+    k.qemu_net_type = None
+    k.qemu_machine_type = None
+    k.virtinstall_wait = True
+    k.virtinstall_noreboot = False
+    k.virtinstall_osimport = False
+    k.gfx_type = None
+    k.should_poll = False
+
+    profile_data: Dict[str, Any] = {
+        "name": "myguest",
+        "virt": _nested_virt_options(ram=1024, cpus=2, auto_boot=True),
+    }
+    _flatten_virt_options(profile_data)
+
+    mocker.patch.object(k, "load_virt_modules")
+    create_func = MagicMock(return_value="ok")
+    mocker.patch.object(k, "virt_choose", return_value=(None, create_func, False, None))
+
+    # Act
+    k.virt_net_install(profile_data)
+
+    # Assert
+    kwargs = create_func.call_args.kwargs
+    passed_profile_data = kwargs["profile_data"]
+    assert passed_profile_data["virt_ram"] == 1024
+    assert passed_profile_data["virt_cpus"] == 2
+    assert passed_profile_data["virt_file_size"] == 0
+    assert passed_profile_data["virt_auto_boot"] is True
+
+
 def test_calc_virt_mac_not_virt_returns_none():
     # Arrange
     k = Koan()
@@ -478,6 +687,51 @@ def test_get_data_singular_calls_get_x_as_rendered():
     # Assert
     assert result == {"name": "p1"}
     k.xmlrpc_server.get_profile_as_rendered.assert_called_once_with("p1")
+
+
+@pytest.mark.parametrize(
+    "what,server_method",
+    [
+        ("profile", "get_profile_as_rendered"),
+        ("system", "get_system_as_rendered"),
+        ("image", "get_image_as_rendered"),
+    ],
+)
+def test_get_data_singular_flattens_nested_virt(what: str, server_method: str) -> None:
+    # Arrange
+    k = Koan()
+    k.xmlrpc_server = MagicMock()
+    getattr(k.xmlrpc_server, server_method).return_value = {
+        "name": "x1",
+        "virt": _nested_virt_options(ram=512),
+    }
+
+    # Act
+    result = k.get_data(what, "x1")
+
+    # Assert
+    assert result["virt_ram"] == 512
+
+
+def test_get_data_plural_untouched_by_virt_normalization() -> None:
+    # Arrange
+    k = Koan()
+    k.xmlrpc_server = MagicMock()
+    k.xmlrpc_server.get_systems.return_value = [
+        {"name": "s1"},
+        {"name": "s2", "virt": _nested_virt_options()},
+    ]
+
+    # Act
+    result = k.get_data("systems")
+
+    # Assert
+    # Plural results are a list, not a dict - must not be passed through the
+    # dict-only flattening helper.
+    assert result == [
+        {"name": "s1"},
+        {"name": "s2", "virt": _nested_virt_options()},
+    ]
 
 
 def test_get_data_empty_result_raises():
@@ -1343,23 +1597,6 @@ def test_run_dispatches_to_update_files(mocker):
 
     # Assert
     k.update_files.assert_called_once()
-
-
-def test_run_dispatches_to_update_config(mocker):
-    # Arrange
-    k = Koan()
-    k.server = "host"
-    k.is_update_config = True
-    k.system = "sys1"
-    mocker.patch("koan.app.utils.connect_to_server", return_value=MagicMock())
-    mocker.patch("koan.app.os.getuid", return_value=0)
-    mocker.patch.object(k, "update_config")
-
-    # Act
-    k.run()
-
-    # Assert
-    k.update_config.assert_called_once()
 
 
 def test_run_dispatches_to_display_by_default(mocker):

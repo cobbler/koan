@@ -220,7 +220,7 @@ def test_check_version_greater_or_equal_mismatched_format_raises():
 
 
 # ---------------------------------------------------------------------------
-# random_mac / generate_timestamp
+# random_mac
 # ---------------------------------------------------------------------------
 
 
@@ -238,18 +238,6 @@ def test_random_mac_is_callable_multiple_times():
 
     # Assert
     assert len(results) >= 1
-
-
-def test_generate_timestamp(mocker):
-    # Arrange
-    mocker.patch("time.time", return_value=1234567890.123)
-
-    # Act
-    result = utils.generate_timestamp()
-
-    # Assert
-    assert result == "1234567890"
-    assert result.isdigit()
 
 
 # ---------------------------------------------------------------------------
@@ -507,6 +495,7 @@ def test_connect_to_server_no_server_raises(mocker):
 def test_connect_to_server_success(mocker):
     # Arrange
     mock_proxy = MagicMock()
+    mock_proxy.extended_version.return_value = {"version_tuple": [4, 0, 0]}
     mocker.patch("xmlrpc.client.ServerProxy", return_value=mock_proxy)
 
     # Act
@@ -519,8 +508,10 @@ def test_connect_to_server_success(mocker):
 
 def test_connect_to_server_uses_custom_port(mocker):
     # Arrange
+    mock_proxy = MagicMock()
+    mock_proxy.extended_version.return_value = {"version_tuple": [4, 0, 0]}
     mock_server_proxy = mocker.patch(
-        "xmlrpc.client.ServerProxy", return_value=MagicMock()
+        "xmlrpc.client.ServerProxy", return_value=mock_proxy
     )
 
     # Act
@@ -535,6 +526,56 @@ def test_connect_to_server_all_urls_fail_raises(mocker):
     mocker.patch(
         "xmlrpc.client.ServerProxy", side_effect=Exception("connection refused")
     )
+
+    # Act & Assert
+    with pytest.raises(InfoException):
+        utils.connect_to_server(server="myserver")
+
+
+def test_connect_to_server_refuses_old_version(mocker):
+    # Arrange
+    mock_proxy = MagicMock()
+    mock_proxy.extended_version.return_value = {"version_tuple": [3, 3, 3]}
+    mocker.patch("xmlrpc.client.ServerProxy", return_value=mock_proxy)
+
+    # Act & Assert
+    with pytest.raises(InfoException):
+        utils.connect_to_server(server="myserver")
+
+
+def test_connect_to_server_accepts_exact_minimum_version(mocker):
+    # Arrange
+    mock_proxy = MagicMock()
+    mock_proxy.extended_version.return_value = {"version_tuple": [4, 0, 0]}
+    mocker.patch("xmlrpc.client.ServerProxy", return_value=mock_proxy)
+
+    # Act
+    result = utils.connect_to_server(server="myserver")
+
+    # Assert
+    assert result is mock_proxy
+
+
+def test_connect_to_server_accepts_newer_version(mocker):
+    # Arrange
+    mock_proxy = MagicMock()
+    mock_proxy.extended_version.return_value = {"version_tuple": [4, 1, 2]}
+    mocker.patch("xmlrpc.client.ServerProxy", return_value=mock_proxy)
+
+    # Act
+    result = utils.connect_to_server(server="myserver")
+
+    # Assert
+    assert result is mock_proxy
+
+
+def test_connect_to_server_refuses_when_extended_version_rpc_fails(mocker):
+    # Arrange
+    import xmlrpc.client as xmlrpclib
+
+    mock_proxy = MagicMock()
+    mock_proxy.extended_version.side_effect = xmlrpclib.Fault(1, "no such method")
+    mocker.patch("xmlrpc.client.ServerProxy", return_value=mock_proxy)
 
     # Act & Assert
     with pytest.raises(InfoException):

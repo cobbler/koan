@@ -96,22 +96,6 @@ Additionally use ``--static-interface=eth0`` to supply which interface to use to
 installer will boot from this virtual interface. Leaving off ``--static-interface`` will result in an unsuccessful
 network installation.
 
-Configuration management
-########################
-
-Using ``--update-config`` will update a system configuration as defined by Cobbler.
-
-.. code-block:: shell
-
-    koan --server=cobbler.example.org --update-config
-
-Additionally, adding the flag ``--summary`` will print configuration run stats.
-
-Koan passes in the system's FQDN in the background during the configuration request. Cobbler will match this FQDN to a
-configured system defined by Cobbler.
-
-The FQDN (Fully Qualified Domain Name) maps to the system's hostname field.
-
 Environment variables
 #####################
 

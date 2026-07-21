@@ -597,3 +597,29 @@ def test_install_container_tree_decodes_bytes_kickstart(mocker):
     )
 
     mock_tune.assert_called_once_with("/vz/private/101", "$6$hash")
+
+
+def test_start_install_still_requires_flat_virt_keys(mocker: MockerFixture) -> None:
+    # This module intentionally has no knowledge of Cobbler's nested "virt" Options
+    # object (data["virt"] = {"ram": ..., ...}) - it only reads the legacy flat
+    # virt_ram/virt_cpus/virt_file_size/virt_auto_boot keys, with no fallback. It
+    # relies entirely on koan.app.Koan.get_data() having already flattened those
+    # keys before profile_data reaches here. If this test ever stops raising
+    # KeyError, either openvz.py grew its own (redundant) nested-shape handling, or
+    # the upstream flattening contract broke silently - either way, investigate
+    # before "fixing" this test.
+    mocker.patch("koan.virt.openvz.os.path.exists", return_value=True)
+
+    kwargs = _base_kwargs()
+    kwargs["profile_data"] = {
+        "autoinst": "http://server.example.com/autoinst.ks",
+        "breed": "redhat",
+        "hostname": "test-host",
+        "ip_address_eth0": "192.168.1.10",
+        "name_servers": ["8.8.8.8", "8.8.4.4"],
+        "autoinstall_meta": [("vz_ctid", "101")],
+        "virt": {"ram": 512, "cpus": 2, "file_size": 10, "auto_boot": True},
+    }
+
+    with pytest.raises(KeyError):
+        openvz.start_install(**kwargs)
