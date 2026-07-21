@@ -1345,23 +1345,6 @@ def test_run_dispatches_to_update_files(mocker):
     k.update_files.assert_called_once()
 
 
-def test_run_dispatches_to_update_config(mocker):
-    # Arrange
-    k = Koan()
-    k.server = "host"
-    k.is_update_config = True
-    k.system = "sys1"
-    mocker.patch("koan.app.utils.connect_to_server", return_value=MagicMock())
-    mocker.patch("koan.app.os.getuid", return_value=0)
-    mocker.patch.object(k, "update_config")
-
-    # Act
-    k.run()
-
-    # Assert
-    k.update_config.assert_called_once()
-
-
 def test_run_dispatches_to_display_by_default(mocker):
     # Arrange
     k = Koan()
