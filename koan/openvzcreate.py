@@ -6,6 +6,7 @@ OpenVZ container-type virtualization installation functions.
 # SPDX-FileCopyrightText: Copyright 2012 Artem Kanarev <kanarev AT tncc.ru>, Sergey Podushkin <psv AT tncc.ru>
 
 import os
+
 from .cexceptions import OVZCreateException
 
 

@@ -7,80 +7,14 @@ registration tool for cobbler.
 # SPDX-FileCopyrightText: Michael DeHaan <michael.dehaan AT gmail>
 
 import os
-import traceback
-from optparse import OptionParser
-import time
-import sys
 import socket
+import time
+import traceback
+
 from . import utils
 from .cexceptions import InfoException
 
 # usage: cobbler-register [--server=server] [--fqdn=hostname] --profile=foo
-
-
-def main():
-    """
-    Command line stuff...
-    """
-
-    p = OptionParser()
-    p.add_option(
-        "-s",
-        "--server",
-        dest="server",
-        default=os.environ.get("COBBLER_SERVER", ""),
-        help="attach to this cobbler server",
-    )
-    p.add_option(
-        "-f",
-        "--fqdn",
-        dest="hostname",
-        default="",
-        help="override the discovered hostname",
-    )
-    p.add_option(
-        "-p", "--port", dest="port", default="80", help="cobbler port (default 80)"
-    )
-    p.add_option(
-        "-P",
-        "--profile",
-        dest="profile",
-        default="",
-        help="assign this profile to this system",
-    )
-    p.add_option(
-        "-b",
-        "--batch",
-        dest="batch",
-        action="store_true",
-        help="indicates this is being run from a script",
-    )
-
-    options, args = p.parse_args()
-    # if not os.getuid() == 0:
-    #    print("koan requires root access")
-    #    return 3
-
-    try:
-        k = Register()
-        k.server = options.server
-        k.port = options.port
-        k.profile = options.profile
-        k.hostname = options.hostname
-        k.batch = options.batch
-        k.run()
-    except Exception as e:
-        xa, xb, tb = sys.exc_info()
-        try:
-            getattr(e, "from_koan")
-            print(str(e)[1:-1])  # nice exception, no traceback needed
-        except:
-            print(xa)
-            print(xb)
-            print("".join(traceback.format_list(traceback.extract_tb(tb))))
-        return 1
-
-    return 0
 
 
 class Register:
@@ -159,7 +93,3 @@ class Register:
                 print("- registration failed, ignoring because of --batch")
 
         return
-
-
-if __name__ == "__main__":
-    main()

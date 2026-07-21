@@ -33,6 +33,18 @@ jobs:
         with:
           options: "--check --safe --verbose"
           version: "26.5.1"
+  isort:
+    name: isort formatter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        # https://github.com/actions/checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Run isort
+        # https://github.com/isort/isort-action
+        uses: isort/isort-action@24d8a7a51d33ca7f36c3f23598dafa33f7071326 # v1.1.1
+        with:
+          configuration: "--check-only --diff --profile black"
   commitlint:
     name: commitlint
     runs-on: ubuntu-latest

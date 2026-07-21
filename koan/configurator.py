@@ -9,16 +9,17 @@ module for configuring repos, packages and files
 # SPDX-FileCopyrightText: Kelsey Hightower <kelsey.hightower@gmail.com>
 
 import filecmp
-import shutil
-from . import utils
-import tempfile
-import stat
-import os.path
-import sys
-import time
-import pwd
 import grp
 import json
+import os.path
+import pwd
+import shutil
+import stat
+import sys
+import tempfile
+import time
+
+from . import utils
 
 try:
     import yum

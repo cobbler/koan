@@ -11,9 +11,8 @@ requires python-virtinst-0.200 (or virt-install in later distros).
 
 from xml.dom.minidom import parseString
 
+from koan import utils, virtinstall
 from koan.cexceptions import InfoException
-from koan import utils
-from koan import virtinstall
 
 
 def start_install(*args, **kwargs):

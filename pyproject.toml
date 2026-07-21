@@ -11,3 +11,6 @@ __gitstamp__ = "{scm_version.node}"
 __gitdate__ = "{scm_version.node_date}"
 __builddate__ = "{scm_version.time}"
 """
+
+[tool.isort]
+profile = "black"
