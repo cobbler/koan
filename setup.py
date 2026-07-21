@@ -24,8 +24,8 @@ setup(
     packages=["koan"],
     entry_points={
         "console_scripts": [
-            "koan = koan.register:main",
-            "cobbler-register = koan.app:main",
+            "koan = koan.app:main",
+            "cobbler-register = koan.register:main",
         ]
     },
 )
