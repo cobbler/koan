@@ -16,7 +16,7 @@ jobs:
       # git must be present before checkout, or the container image has none and actions/checkout silently falls back to
       # downloading a tarball via the GitHub REST API, which has no .git dir for setuptools_scm to read.
       - name: Install package deps
-        run: zypper -n in --no-recommends git tar curl python3 python3-devel python3-wheel python3-pip python3-libvirt-python gcc make
+        run: zypper -n in --no-recommends git tar curl python3 python3-devel python3-wheel python3-pip python3-libvirt-python gcc make virt-install
       - name: Checkout repository
         # setuptools_scm needs full history (incl. tags) to derive the version
         # https://github.com/actions/checkout

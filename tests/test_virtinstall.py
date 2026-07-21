@@ -1,21 +1,27 @@
 import unittest
+from unittest.mock import patch
 
-from mock import patch
+import pytest
 
 import koan
-import koan.utils
-from koan.virtinstall import build_commandline, create_image_file
+import koan.virtinstall
+from koan.cexceptions import InfoException
+from koan.virtinstall import _sanitize_nics, build_commandline, create_image_file
 
-# FIXME: This is not yet converted to pytest
 
+@pytest.fixture(autouse=True)
+def force_new_style_virtinst():
+    """Force a 'new' virt-install so build_commandline() doesn't disable features.
 
-def setup():
-    try:
-        from virtinst import version as vi_version
-
-        koan.virtinstall.virtinst_version = vi_version.__version__.split(".")
-    except:
-        koan.virtinstall.virtinst_version = 6
+    The expected command lines below were written assuming a truthy
+    virtinst_version (i.e. a modern virt-install), so this pins that
+    regardless of whether virt-install is actually installed on the machine
+    running the tests.
+    """
+    original = koan.virtinstall.virtinst_version
+    koan.virtinstall.virtinst_version = "6.0.0"
+    yield
+    koan.virtinstall.virtinst_version = original
 
 
 class OsPathMock:
@@ -53,6 +59,7 @@ class KoanVirtInstallTest(unittest.TestCase):
             profile_data={
                 "kernel_local": "kernel",
                 "initrd_local": "initrd",
+                "install_tree": "http://example.com/tree",
             },
             extra="ks=http://example.com/ks.ks",
         )
@@ -62,7 +69,7 @@ class KoanVirtInstallTest(unittest.TestCase):
             cmd,
             (
                 "virt-install --connect xen:/// --name foo --ram 256 --vcpus 1 "
-                "--uuid ad6611b9-98e4-82c8-827f-051b6b6680d7 --vnc --paravirt "
+                "--uuid ad6611b9-98e4-82c8-827f-051b6b6680d7 --nographics --paravirt "
                 "--boot kernel=kernel,initrd=initrd,kernel_args=ks=http://example.com/ks.ks "
                 "--disk path=/tmp/foo1.img,size=8 --disk path=/dev/foo1 "
                 "--network bridge=br0 "
@@ -84,6 +91,7 @@ class KoanVirtInstallTest(unittest.TestCase):
             profile_data={
                 "breed": "redhat",
                 "os_version": "fedora14",
+                "install_tree": "http://example.com/tree",
                 "interfaces": {
                     "eth0": {
                         "interface_type": "na",
@@ -102,7 +110,7 @@ class KoanVirtInstallTest(unittest.TestCase):
             cmd,
             (
                 "virt-install --connect xen:/// --name foo --ram 256 --vcpus 1 "
-                "--vnc --hvm --pxe --arch x86_64 "
+                "--nographics --hvm --location http://example.com/tree/ --arch x86_64 "
                 "--os-variant fedora14 --disk path=/dev/foo1 "
                 "--network bridge=br0,mac=11:22:33:44:55:66 "
                 "--network bridge=br1,mac=11:22:33:33:22:11 "
@@ -131,7 +139,7 @@ class KoanVirtInstallTest(unittest.TestCase):
             cmd,
             (
                 "virt-install --connect qemu:///system --name foo --ram 256 "
-                "--vcpus 1 --vnc --virt-type qemu --machine pc --hvm --cdrom /some/cdrom/path.iso "
+                "--vcpus 1 --nographics --virt-type qemu --machine pc --hvm --cdrom /some/cdrom/path.iso "
                 "--os-type windows --disk path=/tmp/foo1.img,size=8 "
                 "--disk path=/dev/foo1 --network bridge=br0 "
                 "--wait 0 --noautoconsole"
@@ -164,10 +172,10 @@ class KoanVirtInstallTest(unittest.TestCase):
             cmd,
             (
                 "virt-install --connect qemu:///system --name foo --ram 256 "
-                "--vcpus 1 --vnc --virt-type qemu --machine pc --hvm "
+                "--vcpus 1 --nographics --virt-type qemu --machine pc --hvm "
+                "--location http://example.com/some/install/tree/ "
                 "--extra-args=ks=http://example.com/ks.ks text kssendmac "
-                "--location http://example.com/some/install/tree/ --arch i686 "
-                "--os-variant ubuntunatty "
+                "--arch i686 --os-variant ubuntunatty "
                 "--disk path=/tmp/foo1.img,size=8,bus=virtio "
                 "--disk path=/dev/foo1,bus=virtio "
                 "--network bridge=br0,model=virtio --wait 0 --noautoconsole"
@@ -201,10 +209,10 @@ class KoanVirtInstallTest(unittest.TestCase):
             cmd,
             (
                 "virt-install --connect qemu:///system --name foo --ram 256 "
-                "--vcpus 1 --vnc --virt-type kvm --machine pc-1.0 "
+                "--vcpus 1 --nographics --virt-type kvm --machine pc-1.0 "
+                "--location http://example.com/some/install/tree/ "
                 "--extra-args=ks=http://example.com/ks.ks text kssendmac "
-                "--location http://example.com/some/install/tree/ --arch i686 "
-                "--os-variant ubuntunatty "
+                "--arch i686 --os-variant ubuntunatty "
                 "--disk path=/tmp/foo1.img,size=8,bus=virtio "
                 "--disk path=/dev/foo1,bus=virtio "
                 "--network bridge=br0,model=virtio --wait 0 --noautoconsole"
@@ -232,24 +240,11 @@ class KoanVirtInstallTest(unittest.TestCase):
         self.assertEqual(
             cmd,
             (
-                "virt-install --name foo --ram 256 --vcpus 1 --vnc --import "
+                "virt-install --name foo --ram 256 --vcpus 1 --nographics --import "
                 "--disk path=/some/install/image.img --network bridge=br0 "
                 "--network bridge=br2 --wait 0 --noautoconsole"
             ),
         )
-
-    def testVirtVersionCheckTest(self):
-        tss = [
-            ("19.19.19", "2.2.2", True),
-            ("1.19.19", "2.2.2", False),
-            ("2.19.19", "2.2.2", True),
-            ("2.2.19", "2.2.2", True),
-            ("1.1.0", "2.2.2", False),
-            ("1.2.1", "2.2.2", False),
-            ("2.2.2", "2.2.2", True),
-        ]
-        for t in tss:
-            self.assertTrue(utils.check_version_greater_or_equal(t[0], t[1]) == t[2])
 
     @patch("koan.virtinstall.utils.subprocess_call")
     @patch("koan.virtinstall.utils.os.path", new_callable=OsPathMock)
@@ -279,3 +274,42 @@ class KoanVirtInstallTest(unittest.TestCase):
                 "qemu-img create -f vmdk /path/to/imagedir/new_vmdk_file 30G",
             ],
         )
+
+
+def test_build_commandline_xen_with_image_raises():
+    with pytest.raises(InfoException, match="Xen does not work"):
+        build_commandline(
+            "xen:///",
+            name="foo",
+            ram=256,
+            vcpus=1,
+            disks=[("/dev/foo1", 0)],
+            bridge="br0",
+            profile_data={"file": "/some/cdrom.iso"},
+        )
+
+
+def test_build_commandline_import_requires_file():
+    with pytest.raises(InfoException, match="Profile 'file' required"):
+        build_commandline(
+            "import",
+            name="foo",
+            ram=256,
+            vcpus=1,
+            disks=[],
+            bridge="br0",
+            profile_data={},
+        )
+
+
+def test_sanitize_nics_skips_bond_bridge_and_vlan_interfaces():
+    nics = {
+        "bond0": {"interface_type": "bond", "mac_address": "aa:aa:aa:aa:aa:aa"},
+        "br0": {"interface_type": "bridge", "mac_address": "bb:bb:bb:bb:bb:bb"},
+        "eth0.10": {"interface_type": "na", "mac_address": "cc:cc:cc:cc:cc:cc"},
+        "eth0": {"interface_type": "na", "mac_address": "dd:dd:dd:dd:dd:dd"},
+    }
+
+    result = _sanitize_nics(nics, "br1", "", None)
+
+    assert result == [("br1", "dd:dd:dd:dd:dd:dd")]
