@@ -484,7 +484,7 @@ class Koan:
                     url_fmt = "http://%s/cblr/svc/op/ks/profile/%s"
                 else:
                     url_fmt = "http://%s/cblr/svc/op/ks/system/%s"
-                url = url_fmt % (self.server, profile_data["name"])
+                url = url_fmt % (profile_data["http_server"], profile_data["name"])
             else:
                 url = profile_data["autoinst"]
 
