@@ -9,21 +9,22 @@ requires python-virtinst-0.200 (or virt-install in later distros).
 # SPDX-FileCopyrightText: Copyright 2007-2008 Red Hat, Inc and Others.
 # SPDX-FileCopyrightText: Michael DeHaan <michael.dehaan AT gmail>
 
+from typing import Any
 from xml.dom.minidom import parseString
 
 from koan import utils, virtinstall
 from koan.cexceptions import InfoException
 
 
-def start_install(*args, **kwargs):
+def start_install(*args: Any, **kwargs: Any) -> None:
     if "arch" in kwargs.keys():
         kwargs["arch"] = None  # use host arch for kvm acceleration
     # Use kvm acceleration if available
     try:
-        import libvirt
-    except:
+        import libvirt  # pyright: ignore[reportMissingTypeStubs]
+    except Exception:
         raise InfoException("package libvirt is required for installing virtual guests")
-    conn = libvirt.openReadOnly(None)
+    conn = libvirt.openReadOnly(None)  # pyright: ignore[reportArgumentType]
     # See http://libvirt.org/formatcaps.html
     capabilities = parseString(conn.getCapabilities())
     for domain in capabilities.getElementsByTagName("domain"):

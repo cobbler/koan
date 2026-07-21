@@ -1,12 +1,16 @@
+from typing import Any, Dict
 from unittest.mock import MagicMock, call
 
 import pytest
+from pytest_mock import MockerFixture
 
 from koan.app import Koan
 from koan.cexceptions import InfoException
 
 
-def test_get_install_tree_from_autoinst_uses_http_server_port(mocker):
+def test_get_install_tree_from_autoinst_uses_http_server_port(
+    mocker: MockerFixture,
+) -> None:
     # Arrange
     # Cobbler bakes a non-default http_port into "http_server" (e.g. "host:10080"),
     # while "server" is just the plain hostname/IP koan was invoked with.
@@ -46,7 +50,9 @@ def test_get_install_tree_from_autoinst_uses_http_server_port(mocker):
         ({"a": 1, "b": 2}, "a", "b", None, 1),
     ],
 )
-def test_safe_load(hashv, primary_key, alternate_key, default, expected):
+def test_safe_load(
+    hashv: Any, primary_key: Any, alternate_key: Any, default: Any, expected: Any
+) -> None:
     # Arrange
     k = Koan()
 
@@ -65,7 +71,7 @@ def test_safe_load(hashv, primary_key, alternate_key, default, expected):
         ("1.2.3.4 and 5.6.7.8 both", ["1.2.3.4", "5.6.7.8"]),
     ],
 )
-def test_get_ips(strdata, expected):
+def test_get_ips(strdata: Any, expected: Any) -> None:
     # Arrange
     k = Koan()
 
@@ -80,7 +86,7 @@ def test_get_ips(strdata, expected):
         ("no ip here", False),
     ],
 )
-def test_is_ip(strdata, expected):
+def test_is_ip(strdata: Any, expected: Any) -> None:
     # Arrange
     k = Koan()
 
@@ -95,7 +101,7 @@ def test_is_ip(strdata, expected):
         ("no mac address here", []),
     ],
 )
-def test_get_macs(strdata, expected):
+def test_get_macs(strdata: Any, expected: Any) -> None:
     # Arrange
     k = Koan()
 
@@ -110,7 +116,7 @@ def test_get_macs(strdata, expected):
         ("not a mac", False),
     ],
 )
-def test_is_mac(strdata, expected):
+def test_is_mac(strdata: Any, expected: Any) -> None:
     # Arrange
     k = Koan()
 
@@ -118,7 +124,7 @@ def test_is_mac(strdata, expected):
     assert k.is_mac(strdata) is expected
 
 
-def test_uuid_to_string():
+def test_uuid_to_string() -> None:
     # Arrange
     k = Koan()
     u = [0] * 16
@@ -130,7 +136,7 @@ def test_uuid_to_string():
     assert result == "00000000-0000-0000-0000-000000000000"
 
 
-def test_random_uuid():
+def test_random_uuid() -> None:
     # Arrange
     k = Koan()
 
@@ -142,7 +148,7 @@ def test_random_uuid():
     assert all(0 <= x <= 255 for x in result)
 
 
-def test_get_uuid_returns_existing_value():
+def test_get_uuid_returns_existing_value() -> None:
     # Arrange
     k = Koan()
 
@@ -153,7 +159,7 @@ def test_get_uuid_returns_existing_value():
     assert result == "existing-uuid"
 
 
-def test_get_uuid_generates_random_when_falsy(mocker):
+def test_get_uuid_generates_random_when_falsy(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     mocker.patch.object(k, "randomUUID", return_value=[0] * 16)
@@ -165,7 +171,7 @@ def test_get_uuid_generates_random_when_falsy(mocker):
     assert result == "00000000-0000-0000-0000-000000000000"
 
 
-def test_merge_disk_data_reuses_last_size_and_driver():
+def test_merge_disk_data_reuses_last_size_and_driver() -> None:
     # Arrange
     k = Koan()
     paths = ["/a", "/b", "/c"]
@@ -183,7 +189,7 @@ def test_merge_disk_data_reuses_last_size_and_driver():
     ]
 
 
-def test_merge_disk_data_no_paths_raises():
+def test_merge_disk_data_no_paths_raises() -> None:
     # Arrange
     k = Koan()
 
@@ -192,7 +198,7 @@ def test_merge_disk_data_no_paths_raises():
         k.merge_disk_data([], [], [])
 
 
-def test_calc_virt_name_explicit_override():
+def test_calc_virt_name_explicit_override() -> None:
     # Arrange
     k = Koan()
     k.virt_name = "my:vm name"
@@ -204,11 +210,11 @@ def test_calc_virt_name_explicit_override():
     assert result == "my_vm_name"
 
 
-def test_calc_virt_name_uses_system_name_for_system_object():
+def test_calc_virt_name_uses_system_name_for_system_object() -> None:
     # Arrange
     k = Koan()
     k.virt_name = None
-    profile_data = {"interfaces": {}, "name": "sys1"}
+    profile_data: Dict[str, Any] = {"interfaces": {}, "name": "sys1"}
 
     # Act
     result = k.calc_virt_name(profile_data)
@@ -217,7 +223,7 @@ def test_calc_virt_name_uses_system_name_for_system_object():
     assert result == "sys1"
 
 
-def test_calc_virt_name_falls_back_to_time(mocker):
+def test_calc_virt_name_falls_back_to_time(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.virt_name = None
@@ -242,7 +248,7 @@ def test_calc_virt_name_falls_back_to_time(mocker):
         (False, {}, False),
     ],
 )
-def test_calc_virt_autoboot(override, data, expected):
+def test_calc_virt_autoboot(override: Any, data: Any, expected: Any) -> None:
     # Arrange
     k = Koan()
 
@@ -263,7 +269,7 @@ def test_calc_virt_autoboot(override, data, expected):
         (False, {"virt_pxe_boot": "0"}, False),
     ],
 )
-def test_calc_virt_pxeboot(override, data, expected):
+def test_calc_virt_pxeboot(override: Any, data: Any, expected: Any) -> None:
     # Arrange
     k = Koan()
 
@@ -274,7 +280,7 @@ def test_calc_virt_pxeboot(override, data, expected):
     assert result is expected
 
 
-def test_calc_virt_filesize_multiple_values():
+def test_calc_virt_filesize_multiple_values() -> None:
     # Arrange
     k = Koan()
     data = {"virt_file_size": "5,10"}
@@ -286,7 +292,7 @@ def test_calc_virt_filesize_multiple_values():
     assert result == [5, 10]
 
 
-def test_calc_virt_filesize_default_when_missing():
+def test_calc_virt_filesize_default_when_missing() -> None:
     # Arrange
     k = Koan()
 
@@ -306,7 +312,7 @@ def test_calc_virt_filesize_default_when_missing():
         ("", 5, 5),
     ],
 )
-def test_calc_virt_filesize2(size, default_filesize, expected):
+def test_calc_virt_filesize2(size: Any, default_filesize: Any, expected: Any) -> None:
     # Arrange
     k = Koan()
 
@@ -317,7 +323,7 @@ def test_calc_virt_filesize2(size, default_filesize, expected):
     assert result == expected
 
 
-def test_calc_virt_drivers_valid_and_invalid_mixed():
+def test_calc_virt_drivers_valid_and_invalid_mixed() -> None:
     # Arrange
     k = Koan()
     data = {"virt_disk_driver": "qcow2,bogus"}
@@ -329,7 +335,7 @@ def test_calc_virt_drivers_valid_and_invalid_mixed():
     assert result == ["qcow2", "raw"]
 
 
-def test_calc_virt_drivers_default():
+def test_calc_virt_drivers_default() -> None:
     # Arrange
     k = Koan()
 
@@ -348,7 +354,7 @@ def test_calc_virt_drivers_default():
         ({}, 64),
     ],
 )
-def test_calc_virt_ram(data, expected):
+def test_calc_virt_ram(data: Any, expected: Any) -> None:
     # Arrange
     k = Koan()
 
@@ -359,7 +365,7 @@ def test_calc_virt_ram(data, expected):
     assert result == expected
 
 
-def test_calc_virt_ram_non_numeric_string_raises():
+def test_calc_virt_ram_non_numeric_string_raises() -> None:
     # Arrange
     # Note: this documents existing (arguably buggy) behavior - the method
     # catches a failed int() conversion but then re-runs int(size) in the
@@ -379,7 +385,7 @@ def test_calc_virt_ram_non_numeric_string_raises():
         ({}, 1),
     ],
 )
-def test_calc_virt_cpus(data, expected):
+def test_calc_virt_cpus(data: Any, expected: Any) -> None:
     # Arrange
     k = Koan()
 
@@ -390,7 +396,7 @@ def test_calc_virt_cpus(data, expected):
     assert result == expected
 
 
-def test_calc_virt_mac_not_virt_returns_none():
+def test_calc_virt_mac_not_virt_returns_none() -> None:
     # Arrange
     k = Koan()
     k.is_virt = False
@@ -403,7 +409,7 @@ def test_calc_virt_mac_not_virt_returns_none():
     assert result is None
 
 
-def test_calc_virt_mac_system_is_mac():
+def test_calc_virt_mac_system_is_mac() -> None:
     # Arrange
     k = Koan()
     k.is_virt = True
@@ -416,7 +422,7 @@ def test_calc_virt_mac_system_is_mac():
     assert result == "AA:BB:CC:DD:EE:FF"
 
 
-def test_calc_virt_mac_generates_random(mocker):
+def test_calc_virt_mac_generates_random(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.is_virt = True
@@ -430,7 +436,7 @@ def test_calc_virt_mac_generates_random(mocker):
     assert result == "00:50:56:11:22:33"
 
 
-def test_calc_virt_uuid_always_none():
+def test_calc_virt_uuid_always_none() -> None:
     # Arrange
     k = Koan()
 
@@ -439,7 +445,7 @@ def test_calc_virt_uuid_always_none():
     assert k.calc_virt_uuid({"virt_uuid": "not-used"}) is None
 
 
-def test_connect_fail_raises_with_server_and_port():
+def test_connect_fail_raises_with_server_and_port() -> None:
     # Arrange
     k = Koan()
     k.server = "myserver"
@@ -452,7 +458,7 @@ def test_connect_fail_raises_with_server_and_port():
         k.connect_fail()
 
 
-def test_get_data_plural_calls_get_x():
+def test_get_data_plural_calls_get_x() -> None:
     # Arrange
     k = Koan()
     k.xmlrpc_server = MagicMock()
@@ -466,7 +472,7 @@ def test_get_data_plural_calls_get_x():
     k.xmlrpc_server.get_systems.assert_called_once_with()
 
 
-def test_get_data_singular_calls_get_x_as_rendered():
+def test_get_data_singular_calls_get_x_as_rendered() -> None:
     # Arrange
     k = Koan()
     k.xmlrpc_server = MagicMock()
@@ -480,7 +486,7 @@ def test_get_data_singular_calls_get_x_as_rendered():
     k.xmlrpc_server.get_profile_as_rendered.assert_called_once_with("p1")
 
 
-def test_get_data_empty_result_raises():
+def test_get_data_empty_result_raises() -> None:
     # Arrange
     k = Koan()
     k.xmlrpc_server = MagicMock()
@@ -491,7 +497,7 @@ def test_get_data_empty_result_raises():
         k.get_data("systems")
 
 
-def test_get_data_exception_calls_connect_fail():
+def test_get_data_exception_calls_connect_fail() -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -504,7 +510,7 @@ def test_get_data_exception_calls_connect_fail():
         k.get_data("systems")
 
 
-def test_list_invalid_what_raises():
+def test_list_invalid_what_raises() -> None:
     # Arrange
     k = Koan()
 
@@ -513,10 +519,14 @@ def test_list_invalid_what_raises():
         k.list("bogus")
 
 
-def test_list_valid_prints_names(mocker, capsys):
+def test_list_valid_prints_names(
+    mocker: MockerFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
     # Arrange
     k = Koan()
-    mocker.patch.object(k, "get_data", return_value=[{"name": "p1"}, {"other": "x"}])
+    mock_get_data = mocker.patch.object(
+        k, "get_data", return_value=[{"name": "p1"}, {"other": "x"}]
+    )
 
     # Act
     result = k.list("profiles")
@@ -525,19 +535,23 @@ def test_list_valid_prints_names(mocker, capsys):
     assert result is True
     captured = capsys.readouterr()
     assert "p1" in captured.out
-    k.get_data.assert_called_once_with("profiles")
+    mock_get_data.assert_called_once_with("profiles")
 
 
-def test_display_prints_selected_params(mocker, capsys):
+def test_display_prints_selected_params(
+    mocker: MockerFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
     # Arrange
     k = Koan()
     profile_data = {"name": "sys1", "distro": "d1", "kernel_options": "foo=bar"}
 
-    def fake_net_install(after_download):
+    def fake_net_install(after_download: Any) -> None:
         after_download(k, profile_data)
 
     mocker.patch.object(k, "net_install", side_effect=fake_net_install)
-    mocker.patch.object(k, "calc_kernel_args", return_value="foo=bar ")
+    mock_calc_kernel_args = mocker.patch.object(
+        k, "calc_kernel_args", return_value="foo=bar "
+    )
 
     # Act
     k.display()
@@ -546,10 +560,10 @@ def test_display_prints_selected_params(mocker, capsys):
     captured = capsys.readouterr()
     assert "sys1" in captured.out
     assert "foo=bar" in captured.out
-    k.calc_kernel_args.assert_called_once_with(profile_data)
+    mock_calc_kernel_args.assert_called_once_with(profile_data)
 
 
-def test_get_distro_files_server_set_builds_http_urls(mocker):
+def test_get_distro_files_server_set_builds_http_urls(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "myhost"
@@ -576,7 +590,7 @@ def test_get_distro_files_server_set_builds_http_urls(mocker):
     assert profile_data["initrd_local"] == "/boot/initrd.img_koan"
 
 
-def test_get_distro_files_no_server_keeps_local_paths(mocker):
+def test_get_distro_files_no_server_keeps_local_paths(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = None
@@ -598,7 +612,7 @@ def test_get_distro_files_no_server_keeps_local_paths(mocker):
     ]
 
 
-def test_get_distro_files_download_error_wrapped(mocker):
+def test_get_distro_files_download_error_wrapped(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = None
@@ -620,7 +634,7 @@ def test_get_distro_files_download_error_wrapped(mocker):
 # ---------------------------------------------------------------------------
 
 
-def test_calc_kernel_args_suse_breed():
+def test_calc_kernel_args_suse_breed() -> None:
     # Arrange
     k = Koan()
     pd = {
@@ -637,7 +651,7 @@ def test_calc_kernel_args_suse_breed():
     assert result == "autoyast=http://x/ks.cfg "
 
 
-def test_calc_kernel_args_debian_breed():
+def test_calc_kernel_args_debian_breed() -> None:
     # Arrange
     k = Koan()
     pd = {
@@ -665,7 +679,9 @@ def test_calc_kernel_args_debian_breed():
         ("fedora17", "inst.ks=http://x/ks.cfg "),
     ],
 )
-def test_calc_kernel_args_redhat_family_ks_prefix(os_version, expected_prefix):
+def test_calc_kernel_args_redhat_family_ks_prefix(
+    os_version: Any, expected_prefix: Any
+) -> None:
     # Arrange
     k = Koan()
     pd = {
@@ -682,7 +698,7 @@ def test_calc_kernel_args_redhat_family_ks_prefix(os_version, expected_prefix):
     assert result == expected_prefix
 
 
-def test_calc_kernel_args_appends_kernel_options():
+def test_calc_kernel_args_appends_kernel_options() -> None:
     # Arrange
     k = Koan()
     pd = {
@@ -699,7 +715,7 @@ def test_calc_kernel_args_appends_kernel_options():
     assert result == "foo=bar baz "
 
 
-def test_calc_kernel_args_static_interface_redhat_non_newdracut():
+def test_calc_kernel_args_static_interface_redhat_non_newdracut() -> None:
     # Arrange
     k = Koan()
     k.static_interface = "eth0"
@@ -729,7 +745,7 @@ def test_calc_kernel_args_static_interface_redhat_non_newdracut():
     )
 
 
-def test_calc_kernel_args_static_interface_redhat_newdracut_rhel7():
+def test_calc_kernel_args_static_interface_redhat_newdracut_rhel7() -> None:
     # Arrange
     k = Koan()
     k.static_interface = "eth0"
@@ -759,7 +775,7 @@ def test_calc_kernel_args_static_interface_redhat_newdracut_rhel7():
     )
 
 
-def test_calc_kernel_args_static_interface_redhat_newdracut_fedora():
+def test_calc_kernel_args_static_interface_redhat_newdracut_fedora() -> None:
     # Arrange
     k = Koan()
     k.static_interface = "eth0"
@@ -788,7 +804,7 @@ def test_calc_kernel_args_static_interface_redhat_newdracut_fedora():
     )
 
 
-def test_calc_kernel_args_static_interface_debian():
+def test_calc_kernel_args_static_interface_debian() -> None:
     # Arrange
     k = Koan()
     k.static_interface = "eth0"
@@ -821,7 +837,7 @@ def test_calc_kernel_args_static_interface_debian():
     )
 
 
-def test_calc_kernel_args_static_interface_suse():
+def test_calc_kernel_args_static_interface_suse() -> None:
     # Arrange
     k = Koan()
     k.static_interface = "eth0"
@@ -851,7 +867,7 @@ def test_calc_kernel_args_static_interface_suse():
     )
 
 
-def test_calc_kernel_args_static_interface_eth_alternate_name_lookup():
+def test_calc_kernel_args_static_interface_eth_alternate_name_lookup() -> None:
     # Arrange
     # cobbler system interfaces are sometimes keyed by "intfX" instead of "ethX"
     k = Koan()
@@ -880,7 +896,7 @@ def test_calc_kernel_args_static_interface_eth_alternate_name_lookup():
     assert "ksdevice=eth0" in result
 
 
-def test_calc_kernel_args_static_interface_non_eth_direct_lookup():
+def test_calc_kernel_args_static_interface_non_eth_direct_lookup() -> None:
     # Arrange
     k = Koan()
     k.static_interface = "bond0"
@@ -908,7 +924,7 @@ def test_calc_kernel_args_static_interface_non_eth_direct_lookup():
     assert "ksdevice=bond0" in result
 
 
-def test_calc_kernel_args_kopts_override_adds_options():
+def test_calc_kernel_args_kopts_override_adds_options() -> None:
     # Arrange
     k = Koan()
     k.kopts_override = "foo=bar baz=qux"
@@ -921,7 +937,7 @@ def test_calc_kernel_args_kopts_override_adds_options():
     assert result == "foo=bar baz=qux "
 
 
-def test_calc_kernel_args_kopts_override_overrides_existing_key():
+def test_calc_kernel_args_kopts_override_overrides_existing_key() -> None:
     # Arrange
     k = Koan()
     k.kopts_override = "foo=new"
@@ -946,7 +962,9 @@ def test_calc_kernel_args_kopts_override_overrides_existing_key():
         ("rhel7", "inst.ks=file:ks.cfg "),
     ],
 )
-def test_calc_kernel_args_replace_self_embed_autoinst(os_version, expected):
+def test_calc_kernel_args_replace_self_embed_autoinst(
+    os_version: Any, expected: Any
+) -> None:
     # Arrange
     k = Koan()
     k.embed_autoinst = True
@@ -964,7 +982,7 @@ def test_calc_kernel_args_replace_self_embed_autoinst(os_version, expected):
     assert result == expected
 
 
-def test_calc_kernel_args_replace_self_without_embed_autoinst_noop():
+def test_calc_kernel_args_replace_self_without_embed_autoinst_noop() -> None:
     # Arrange
     k = Koan()
     k.embed_autoinst = None
@@ -982,7 +1000,7 @@ def test_calc_kernel_args_replace_self_without_embed_autoinst_noop():
     assert result == ""
 
 
-def test_calc_kernel_args_lang_fixup():
+def test_calc_kernel_args_lang_fixup() -> None:
     # Arrange
     k = Koan()
     pd = {
@@ -999,7 +1017,7 @@ def test_calc_kernel_args_lang_fixup():
     assert result == "lang= "
 
 
-def test_calc_kernel_args_ksdevice_bootif_fixup():
+def test_calc_kernel_args_ksdevice_bootif_fixup() -> None:
     # Arrange
     k = Koan()
     pd = {
@@ -1021,7 +1039,7 @@ def test_calc_kernel_args_ksdevice_bootif_fixup():
 # ---------------------------------------------------------------------------
 
 
-def test_run_no_server_raises():
+def test_run_no_server_raises() -> None:
     # Arrange
     k = Koan()
     k.server = None
@@ -1031,7 +1049,7 @@ def test_run_no_server_raises():
         k.run()
 
 
-def test_run_no_action_selected_raises():
+def test_run_no_action_selected_raises() -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1041,7 +1059,7 @@ def test_run_no_action_selected_raises():
         k.run()
 
 
-def test_run_multiple_actions_selected_raises():
+def test_run_multiple_actions_selected_raises() -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1053,7 +1071,7 @@ def test_run_multiple_actions_selected_raises():
         k.run()
 
 
-def test_run_empty_server_with_profile_requires_server():
+def test_run_empty_server_with_profile_requires_server() -> None:
     # Arrange
     k = Koan()
     k.server = ""
@@ -1065,23 +1083,23 @@ def test_run_empty_server_with_profile_requires_server():
         k.run()
 
 
-def test_run_list_items_dispatches_to_list_and_returns(mocker):
+def test_run_list_items_dispatches_to_list_and_returns(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
     k.list_items = "profiles"
     mocker.patch("koan.app.utils.connect_to_server", return_value=MagicMock())
-    mocker.patch.object(k, "list")
+    mock_list = mocker.patch.object(k, "list")
 
     # Act
     result = k.run()
 
     # Assert
-    k.list.assert_called_once_with("profiles")
+    mock_list.assert_called_once_with("profiles")
     assert result is None
 
 
-def test_run_non_root_non_display_returns_3(mocker):
+def test_run_non_root_non_display_returns_3(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1089,17 +1107,17 @@ def test_run_non_root_non_display_returns_3(mocker):
     k.profile = "p1"
     mocker.patch("koan.app.utils.connect_to_server", return_value=MagicMock())
     mocker.patch("koan.app.os.getuid", return_value=1000)
-    mocker.patch.object(k, "update_files")
+    mock_update_files = mocker.patch.object(k, "update_files")
 
     # Act
     result = k.run()
 
     # Assert
     assert result == 3
-    k.update_files.assert_not_called()
+    mock_update_files.assert_not_called()
 
 
-def test_run_non_root_is_virt_warns_but_continues(mocker):
+def test_run_non_root_is_virt_warns_but_continues(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1107,16 +1125,16 @@ def test_run_non_root_is_virt_warns_but_continues(mocker):
     k.profile = "p1"
     mocker.patch("koan.app.utils.connect_to_server", return_value=MagicMock())
     mocker.patch("koan.app.os.getuid", return_value=1000)
-    mocker.patch.object(k, "virt")
+    mock_virt = mocker.patch.object(k, "virt")
 
     # Act
     k.run()
 
     # Assert
-    k.virt.assert_called_once()
+    mock_virt.assert_called_once()
 
 
-def test_run_non_root_is_display_continues(mocker):
+def test_run_non_root_is_display_continues(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1124,16 +1142,16 @@ def test_run_non_root_is_display_continues(mocker):
     k.profile = "p1"
     mocker.patch("koan.app.utils.connect_to_server", return_value=MagicMock())
     mocker.patch("koan.app.os.getuid", return_value=1000)
-    mocker.patch.object(k, "display")
+    mock_display = mocker.patch.object(k, "display")
 
     # Act
     k.run()
 
     # Assert
-    k.display.assert_called_once()
+    mock_display.assert_called_once()
 
 
-def test_run_is_virt_without_profile_system_image_raises(mocker):
+def test_run_is_virt_without_profile_system_image_raises(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1148,7 +1166,7 @@ def test_run_is_virt_without_profile_system_image_raises(mocker):
         k.run()
 
 
-def test_run_autodetects_system_when_not_virt(mocker):
+def test_run_autodetects_system_when_not_virt(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1156,19 +1174,19 @@ def test_run_autodetects_system_when_not_virt(mocker):
     mocker.patch("koan.app.utils.connect_to_server", return_value=MagicMock())
     mocker.patch("koan.app.os.getuid", return_value=0)
     mocker.patch.object(k, "autodetect_system", return_value="sys1")
-    mocker.patch.object(k, "ask_profile")
-    mocker.patch.object(k, "display")
+    mock_ask_profile = mocker.patch.object(k, "ask_profile")
+    mock_display = mocker.patch.object(k, "display")
 
     # Act
     k.run()
 
     # Assert
     assert k.system == "sys1"
-    k.ask_profile.assert_not_called()
-    k.display.assert_called_once()
+    mock_ask_profile.assert_not_called()
+    mock_display.assert_called_once()
 
 
-def test_run_asks_profile_when_autodetect_fails(mocker):
+def test_run_asks_profile_when_autodetect_fails(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1177,17 +1195,17 @@ def test_run_asks_profile_when_autodetect_fails(mocker):
     mocker.patch("koan.app.os.getuid", return_value=0)
     mocker.patch.object(k, "autodetect_system", return_value=None)
     mocker.patch.object(k, "ask_profile", return_value="prof1")
-    mocker.patch.object(k, "display")
+    mock_display = mocker.patch.object(k, "display")
 
     # Act
     k.run()
 
     # Assert
     assert k.profile == "prof1"
-    k.display.assert_called_once()
+    mock_display.assert_called_once()
 
 
-def test_run_invalid_virt_type_raises(mocker):
+def test_run_invalid_virt_type_raises(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1202,7 +1220,9 @@ def test_run_invalid_virt_type_raises(mocker):
         k.run()
 
 
-def test_run_qemu_disk_type_without_qemu_virt_type_raises(mocker):
+def test_run_qemu_disk_type_without_qemu_virt_type_raises(
+    mocker: MockerFixture,
+) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1219,7 +1239,7 @@ def test_run_qemu_disk_type_without_qemu_virt_type_raises(mocker):
         k.run()
 
 
-def test_run_qemu_net_type_without_qemu_virt_type_raises(mocker):
+def test_run_qemu_net_type_without_qemu_virt_type_raises(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1236,7 +1256,9 @@ def test_run_qemu_net_type_without_qemu_virt_type_raises(mocker):
         k.run()
 
 
-def test_run_qemu_machine_type_without_qemu_virt_type_raises(mocker):
+def test_run_qemu_machine_type_without_qemu_virt_type_raises(
+    mocker: MockerFixture,
+) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1253,7 +1275,7 @@ def test_run_qemu_machine_type_without_qemu_virt_type_raises(mocker):
         k.run()
 
 
-def test_run_static_interface_with_profile_raises(mocker):
+def test_run_static_interface_with_profile_raises(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1271,7 +1293,7 @@ def test_run_static_interface_with_profile_raises(mocker):
         k.run()
 
 
-def test_run_dispatches_to_virt(mocker):
+def test_run_dispatches_to_virt(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1279,16 +1301,16 @@ def test_run_dispatches_to_virt(mocker):
     k.profile = "p1"
     mocker.patch("koan.app.utils.connect_to_server", return_value=MagicMock())
     mocker.patch("koan.app.os.getuid", return_value=0)
-    mocker.patch.object(k, "virt")
+    mock_virt = mocker.patch.object(k, "virt")
 
     # Act
     k.run()
 
     # Assert
-    k.virt.assert_called_once()
+    mock_virt.assert_called_once()
 
 
-def test_run_dispatches_to_kexec_replace_when_use_kexec(mocker):
+def test_run_dispatches_to_kexec_replace_when_use_kexec(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1297,18 +1319,18 @@ def test_run_dispatches_to_kexec_replace_when_use_kexec(mocker):
     k.system = "sys1"
     mocker.patch("koan.app.utils.connect_to_server", return_value=MagicMock())
     mocker.patch("koan.app.os.getuid", return_value=0)
-    mocker.patch.object(k, "kexec_replace")
-    mocker.patch.object(k, "replace")
+    mock_kexec_replace = mocker.patch.object(k, "kexec_replace")
+    mock_replace = mocker.patch.object(k, "replace")
 
     # Act
     k.run()
 
     # Assert
-    k.kexec_replace.assert_called_once()
-    k.replace.assert_not_called()
+    mock_kexec_replace.assert_called_once()
+    mock_replace.assert_not_called()
 
 
-def test_run_dispatches_to_replace_when_no_kexec(mocker):
+def test_run_dispatches_to_replace_when_no_kexec(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1317,18 +1339,18 @@ def test_run_dispatches_to_replace_when_no_kexec(mocker):
     k.system = "sys1"
     mocker.patch("koan.app.utils.connect_to_server", return_value=MagicMock())
     mocker.patch("koan.app.os.getuid", return_value=0)
-    mocker.patch.object(k, "kexec_replace")
-    mocker.patch.object(k, "replace")
+    mock_kexec_replace = mocker.patch.object(k, "kexec_replace")
+    mock_replace = mocker.patch.object(k, "replace")
 
     # Act
     k.run()
 
     # Assert
-    k.replace.assert_called_once()
-    k.kexec_replace.assert_not_called()
+    mock_replace.assert_called_once()
+    mock_kexec_replace.assert_not_called()
 
 
-def test_run_dispatches_to_update_files(mocker):
+def test_run_dispatches_to_update_files(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1336,16 +1358,16 @@ def test_run_dispatches_to_update_files(mocker):
     k.system = "sys1"
     mocker.patch("koan.app.utils.connect_to_server", return_value=MagicMock())
     mocker.patch("koan.app.os.getuid", return_value=0)
-    mocker.patch.object(k, "update_files")
+    mock_update_files = mocker.patch.object(k, "update_files")
 
     # Act
     k.run()
 
     # Assert
-    k.update_files.assert_called_once()
+    mock_update_files.assert_called_once()
 
 
-def test_run_dispatches_to_display_by_default(mocker):
+def test_run_dispatches_to_display_by_default(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1353,13 +1375,13 @@ def test_run_dispatches_to_display_by_default(mocker):
     k.system = "sys1"
     mocker.patch("koan.app.utils.connect_to_server", return_value=MagicMock())
     mocker.patch("koan.app.os.getuid", return_value=0)
-    mocker.patch.object(k, "display")
+    mock_display = mocker.patch.object(k, "display")
 
     # Act
     k.run()
 
     # Assert
-    k.display.assert_called_once()
+    mock_display.assert_called_once()
 
 
 # ---------------------------------------------------------------------------
@@ -1367,7 +1389,7 @@ def test_run_dispatches_to_display_by_default(mocker):
 # ---------------------------------------------------------------------------
 
 
-def test_ask_profile_returns_matching_choice(mocker):
+def test_ask_profile_returns_matching_choice(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.xmlrpc_server = MagicMock()
@@ -1381,7 +1403,7 @@ def test_ask_profile_returns_matching_choice(mocker):
     assert result == "p2"
 
 
-def test_ask_profile_returns_none_when_no_match(mocker):
+def test_ask_profile_returns_none_when_no_match(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.xmlrpc_server = MagicMock()
@@ -1395,7 +1417,7 @@ def test_ask_profile_returns_none_when_no_match(mocker):
     assert result is None
 
 
-def test_ask_profile_connect_failure_raises(mocker):
+def test_ask_profile_connect_failure_raises(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     k.server = "host"
@@ -1408,7 +1430,7 @@ def test_ask_profile_connect_failure_raises(mocker):
         k.ask_profile()
 
 
-def test_autodetect_system_no_match_raises(mocker):
+def test_autodetect_system_no_match_raises(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     mocker.patch.object(
@@ -1438,7 +1460,9 @@ def test_autodetect_system_no_match_raises(mocker):
         k.autodetect_system()
 
 
-def test_autodetect_system_no_match_interactive_returns_none(mocker):
+def test_autodetect_system_no_match_interactive_returns_none(
+    mocker: MockerFixture,
+) -> None:
     # Arrange
     k = Koan()
     mocker.patch.object(
@@ -1470,7 +1494,7 @@ def test_autodetect_system_no_match_interactive_returns_none(mocker):
     assert result is None
 
 
-def test_autodetect_system_single_match_by_mac(mocker):
+def test_autodetect_system_single_match_by_mac(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     mocker.patch.object(
@@ -1502,7 +1526,7 @@ def test_autodetect_system_single_match_by_mac(mocker):
     assert result == "sysA"
 
 
-def test_autodetect_system_multiple_matches_raises(mocker):
+def test_autodetect_system_multiple_matches_raises(mocker: MockerFixture) -> None:
     # Arrange
     k = Koan()
     mocker.patch.object(
@@ -1541,7 +1565,7 @@ def test_autodetect_system_multiple_matches_raises(mocker):
         k.autodetect_system()
 
 
-def test_virt_choose_virt_clone_image():
+def test_virt_choose_virt_clone_image() -> None:
     # Arrange
     from koan.virt import image
 
@@ -1559,7 +1583,7 @@ def test_virt_choose_virt_clone_image():
     assert can_poll is None
 
 
-def test_virt_choose_xenpv():
+def test_virt_choose_xenpv() -> None:
     # Arrange
     from koan.virt import xen
 
@@ -1577,7 +1601,7 @@ def test_virt_choose_xenpv():
     assert uuid is not None
 
 
-def test_virt_choose_xenfv():
+def test_virt_choose_xenfv() -> None:
     # Arrange
     from koan.virt import xen
 
@@ -1586,7 +1610,7 @@ def test_virt_choose_xenfv():
     k.virt_type = "xenfv"
 
     # Act
-    uuid, creator, fullvirt, can_poll = k.virt_choose({})
+    _uuid, creator, fullvirt, can_poll = k.virt_choose({})
 
     # Assert
     assert creator is xen.start_install
@@ -1594,7 +1618,7 @@ def test_virt_choose_xenfv():
     assert can_poll == "xen"
 
 
-def test_virt_choose_qemu():
+def test_virt_choose_qemu() -> None:
     # Arrange
     from koan.virt import qemu
 
@@ -1612,7 +1636,7 @@ def test_virt_choose_qemu():
     assert can_poll == "qemu"
 
 
-def test_virt_choose_kvm():
+def test_virt_choose_kvm() -> None:
     # Arrange
     from koan.virt import qemu
 
@@ -1621,7 +1645,7 @@ def test_virt_choose_kvm():
     k.virt_type = "kvm"
 
     # Act
-    uuid, creator, fullvirt, can_poll = k.virt_choose({})
+    _uuid, creator, fullvirt, can_poll = k.virt_choose({})
 
     # Assert
     assert creator is qemu.start_install
@@ -1629,7 +1653,7 @@ def test_virt_choose_kvm():
     assert can_poll == "qemu"
 
 
-def test_virt_choose_vmware():
+def test_virt_choose_vmware() -> None:
     # Arrange
     from koan.virt import vmw
 
@@ -1647,7 +1671,7 @@ def test_virt_choose_vmware():
     assert can_poll is None
 
 
-def test_virt_choose_openvz():
+def test_virt_choose_openvz() -> None:
     # Arrange
     from koan.virt import openvz
 
@@ -1656,14 +1680,14 @@ def test_virt_choose_openvz():
     k.virt_type = "openvz"
 
     # Act
-    uuid, creator, fullvirt, can_poll = k.virt_choose({})
+    uuid, creator, _fullvirt, _can_poll = k.virt_choose({})
 
     # Assert
     assert creator is openvz.start_install
     assert uuid is None
 
 
-def test_virt_choose_invalid_type_raises():
+def test_virt_choose_invalid_type_raises() -> None:
     # Arrange
     k = Koan()
     k.image = None
@@ -1674,7 +1698,9 @@ def test_virt_choose_invalid_type_raises():
         k.virt_choose({})
 
 
-def test_get_install_tree_from_profile_data_remote_url(capsys):
+def test_get_install_tree_from_profile_data_remote_url(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     # Arrange
     k = Koan()
     profile_data = {
@@ -1689,7 +1715,7 @@ def test_get_install_tree_from_profile_data_remote_url(capsys):
     assert profile_data["install_tree"] == "http://otherhost/tree"
 
 
-def test_get_install_tree_from_profile_data_local_path():
+def test_get_install_tree_from_profile_data_local_path() -> None:
     # Arrange
     k = Koan()
     profile_data = {
@@ -1704,7 +1730,7 @@ def test_get_install_tree_from_profile_data_local_path():
     assert profile_data["install_tree"] == "http://myhost/path/to/tree"
 
 
-def test_get_install_tree_from_profile_data_suse_fallback_to_kernel_options():
+def test_get_install_tree_from_profile_data_suse_fallback_to_kernel_options() -> None:
     # Arrange
     k = Koan()
     profile_data = {
@@ -1719,7 +1745,7 @@ def test_get_install_tree_from_profile_data_suse_fallback_to_kernel_options():
     assert profile_data["install_tree"] == "http://x/tree"
 
 
-def test_get_install_tree_from_profile_data_non_suse_exception_is_swallowed():
+def test_get_install_tree_from_profile_data_non_suse_exception_is_swallowed() -> None:
     # Arrange
     k = Koan()
     profile_data = {"breed": "redhat"}

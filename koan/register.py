@@ -10,25 +10,29 @@ import os
 import socket
 import time
 import traceback
+from typing import Any, Dict, Optional
 
 from koan import utils
 from koan.cexceptions import InfoException
+from koan.utils import CobblerXMLRPCInterface
 
 # usage: cobbler-register [--server=server] [--fqdn=hostname] --profile=foo
 
 
 class Register:
-    def __init__(self):
+    conn: CobblerXMLRPCInterface
+
+    def __init__(self) -> None:
         """
         Constructor.  Arguments will be filled in by optparse...
         """
-        self.server = ""
-        self.port = ""
-        self.profile = ""
-        self.hostname = ""
-        self.batch = ""
+        self.server: str = ""
+        self.port: str = ""
+        self.profile: str = ""
+        self.hostname: str = ""
+        self.batch: Optional[bool] = None
 
-    def run(self):
+    def run(self) -> None:
         """
         Commence with the registration already.
         """
@@ -40,7 +44,7 @@ class Register:
 
         print("- preparing to koan home")
         self.conn = utils.connect_to_server(self.server, self.port)
-        reg_info = {}
+        reg_info: Dict[str, Any] = {}
         print("- gathering network info")
         netinfo = utils.get_network_info()
         reg_info["interfaces"] = netinfo
@@ -88,7 +92,7 @@ class Register:
             try:
                 self.conn.register_new_system(reg_info)
                 print("- registration successful, new system name: %s" % sysname)
-            except:
+            except Exception:
                 traceback.print_exc()
                 print("- registration failed, ignoring because of --batch")
 

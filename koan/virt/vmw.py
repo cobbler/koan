@@ -7,6 +7,8 @@ Virtualization installation functions.
 # SPDX-FileCopyrightText: Michael DeHaan <michael.dehaan AT gmail>
 
 import os
+import subprocess
+from typing import Any, Dict, List, Optional, Union, cast
 
 from koan.cexceptions import InfoException, VirtCreateException
 
@@ -45,15 +47,31 @@ memsize = "%(MEMORY)s"
 # ide1:0.filename = "%(PATH_TO_ISO)s"
 
 
-def make_disk(disksize, image):
-    cmd = "vmware-vdiskmanager -c -a lsilogic -s %sGb -t 0 %s" % (disksize, image)
+def make_disk(disksize: Union[int, str], image: str) -> None:
+    cmd = [
+        "vmware-vdiskmanager",
+        "-c",
+        "-a",
+        "lsilogic",
+        "-s",
+        "%sGb" % disksize,
+        "-t",
+        "0",
+        image,
+    ]
     print("- %s" % cmd)
-    rc = os.system(cmd)
+    rc = subprocess.call(cmd)
     if rc != 0:
         raise VirtCreateException("command failed")
 
 
-def make_vmx(path, vmdk_image, image_name, mac_address, memory):
+def make_vmx(
+    path: str,
+    vmdk_image: str,
+    image_name: str,
+    mac_address: str,
+    memory: Union[int, str],
+) -> None:
     template_params = {
         "VMDK_IMAGE": vmdk_image,
         "IMAGE_NAME": image_name,
@@ -66,41 +84,42 @@ def make_vmx(path, vmdk_image, image_name, mac_address, memory):
     fd.close()
 
 
-def register_vmx(vmx_file):
-    cmd = "vmware-cmd -s register %s" % vmx_file
+def register_vmx(vmx_file: str) -> None:
+    cmd = ["vmware-cmd", "-s", "register", vmx_file]
     print("- %s" % cmd)
-    rc = os.system(cmd)
+    rc = subprocess.call(cmd)
     if rc != 0:
         raise VirtCreateException("vmware registration failed")
 
 
-def start_vm(vmx_file):
+def start_vm(vmx_file: str) -> None:
     os.chmod(vmx_file, 0o755)
-    cmd = "vmware-cmd %s start" % vmx_file
+    cmd = ["vmware-cmd", vmx_file, "start"]
     print("- %s" % cmd)
-    rc = os.system(cmd)
+    rc = subprocess.call(cmd)
     if rc != 0:
         raise VirtCreateException("vm start failed")
 
 
 def start_install(
-    name=None,
-    ram=None,
-    disks=None,
-    mac=None,
-    uuid=None,
-    extra=None,
-    vcpus=None,
-    profile_data=None,
-    arch=None,
-    gfx_type=None,
-    fullvirt=True,
-    bridge=None,
-    virt_type=None,
-    virt_auto_boot=False,
-    qemu_driver_type=None,
-    qemu_net_type=None,
-):
+    name: Optional[str] = None,
+    ram: Optional[Union[int, str]] = None,
+    disks: Optional[List[Any]] = None,
+    mac: Optional[str] = None,
+    uuid: Optional[str] = None,
+    extra: Optional[str] = None,
+    vcpus: Optional[int] = None,
+    profile_data: Optional[Dict[str, Any]] = None,
+    arch: Optional[str] = None,
+    gfx_type: Optional[str] = None,
+    fullvirt: Optional[bool] = True,
+    bridge: Optional[str] = None,
+    virt_type: Optional[str] = None,
+    virt_auto_boot: bool = False,
+    qemu_driver_type: Optional[str] = None,
+    qemu_net_type: Optional[str] = None,
+) -> Optional[int]:
+    profile_data = cast(Dict[str, Any], profile_data)
 
     if "file" in profile_data:
         raise InfoException("vmware does not work with --image yet")
@@ -129,6 +148,7 @@ def start_install(
     if not os.path.exists(VMX_DIR):
         os.makedirs(VMX_DIR)
 
+    disks = cast(List[Any], disks)
     if len(disks) != 1:
         raise VirtCreateException("vmware support is limited to 1 virtual disk")
 
@@ -139,6 +159,6 @@ def start_install(
     make_disk(disksize, image)
     vmx = "%s/%s" % (VMX_DIR, name)
     print("- saving vmx file as %s" % vmx)
-    make_vmx(vmx, image, name, mac, ram)
+    make_vmx(vmx, image, cast(str, name), mac, cast(Union[int, str], ram))
     register_vmx(vmx)
     start_vm(vmx)

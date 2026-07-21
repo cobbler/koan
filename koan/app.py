@@ -21,9 +21,11 @@ import sys
 import time
 import traceback
 from optparse import OptionParser
+from typing import Any, Callable, Dict, List, NoReturn, Optional, Tuple, Union, cast
 
 from koan import utils
 from koan.cexceptions import InfoException
+from koan.utils import CobblerXMLRPCInterface
 
 """
 koan --virt [--profile=webserver|--system=name] --server=hostname
@@ -53,51 +55,51 @@ DISPLAY_PARAMS = [
 
 
 class Koan:
-    def __init__(self):
+    xmlrpc_server: CobblerXMLRPCInterface
+
+    def __init__(self) -> None:
         """
         Constructor.  Arguments will be filled in by optparse...
         """
-        self.server = None
-        self.system = None
-        self.profile = None
-        self.image = None
-        self.live_cd = None
-        self.list_items = None
-        self.list_profiles = None
-        self.list_systems = None
-        self.is_virt = None
-        self.is_update_files = None
-        self.is_replace = None
-        self.is_display = None
-        self.port = None
-        self.static_interface = None
-        self.virt_name = None
-        self.virt_type = None
-        self.virt_path = None
-        self.virt_bridge = None
-        self.force_path = None
-        self.qemu_disk_type = None
-        self.qemu_net_type = None
-        self.qemu_machine_type = None
-        self.virt_auto_boot = None
-        self.virt_pxe_boot = None
-        self.virtinstall_wait = None
-        self.virtinstall_noreboot = None
-        self.virtinstall_osimport = None
-        self.gfx_type = None
-        self.add_reinstall_entry = None
-        self.kopts_override = None
-        self.use_kexec = None
-        self.should_poll = None
-        self.embed_autoinst = None
+        self.server: Optional[str] = None
+        self.system: Optional[str] = None
+        self.profile: Optional[str] = None
+        self.image: Optional[str] = None
+        self.live_cd: Optional[bool] = None
+        self.list_items: Optional[str] = None
+        self.is_virt: Optional[bool] = None
+        self.is_update_files: Optional[bool] = None
+        self.is_replace: Optional[bool] = None
+        self.is_display: Optional[bool] = None
+        self.port: Optional[Union[str, int]] = None
+        self.static_interface: Optional[str] = None
+        self.virt_name: Optional[str] = None
+        self.virt_type: Optional[str] = None
+        self.virt_path: Optional[str] = None
+        self.virt_bridge: Optional[str] = None
+        self.force_path: Optional[bool] = None
+        self.qemu_disk_type: Optional[str] = None
+        self.qemu_net_type: Optional[str] = None
+        self.qemu_machine_type: Optional[str] = None
+        self.virt_auto_boot: Optional[bool] = None
+        self.virt_pxe_boot: Optional[bool] = None
+        self.virtinstall_wait: Optional[int] = None
+        self.virtinstall_noreboot: Optional[bool] = None
+        self.virtinstall_osimport: Optional[bool] = None
+        self.gfx_type: Optional[str] = None
+        self.add_reinstall_entry: Optional[bool] = None
+        self.kopts_override: Optional[str] = None
+        self.use_kexec: Optional[bool] = None
+        self.should_poll: Optional[bool] = None
+        self.embed_autoinst: Optional[bool] = None
 
         # This option adds the --copy-default argument to /sbin/grubby
         # which uses the default boot entry in the grub.conf
         # as template for the new entry being added to that file.
         # look at /sbin/grubby --help for more info
-        self.no_copy_default = None
+        self.no_copy_default: Optional[bool] = None
 
-    def run(self):
+    def run(self) -> Optional[int]:
         """
         koan's main function...
         """
@@ -209,7 +211,7 @@ class Koan:
         else:
             self.display()
 
-    def ask_profile(self):
+    def ask_profile(self) -> Optional[str]:
         """
         Used by the live CD mode, if the system can not be auto-discovered, show a list of available
         profiles and ask the user what they want to install.
@@ -217,7 +219,7 @@ class Koan:
         # FIXME: use a TUI library to make this more presentable.
         try:
             available_profiles = self.xmlrpc_server.get_profiles()
-        except:
+        except Exception:
             traceback.print_exc()
             self.connect_fail()
 
@@ -236,7 +238,9 @@ class Koan:
                 return data
         return None
 
-    def autodetect_system(self, allow_interactive=False):
+    def autodetect_system(
+        self, allow_interactive: Optional[bool] = False
+    ) -> Optional[str]:
         """
         Determine the name of the cobbler system record that
         matches this MAC address.
@@ -244,17 +248,17 @@ class Koan:
         systems = self.get_data("systems")
         my_netinfo = utils.get_network_info()
         my_interfaces = my_netinfo.keys()
-        mac_criteria = []
-        ip_criteria = []
+        mac_criteria: List[str] = []
+        ip_criteria: List[str] = []
         for my_interface in my_interfaces:
             mac_criteria.append(my_netinfo[my_interface]["mac_address"].upper())
             ip_criteria.append(my_netinfo[my_interface]["ip_address"])
 
-        detected_systems = []
+        detected_systems: List[str] = []
         systems = self.get_data("systems")
         for system in systems:
             obj_name = system["name"]
-            for obj_iname, obj_interface in system["interfaces"].items():
+            for _obj_iname, obj_interface in system["interfaces"].items():
                 mac = obj_interface["mac_address"].upper()
                 ip = obj_interface["ip_address"].upper()
                 for my_mac in mac_criteria:
@@ -282,7 +286,13 @@ class Koan:
             print("- Auto detected: %s" % detected_systems[0])
             return detected_systems[0]
 
-    def safe_load(self, hashv, primary_key, alternate_key=None, default=None):
+    def safe_load(
+        self,
+        hashv: Dict[str, Any],
+        primary_key: str,
+        alternate_key: Optional[Union[str, int]] = None,
+        default: Any = None,
+    ) -> Any:
         if primary_key in hashv:
             return hashv[primary_key]
         elif alternate_key is not None and alternate_key in hashv:
@@ -290,12 +300,15 @@ class Koan:
         else:
             return default
 
-    def net_install(self, after_download):
+    def net_install(
+        self, after_download: Callable[["Koan", Dict[str, Any]], Any]
+    ) -> Any:
         """
         Actually kicks off downloads and auto-ks or virt installs
         """
 
         # initialise the profile, from the server if any
+        profile_data: Dict[str, Any]
         if self.profile:
             profile_data = self.get_data("profile", self.profile)
         elif self.system:
@@ -350,6 +363,7 @@ class Koan:
                     )
 
         # find the correct file download location
+        download: Optional[str]
         if not self.is_virt:
             download = "/boot"
 
@@ -463,7 +477,7 @@ class Koan:
         # perform specified action
         after_download(self, profile_data)
 
-    def get_install_tree_from_autoinst(self, profile_data):
+    def get_install_tree_from_autoinst(self, profile_data: Dict[str, Any]) -> None:
         """
         Scan the autoinst configuration for either a "url" or "nfs" command
            take the install_tree url from that
@@ -479,7 +493,7 @@ class Koan:
             else:
                 url = profile_data["autoinst"]
 
-            lines = utils.urlread(url).decode().splitlines()
+            lines = cast(bytes, utils.urlread(url)).decode().splitlines()
 
             method_re = re.compile(r"(?P<urlcmd>\s*url\s.*)|(?P<nfscmd>\s*nfs\s.*)")
 
@@ -496,12 +510,12 @@ class Koan:
                 if match:
                     cmd = match.group("urlcmd")
                     if cmd:
-                        options, args = url_parser.parse_args(shlex.split(cmd)[1:])
+                        options, _args = url_parser.parse_args(shlex.split(cmd)[1:])
                         profile_data["install_tree"] = options.url
                         break
                     cmd = match.group("nfscmd")
                     if cmd:
-                        options, args = nfs_parser.parse_args(shlex.split(cmd)[1:])
+                        options, _args = nfs_parser.parse_args(shlex.split(cmd)[1:])
                         profile_data["install_tree"] = "nfs://%s:%s" % (
                             options.server,
                             options.dir,
@@ -519,7 +533,7 @@ class Koan:
             # autoinst OS's...
             pass
 
-    def get_install_tree_from_profile_data(self, profile_data):
+    def get_install_tree_from_profile_data(self, profile_data: Dict[str, Any]) -> None:
         """
         Get the tree path from autoinstall_meta. Generate the install_tree
            using the http_server and the tree.
@@ -553,7 +567,7 @@ class Koan:
             else:
                 pass
 
-    def list(self, what):
+    def list(self, what: str) -> bool:
         if what not in ["images", "profiles", "systems", "distros", "repos"]:
             raise InfoException("koan does not know how to list that")
         data = self.get_data(what)
@@ -562,8 +576,8 @@ class Koan:
                 print(x["name"])
         return True
 
-    def display(self):
-        def after_download(self, profile_data):
+    def display(self) -> Any:
+        def after_download(self: "Koan", profile_data: Dict[str, Any]) -> None:
             for x in DISPLAY_PARAMS:
                 if x in profile_data:
                     value = profile_data[x]
@@ -573,17 +587,17 @@ class Koan:
 
         return self.net_install(after_download)
 
-    def virt(self):
+    def virt(self) -> Any:
         """
         Handle virt provisioning.
         """
 
-        def after_download(self, profile_data):
+        def after_download(self: "Koan", profile_data: Dict[str, Any]) -> None:
             self.virt_net_install(profile_data)
 
         return self.net_install(after_download)
 
-    def update_files(self):
+    def update_files(self) -> bool:
         """
         Contact the cobbler server and get any config-management
         files in cobbler that we are providing to nodes.  Basically
@@ -595,6 +609,7 @@ class Koan:
         """
 
         # FIXME: make this a utils.py function
+        profile_data: Dict[str, Any]
         if self.profile:
             profile_data = self.get_data("profile", self.profile)
         elif self.system:
@@ -646,7 +661,7 @@ class Koan:
 
         return True
 
-    def kexec_replace(self):
+    def kexec_replace(self) -> Any:
         """
         Prepare to morph existing system by downloading new kernel and initrd
         and preparing kexec to execute them. Allow caller to do final 'kexec
@@ -655,7 +670,7 @@ class Koan:
         an invalid state.
         """
 
-        def after_download(self, profile_data):
+        def after_download(self: "Koan", profile_data: Dict[str, Any]) -> None:
             k_args = self.calc_kernel_args(profile_data)
             autoinst = self.safe_load(profile_data, "autoinst")
             arch = self.safe_load(profile_data, "arch")
@@ -709,13 +724,13 @@ class Koan:
 
         return self.net_install(after_download)
 
-    def get_boot_loader_info(self):
+    def get_boot_loader_info(self) -> Tuple[Optional[int], str]:
         cmd = ["/sbin/grubby", "--bootloader-probe"]
         probe_process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         which_loader = probe_process.communicate()[0].decode()
         return probe_process.returncode, which_loader
 
-    def replace(self):
+    def replace(self) -> Any:
         """
         Handle morphing an existing system through downloading new kernel, new initrd, and installing a autoinst in the
         initrd, then manipulating grub.
@@ -723,17 +738,17 @@ class Koan:
         try:
             shutil.rmtree("/var/spool/koan")
         except OSError as xxx_todo_changeme:
-            err, msg = xxx_todo_changeme.args
+            err, _msg = xxx_todo_changeme.args
             if err != errno.ENOENT:
                 raise
         try:
             os.makedirs("/var/spool/koan")
         except OSError as xxx_todo_changeme1:
-            err, msg = xxx_todo_changeme1.args
+            err, _msg = xxx_todo_changeme1.args
             if err != errno.EEXIST:
                 raise
 
-        def after_download(self, profile_data):
+        def after_download(self: "Koan", profile_data: Dict[str, Any]) -> None:
             use_grubby = False
             use_grub2 = False
             make, version = utils.os_release()
@@ -873,9 +888,11 @@ class Koan:
 
                 # Set paths for Ubuntu/Debian
                 # TODO: Add support for other distros when they ship grub2
+                grub_file = "/etc/grub.d/42_koan"
+                grub_default_file = "/etc/default/grub"
+                cmd: List[str] = []
+                default_cmd: List[str] = []
                 if make in ["ubuntu", "debian", "suse"]:
-                    grub_file = "/etc/grub.d/42_koan"
-                    grub_default_file = "/etc/default/grub"
                     if make in ["suse"]:
                         cmd = ["/sbin/update-bootloader", "--refresh"]
                     else:
@@ -929,7 +946,7 @@ EOF
 
         return self.net_install(after_download)
 
-    def get_insert_script(self, initrd):
+    def get_insert_script(self, initrd: str) -> str:
         """
         Create bash script for inserting autoinst into initrd.
         Code heavily borrowed from internal auto-ks scripts.
@@ -957,16 +974,15 @@ EOF
             initrd,
         )
 
-    def build_initrd(self, initrd, autoinst, data):
+    def build_initrd(self, initrd: str, autoinst: str, data: Dict[str, Any]) -> None:
         """
         Crack open an initrd and install the autoinst file.
         """
 
         # save autoinst to file
-        ksdata = utils.urlread(autoinst)
+        ksdata = cast(str, utils.urlread(autoinst))
         fd = open("/var/spool/koan/ks.cfg", "w+")
-        if ksdata is not None:
-            fd.write(ksdata)
+        fd.write(ksdata)
         fd.close()
 
         # handle insertion of autoinst based on type of initrd
@@ -976,32 +992,62 @@ EOF
         utils.subprocess_call(["/bin/bash", "/var/spool/koan/insert.sh"])
         shutil.copyfile("/var/spool/koan/initrd_final", initrd)
 
-    def connect_fail(self):
+    def connect_fail(self) -> NoReturn:
         raise InfoException(
             "Could not communicate with %s:%s" % (self.server, self.port)
         )
 
-    def get_data(self, what, name=None):
+    def get_data(self, what: str, name: Optional[str] = None) -> Any:
+        if what not in (
+            "distros",
+            "profiles",
+            "systems",
+            "repos",
+            "images",
+            "profile",
+            "system",
+            "image",
+        ):
+            raise InfoException("Unknown data type: %s" % what)
+        server = self.xmlrpc_server
         try:
-            if what[-1] == "s":
-                data = getattr(self.xmlrpc_server, "get_%s" % what)()
+            if what == "distros":
+                data: Any = server.get_distros()
+            elif what == "profiles":
+                data = server.get_profiles()
+            elif what == "systems":
+                data = server.get_systems()
+            elif what == "repos":
+                data = server.get_repos()
+            elif what == "images":
+                data = server.get_images()
+            elif what == "profile":
+                data = cast(
+                    Dict[str, Any], server.get_profile_as_rendered(cast(str, name))
+                )
+            elif what == "system":
+                data = cast(
+                    Dict[str, Any], server.get_system_as_rendered(cast(str, name))
+                )
             else:
-                data = getattr(self.xmlrpc_server, "get_%s_as_rendered" % what)(name)
-        except:
+                data = cast(
+                    Dict[str, Any], server.get_image_as_rendered(cast(str, name))
+                )
+        except Exception:
             traceback.print_exc()
             self.connect_fail()
         if data == {}:
             raise InfoException("No entry/entries found")
         return data
 
-    def get_ips(self, strdata):
+    def get_ips(self, strdata: str) -> List[str]:
         """
         Return a list of IP address strings found in argument.
         warning: not IPv6 friendly
         """
         return re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", strdata)
 
-    def get_macs(self, strdata):
+    def get_macs(self, strdata: str) -> List[str]:
         """
         Return a list of MAC address strings found in argument.
         """
@@ -1010,20 +1056,22 @@ EOF
             strdata.upper(),
         )
 
-    def is_ip(self, strdata):
+    def is_ip(self, strdata: str) -> bool:
         """
         Is strdata an IP?
         warning: not IPv6 friendly
         """
-        return self.get_ips(strdata) and True or False
+        return bool(self.get_ips(strdata))
 
-    def is_mac(self, strdata):
+    def is_mac(self, strdata: str) -> bool:
         """
         Return whether the argument is a mac address.
         """
-        return self.get_macs(strdata) and True or False
+        return bool(self.get_macs(strdata))
 
-    def get_distro_files(self, profile_data, download_root):
+    def get_distro_files(
+        self, profile_data: Dict[str, Any], download_root: str
+    ) -> None:
         """
         Using distro data (fetched from bootconf tree), determine
         what kernel and initrd to download, and save them locally.
@@ -1065,7 +1113,7 @@ EOF
         profile_data["kernel_local"] = kernel_save
         profile_data["initrd_local"] = initrd_save
 
-    def calc_kernel_args(self, pd, replace_self=0):
+    def calc_kernel_args(self, pd: Dict[str, Any], replace_self: int = 0) -> Any:
         autoinst = self.safe_load(pd, "autoinst")
         options = self.safe_load(pd, "kernel_options", default="")
         breed = self.safe_load(pd, "breed")
@@ -1121,6 +1169,7 @@ EOF
                 name = self.safe_load(pd, "name")
 
                 if hostname != "" or name != "":
+                    my_domain = ""
                     if hostname != "":
                         # if this is a FQDN, grab the first bit
                         my_hostname = hostname.split(".")[0]
@@ -1157,7 +1206,7 @@ EOF
                     hashv["netcfg/get_ipaddress"] = ip
                 elif newdracut:
 
-                    def get_cidr(netmask):
+                    def get_cidr(netmask: str) -> str:
                         binary_str = ""
                         for octet in netmask.split("."):
                             binary_str += bin(int(octet))[2:].zfill(8)
@@ -1217,7 +1266,7 @@ EOF
         options = options.replace("ksdevice=bootif", "ksdevice=link")
         return options
 
-    def virt_net_install(self, profile_data):
+    def virt_net_install(self, profile_data: Dict[str, Any]) -> Any:
         """
         Invoke virt guest-install (or tweaked copy thereof)
         """
@@ -1269,12 +1318,12 @@ EOF
         # print results
 
         if can_poll is not None and self.should_poll:
-            import libvirt
+            import libvirt  # pyright: ignore[reportMissingTypeStubs]
 
             print("- polling for virt completion")
-            conn = None
+            conn: Any = None
             if can_poll == "xen":
-                conn = libvirt.open(None)
+                conn = libvirt.open(None)  # pyright: ignore[reportArgumentType]
             elif can_poll == "qemu":
                 conn = libvirt.open("qemu:///system")
             else:
@@ -1315,21 +1364,23 @@ EOF
             # else...
         return results
 
-    def load_virt_modules(self):
+    def load_virt_modules(self) -> None:
         try:
             from koan.virt import image, qemu, xen
 
             assert xen
             assert qemu
             assert image
-        except:
+        except Exception:
             traceback.print_exc()
             raise InfoException("no virtualization support available,\
                 install python-virtinst or virt-install?")
 
-    def virt_choose(self, pd):
+    def virt_choose(
+        self, pd: Dict[str, Any]
+    ) -> Tuple[Any, Callable[..., Any], bool, Optional[str]]:
         fullvirt = False
-        can_poll = None
+        can_poll: Optional[str] = None
         if (self.image is not None) and (pd["image_type"] == "virt-clone"):
             fullvirt = True
             uuid = None
@@ -1357,10 +1408,10 @@ EOF
             uuid = None
             creator = vmw.start_install
         elif self.virt_type == "vmwarew":
-            import vmwwcreate
+            import vmwwcreate  # pyright: ignore[reportMissingImports, reportUnknownVariableType]
 
             uuid = None
-            creator = vmwwcreate.start_install
+            creator = cast(Callable[..., Any], vmwwcreate.start_install)
         elif self.virt_type == "openvz":
             from koan.virt import openvz
 
@@ -1370,10 +1421,12 @@ EOF
             raise InfoException("Unspecified virt type: %s" % self.virt_type)
         return (uuid, creator, fullvirt, can_poll)
 
-    def merge_disk_data(self, paths, sizes, drivers):
+    def merge_disk_data(
+        self, paths: List[str], sizes: List[int], drivers: List[str]
+    ) -> List[List[Any]]:
         counter = 0
-        disks = []
-        for p in paths:
+        disks: List[List[Any]] = []
+        for _p in paths:
             path = paths[counter]
             if counter >= len(sizes):
                 size = sizes[-1]
@@ -1392,7 +1445,7 @@ EOF
             raise InfoException("Disk configuration not resolvable!")
         return disks
 
-    def calc_virt_name(self, profile_data):
+    def calc_virt_name(self, profile_data: Dict[str, Any]) -> str:
         if self.virt_name is not None:
             # explicit override
             name = self.virt_name
@@ -1407,7 +1460,9 @@ EOF
         # keep libvirt happy with the names
         return name.replace(":", "_").replace(" ", "_")
 
-    def calc_virt_autoboot(self, data, override_autoboot=False):
+    def calc_virt_autoboot(
+        self, data: Dict[str, Any], override_autoboot: Optional[bool] = False
+    ) -> bool:
         if override_autoboot:
             return True
 
@@ -1419,7 +1474,9 @@ EOF
 
         return False
 
-    def calc_virt_pxeboot(self, data, override_pxeboot=False):
+    def calc_virt_pxeboot(
+        self, data: Dict[str, Any], override_pxeboot: Optional[bool] = False
+    ) -> bool:
         if override_pxeboot:
             return True
 
@@ -1431,18 +1488,22 @@ EOF
 
         return False
 
-    def calc_virt_filesize(self, data, default_filesize=0):
+    def calc_virt_filesize(
+        self, data: Dict[str, Any], default_filesize: int = 0
+    ) -> List[int]:
 
         # MAJOR FIXME: are there overrides?
         size = self.safe_load(data, "virt_file_size", "xen_file_size", 0)
 
         tokens = str(size).split(",")
-        accum = []
+        accum: List[int] = []
         for t in tokens:
             accum.append(self.calc_virt_filesize2(data, size=t))
         return accum
 
-    def calc_virt_filesize2(self, data, default_filesize=1, size=0):
+    def calc_virt_filesize2(
+        self, data: Dict[str, Any], default_filesize: int = 1, size: Any = 0
+    ) -> int:
         """
         Assign a virt filesize if none is given in the profile.
         """
@@ -1450,20 +1511,20 @@ EOF
         err = False
         try:
             int(size)
-        except:
+        except Exception:
             err = True
         if size is None or size == "":
             err = True
         if err:
             print("invalid file size specified, using defaults")
             return default_filesize
-        return int(size)
+        return int(size)  # pyright: ignore[reportArgumentType]
 
-    def calc_virt_drivers(self, data):
+    def calc_virt_drivers(self, data: Dict[str, Any]) -> List[str]:
         driver = self.safe_load(data, "virt_disk_driver", default="raw")
 
         tokens = driver.split(",")
-        accum = []
+        accum: List[str] = []
         for t in tokens:
             # FIXME: this list should be pulled out of
             #        the virtinst VirtualDisk class, but
@@ -1476,7 +1537,7 @@ EOF
                 accum.append("raw")
         return accum
 
-    def calc_virt_ram(self, data, default_ram=64):
+    def calc_virt_ram(self, data: Dict[str, Any], default_ram: int = 64) -> int:
         """
         Assign a virt ram size if none is given in the profile.
         """
@@ -1484,35 +1545,35 @@ EOF
         err = False
         try:
             int(size)
-        except:
+        except Exception:
             err = True
         if size is None or size == "" or int(size) < default_ram:
             err = True
         if err:
             print("invalid RAM size specified, using defaults.")
             return default_ram
-        return int(size)
+        return int(size)  # pyright: ignore[reportArgumentType]
 
-    def calc_virt_cpus(self, data, default_cpus=1):
+    def calc_virt_cpus(self, data: Dict[str, Any], default_cpus: int = 1) -> int:
         """
         Assign virtual CPUs if none is given in the profile.
         """
         size = self.safe_load(data, "virt_cpus", default=default_cpus)
         try:
             isize = int(size)
-        except:
+        except Exception:
             traceback.print_exc()
             return default_cpus
         return isize
 
-    def calc_virt_mac(self, data):
+    def calc_virt_mac(self, data: Dict[str, Any]) -> Optional[str]:
         if not self.is_virt:
             return None  # irrelevant
-        if self.is_mac(self.system):
-            return self.system.upper()
+        if self.is_mac(cast(str, self.system)):
+            return cast(str, self.system).upper()
         return utils.random_mac()
 
-    def calc_virt_uuid(self, data):
+    def calc_virt_uuid(self, data: Dict[str, Any]) -> Optional[str]:
         # TODO: eventually we may want to allow some koan CLI
         # option (or cobbler system option) for passing in the UUID.
         # Until then, it's random.
@@ -1536,7 +1597,7 @@ EOF
             return None
         return my_id
 
-    def calc_virt_path(self, pd, name):
+    def calc_virt_path(self, pd: Dict[str, Any], name: str) -> List[str]:
 
         # input is either a single item or a string list
         # it's not in the arguments to this function .. it's from one of many
@@ -1569,17 +1630,24 @@ EOF
         virt_sizes = self.calc_virt_filesize(pd)
 
         path_splitted = location.split(",")
-        paths = []
+        paths: List[str] = []
         count = -1
         for x in path_splitted:
             count = count + 1
             path = self.calc_virt_path2(
                 pd, name, offset=count, location=x, sizes=virt_sizes
             )
-            paths.append(path)
+            paths.append(cast(str, path))
         return paths
 
-    def calc_virt_path2(self, pd, name, offset=0, location=None, sizes=[]):
+    def calc_virt_path2(
+        self,
+        pd: Dict[str, Any],
+        name: str,
+        offset: int = 0,
+        location: Optional[str] = None,
+        sizes: List[int] = [],
+    ) -> Union[str, int]:
 
         # Parse the command line to determine if this is a
         # path, a partition, or a volume group parameter
@@ -1591,6 +1659,7 @@ EOF
         # complicated ...
 
         # use default location for the virt type
+        location = cast(str, location)
 
         if not location.startswith("/dev/") and location.startswith("/"):
             # filesystem path
@@ -1646,9 +1715,9 @@ EOF
             print("(%s)" % freespace_str)
             freespace = int(float(freespace_str))
 
-            virt_size = self.calc_virt_filesize(pd)
+            virt_size_list = self.calc_virt_filesize(pd)
 
-            if len(virt_size) > offset:
+            if len(virt_size_list) > offset:
                 virt_size = sizes[offset]
             else:
                 return sizes[-1]
@@ -1719,16 +1788,16 @@ EOF
             else:
                 raise InfoException("volume group needs %s GB free space." % virt_size)
 
-    def randomUUID(self):
+    def randomUUID(self) -> List[int]:
         """
         Generate a random UUID.  Copied from xend/uuid.py
         """
-        rc = []
-        for x in range(0, 16):
+        rc: List[int] = []
+        for _x in range(0, 16):
             rc.append(random.randint(0, 255))
         return rc
 
-    def uuidToString(self, u):
+    def uuidToString(self, u: List[int]) -> str:
         """
         return uuid as a string
         """
@@ -1736,7 +1805,7 @@ EOF
             ["%02x" * 4, "%02x" * 2, "%02x" * 2, "%02x" * 2, "%02x" * 6]
         ) % tuple(u)
 
-    def get_uuid(self, uuid):
+    def get_uuid(self, uuid: Optional[str]) -> str:
         """
         return the passed-in uuid, or a random one if it's not set.
         """

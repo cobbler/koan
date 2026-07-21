@@ -14,3 +14,9 @@ __builddate__ = "{scm_version.time}"
 
 [tool.isort]
 profile = "black"
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "strict"
+useLibraryCodeForTypes = true
+exclude = ["build", "venv", ".venv", "node_modules"]

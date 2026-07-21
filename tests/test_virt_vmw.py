@@ -1,4 +1,7 @@
+from typing import Any, Dict
+
 import pytest
+from pytest_mock import MockerFixture
 
 from koan.cexceptions import InfoException, VirtCreateException
 from koan.virt import vmw
@@ -12,25 +15,25 @@ from tests.conftest import does_not_raise
         (1, pytest.raises(VirtCreateException)),
     ],
 )
-def test_make_disk(rc, expected_exception, mocker):
+def test_make_disk(rc: Any, expected_exception: Any, mocker: MockerFixture) -> None:
     # Arrange
-    os_system = mocker.patch("koan.virt.vmw.os.system", return_value=rc)
+    subprocess_call = mocker.patch("koan.virt.vmw.subprocess.call", return_value=rc)
 
     # Act
     with expected_exception:
         vmw.make_disk(10, "/var/lib/vmware/images/foo")
 
     # Assert
-    os_system.assert_called_once()
-    cmd = os_system.call_args[0][0]
+    subprocess_call.assert_called_once()
+    cmd = subprocess_call.call_args[0][0]
     assert "vmware-vdiskmanager" in cmd
     assert "10Gb" in cmd
     assert "/var/lib/vmware/images/foo" in cmd
 
 
-def test_make_vmx_writes_template(mocker):
+def test_make_vmx_writes_template(mocker: MockerFixture) -> None:
     # Arrange
-    mock_open = mocker.mock_open()
+    mock_open = mocker.mock_open()  # pyright: ignore[reportUnknownMemberType]
     mocker.patch("builtins.open", mock_open)
 
     # Act
@@ -61,19 +64,18 @@ def test_make_vmx_writes_template(mocker):
         (1, pytest.raises(VirtCreateException)),
     ],
 )
-def test_register_vmx(rc, expected_exception, mocker):
+def test_register_vmx(rc: Any, expected_exception: Any, mocker: MockerFixture) -> None:
     # Arrange
-    os_system = mocker.patch("koan.virt.vmw.os.system", return_value=rc)
+    subprocess_call = mocker.patch("koan.virt.vmw.subprocess.call", return_value=rc)
 
     # Act
     with expected_exception:
         vmw.register_vmx("/var/lib/vmware/vmx/foo")
 
     # Assert
-    os_system.assert_called_once()
-    cmd = os_system.call_args[0][0]
-    assert "vmware-cmd -s register" in cmd
-    assert "/var/lib/vmware/vmx/foo" in cmd
+    subprocess_call.assert_called_once()
+    cmd = subprocess_call.call_args[0][0]
+    assert cmd == ["vmware-cmd", "-s", "register", "/var/lib/vmware/vmx/foo"]
 
 
 @pytest.mark.parametrize(
@@ -83,10 +85,10 @@ def test_register_vmx(rc, expected_exception, mocker):
         (1, pytest.raises(VirtCreateException)),
     ],
 )
-def test_start_vm(rc, expected_exception, mocker):
+def test_start_vm(rc: Any, expected_exception: Any, mocker: MockerFixture) -> None:
     # Arrange
     os_chmod = mocker.patch("koan.virt.vmw.os.chmod")
-    os_system = mocker.patch("koan.virt.vmw.os.system", return_value=rc)
+    subprocess_call = mocker.patch("koan.virt.vmw.subprocess.call", return_value=rc)
 
     # Act
     with expected_exception:
@@ -94,13 +96,13 @@ def test_start_vm(rc, expected_exception, mocker):
 
     # Assert
     os_chmod.assert_called_once_with("/var/lib/vmware/vmx/foo", 0o755)
-    os_system.assert_called_once()
-    cmd = os_system.call_args[0][0]
+    subprocess_call.assert_called_once()
+    cmd = subprocess_call.call_args[0][0]
     assert "vmware-cmd" in cmd
     assert "start" in cmd
 
 
-def test_start_install_raises_on_image_profile():
+def test_start_install_raises_on_image_profile() -> None:
     # Arrange
     profile_data = {"file": "/some/image"}
 
@@ -109,9 +111,9 @@ def test_start_install_raises_on_image_profile():
         vmw.start_install(profile_data=profile_data)
 
 
-def test_start_install_returns_1_when_no_interfaces():
+def test_start_install_returns_1_when_no_interfaces() -> None:
     # Arrange
-    profile_data = {}
+    profile_data: Dict[str, Any] = {}
 
     # Act
     result = vmw.start_install(profile_data=profile_data)
@@ -120,7 +122,7 @@ def test_start_install_returns_1_when_no_interfaces():
     assert result == 1
 
 
-def test_start_install_returns_1_when_no_mac_found():
+def test_start_install_returns_1_when_no_mac_found() -> None:
     # Arrange
     profile_data = {"interfaces": {"eth0": {"mac_address": None}}}
 
@@ -131,7 +133,7 @@ def test_start_install_returns_1_when_no_mac_found():
     assert result == 1
 
 
-def test_start_install_raises_when_not_exactly_one_disk(mocker):
+def test_start_install_raises_when_not_exactly_one_disk(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("koan.virt.vmw.os.path.exists", return_value=True)
     profile_data = {"interfaces": {"eth0": {"mac_address": "AA:BB:CC:DD:EE:FF"}}}
@@ -146,7 +148,7 @@ def test_start_install_raises_when_not_exactly_one_disk(mocker):
         )
 
 
-def test_start_install_happy_path_creates_dirs(mocker):
+def test_start_install_happy_path_creates_dirs(mocker: MockerFixture) -> None:
     # Arrange
     os_path_exists = mocker.patch("koan.virt.vmw.os.path.exists", return_value=False)
     os_makedirs = mocker.patch("koan.virt.vmw.os.makedirs")
@@ -183,7 +185,9 @@ def test_start_install_happy_path_creates_dirs(mocker):
     start_vm.assert_called_once_with(vmx)
 
 
-def test_start_install_does_not_create_dirs_when_they_exist(mocker):
+def test_start_install_does_not_create_dirs_when_they_exist(
+    mocker: MockerFixture,
+) -> None:
     # Arrange
     mocker.patch("koan.virt.vmw.os.path.exists", return_value=True)
     os_makedirs = mocker.patch("koan.virt.vmw.os.makedirs")

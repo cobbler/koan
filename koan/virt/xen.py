@@ -11,10 +11,12 @@ Currently somewhat Xen/paravirt specific, will evolve later.
 # SPDX-FileCopyrightText: Option handling added by Andrew Puch <apuch@redhat.com>
 # SPDX-FileCopyrightText: Simplified for use as library by koan, Michael DeHaan <michael.dehaan AT gmail>
 
+from typing import Any
+
 from koan import utils, virtinstall
 
 
-def start_install(*args, **kwargs):
+def start_install(*args: Any, **kwargs: Any) -> None:
     cmd = virtinstall.build_commandline("xen:///", *args, **kwargs)
     rc, result, result_stderr = utils.subprocess_get_response(
         cmd, ignore_rc=True, get_stderr=True
