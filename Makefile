@@ -2,6 +2,7 @@ TOP_DIR:=$(shell pwd)
 DESTDIR=/
 PYFLAKES = $(shell { command -v pyflakes-3 || command -v pyflakes3 || command -v pyflakes; }  2> /dev/null)
 BLACK := $(shell { command -v black; } 2> /dev/null)
+ISORT := $(shell { command -v isort; } 2> /dev/null)
 PYTHON=/usr/bin/python3
 
 all: clean build
@@ -49,6 +50,13 @@ ifeq ($(strip $(BLACK)),)
 else
 	@echo "checking: black"
 	@${BLACK} --verbose --safe .
+endif
+
+ifeq ($(strip $(ISORT)),)
+	@echo "No isort found"
+else
+	@echo "checking: isort ${ISORT}"
+	@${ISORT} --check-only --diff --profile black .
 endif
 
 authors:

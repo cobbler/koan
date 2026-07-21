@@ -23,8 +23,7 @@ import time
 import traceback
 from optparse import OptionParser
 
-from . import configurator
-from . import utils
+from . import configurator, utils
 from .cexceptions import InfoException
 
 COBBLER_REQUIRED = 1.300
@@ -1413,9 +1412,7 @@ EOF
 
     def load_virt_modules(self):
         try:
-            from . import xencreate
-            from . import qcreate
-            from . import imagecreate
+            from . import imagecreate, qcreate, xencreate
 
             assert xencreate
             assert qcreate

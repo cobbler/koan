@@ -7,7 +7,8 @@ Virtualization installation functions.
 # SPDX-FileCopyrightText: Michael DeHaan <michael.dehaan AT gmail>
 
 import os
-from .cexceptions import VirtCreateException, InfoException
+
+from .cexceptions import InfoException, VirtCreateException
 
 IMAGE_DIR = "/var/lib/vmware/images"
 VMX_DIR = "/var/lib/vmware/vmx"

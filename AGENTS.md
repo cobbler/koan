@@ -31,9 +31,12 @@ pyflakes *.py koan/*.py
 
 # Format (black is also enforced via pre-commit and CI)
 black --safe .
+
+# Import sorting (isort is also enforced via pre-commit and CI; profile=black keeps it black-compatible)
+isort --profile black .
 ```
 
-`make qa` runs pyflakes + black if available locally. `make doc` builds the Sphinx docs in
+`make qa` runs pyflakes + black + isort if available locally. `make doc` builds the Sphinx docs in
 `docs/`. `make release` (clean → qa → authors → sdist → bdist → doc) is the full local release
 build; `make rpms` / `make debs` build native packages and depend on `setuptools_scm`-derived
 versioning being consistent — see the comments above `pin-spec-version` and `debs` in `Makefile`

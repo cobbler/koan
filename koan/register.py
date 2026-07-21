@@ -7,9 +7,10 @@ registration tool for cobbler.
 # SPDX-FileCopyrightText: Michael DeHaan <michael.dehaan AT gmail>
 
 import os
-import traceback
-import time
 import socket
+import time
+import traceback
+
 from . import utils
 from .cexceptions import InfoException
 

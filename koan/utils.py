@@ -9,16 +9,18 @@ general usage functions
 
 import os
 import random
+import shutil
+import subprocess
+import sys
 import tempfile
+import time
 import traceback
-import distro
 import urllib.request
 import xmlrpc.client
+
+import distro
 import netifaces
-import subprocess
-import shutil
-import sys
-import time
+
 from .cexceptions import InfoException
 
 VIRT_STATE_NAME_MAP = {
