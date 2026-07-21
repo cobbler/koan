@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: ❓ Questions
+    url: https://github.com/cobbler/koan/discussions
+    about: Ask questions here
+  - name: 💬 Gitter Chat
+    url: https://gitter.im/cobbler/koan
+    about: Chat with the Koan/Cobbler community
+  - name: 📬 Development mailing list
+    url: https://groups.google.com/forum/#!forum/cobbler-users
+    about: The developer mailing list
