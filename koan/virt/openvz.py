@@ -7,7 +7,7 @@ OpenVZ container-type virtualization installation functions.
 
 import os
 
-from .cexceptions import OVZCreateException
+from koan.cexceptions import OVZCreateException
 
 
 def start_install(*args, **kwargs):

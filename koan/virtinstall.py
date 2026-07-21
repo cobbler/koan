@@ -15,8 +15,8 @@ import os
 import re
 import shlex
 
-from . import utils
-from .cexceptions import InfoException
+from koan import utils
+from koan.cexceptions import InfoException
 
 # The virtinst module will no longer be availabe to import in some
 # distros. We need to get all the info we need from the virt-install
@@ -218,7 +218,7 @@ def build_commandline(
 
     is_import = uri.startswith("import")
     if is_import:
-        # We use the special value 'import' for imagecreate.py. Since
+        # We use the special value 'import' for koan/virt/image.py. Since
         # it is connection agnostic, just let virt-install choose the
         # best hypervisor.
         uri = ""

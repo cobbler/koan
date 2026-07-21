@@ -8,7 +8,7 @@ Virtualization installation functions.
 
 import os
 
-from .cexceptions import InfoException, VirtCreateException
+from koan.cexceptions import InfoException, VirtCreateException
 
 IMAGE_DIR = "/var/lib/vmware/images"
 VMX_DIR = "/var/lib/vmware/vmx"

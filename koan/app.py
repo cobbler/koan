@@ -23,8 +23,8 @@ import time
 import traceback
 from optparse import OptionParser
 
-from . import configurator, utils
-from .cexceptions import InfoException
+from koan import configurator, utils
+from koan.cexceptions import InfoException
 
 COBBLER_REQUIRED = 1.300
 KOAN_CONF_DIR = "/var/lib/koan/config/"
@@ -1412,11 +1412,11 @@ EOF
 
     def load_virt_modules(self):
         try:
-            from . import imagecreate, qcreate, xencreate
+            from koan.virt import image, qemu, xen
 
-            assert xencreate
-            assert qcreate
-            assert imagecreate
+            assert xen
+            assert qemu
+            assert image
         except:
             traceback.print_exc()
             raise InfoException("no virtualization support available,\
@@ -1428,39 +1428,39 @@ EOF
         if (self.image is not None) and (pd["image_type"] == "virt-clone"):
             fullvirt = True
             uuid = None
-            from . import imagecreate
+            from koan.virt import image
 
-            creator = imagecreate.start_install
+            creator = image.start_install
         elif self.virt_type in ["xenpv", "xenfv"]:
             uuid = self.get_uuid(self.calc_virt_uuid(pd))
-            from . import xencreate
+            from koan.virt import xen
 
-            creator = xencreate.start_install
+            creator = xen.start_install
             if self.virt_type == "xenfv":
                 fullvirt = True
             can_poll = "xen"
         elif self.virt_type in ["qemu", "kvm"]:
             fullvirt = True
             uuid = None
-            from . import qcreate
+            from koan.virt import qemu
 
-            creator = qcreate.start_install
+            creator = qemu.start_install
             can_poll = "qemu"
         elif self.virt_type == "vmware":
-            from . import vmwcreate
+            from koan.virt import vmw
 
             uuid = None
-            creator = vmwcreate.start_install
+            creator = vmw.start_install
         elif self.virt_type == "vmwarew":
             import vmwwcreate
 
             uuid = None
             creator = vmwwcreate.start_install
         elif self.virt_type == "openvz":
-            from . import openvzcreate
+            from koan.virt import openvz
 
             uuid = None
-            creator = openvzcreate.start_install
+            creator = openvz.start_install
         else:
             raise InfoException("Unspecified virt type: %s" % self.virt_type)
         return (uuid, creator, fullvirt, can_poll)

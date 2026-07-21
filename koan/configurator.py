@@ -19,7 +19,7 @@ import sys
 import tempfile
 import time
 
-from . import utils
+from koan import utils
 
 try:
     import yum
