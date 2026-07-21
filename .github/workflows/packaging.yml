@@ -21,11 +21,6 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - name: Pin spec version
-        if: inputs.version != ''
-        env:
-          KOAN_VERSION: ${{ inputs.version }}
-        run: sed -ri 's/^(Version:\s*).*/\1'"$KOAN_VERSION"'/' koan.spec
       - name: Build a RockyLinux 10 Package
         shell: 'script -q -e -c "bash {0}"'
         env:
@@ -48,11 +43,6 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - name: Pin spec version
-        if: inputs.version != ''
-        env:
-          KOAN_VERSION: ${{ inputs.version }}
-        run: sed -ri 's/^(Version:\s*).*/\1'"$KOAN_VERSION"'/' koan.spec
       - name: Build a Fedora Package
         shell: 'script -q -e -c "bash {0}"'
         env:
@@ -77,11 +67,6 @@ jobs:
           fetch-depth: 0
       - name: Install System dependencies
         run: sudo apt-get install -y rename
-      - name: Pin spec version
-        if: inputs.version != ''
-        env:
-          KOAN_VERSION: ${{ inputs.version }}
-        run: sed -ri 's/^(Version:\s*).*/\1'"$KOAN_VERSION"'/' koan.spec
       - name: Build a openSUSE Leap 16 Package
         shell: 'script -q -e -c "bash {0}"'
         env:
@@ -109,11 +94,6 @@ jobs:
           fetch-depth: 0
       - name: Install System dependencies
         run: sudo apt-get install -y rename
-      - name: Pin spec version
-        if: inputs.version != ''
-        env:
-          KOAN_VERSION: ${{ inputs.version }}
-        run: sed -ri 's/^(Version:\s*).*/\1'"$KOAN_VERSION"'/' koan.spec
       - name: Build a openSUSE Tumbleweed Package
         shell: 'script -q -e -c "bash {0}"'
         env:
@@ -139,11 +119,6 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - name: Pin spec version
-        if: inputs.version != ''
-        env:
-          KOAN_VERSION: ${{ inputs.version }}
-        run: sed -ri 's/^(Version:\s*).*/\1'"$KOAN_VERSION"'/' koan.spec
       - name: Build a Debian 13 Package
         shell: 'script -q -e -c "bash {0}"'
         env:

@@ -84,7 +84,14 @@ install: build
 		${PYTHON} -m build --root $(DESTDIR) -f; \
 	fi
 
-rpms: release
+# koan.spec hardcodes Version, which rpmbuild/debbuild use to compute Source0's expected filename before dist/ exists.
+# Sync it to the version the sdist we just built actually has (read from its filename, since re-deriving the version via
+# a second setuptools_scm call can disagree with the first once the sdist step leaves the tree dirty), or the expected
+# and actual tarball names diverge whenever HEAD isn't exactly on a release tag.
+pin-spec-version: release
+	@sed -ri 's/^(Version:[[:space:]]*).*/\1'"$$(basename dist/*.tar.gz .tar.gz | sed 's/^koan-//')"'/' koan.spec
+
+rpms: pin-spec-version
 	mkdir -p rpm-build
 	cp dist/*.gz rpm-build/
 	rpmbuild --define "_topdir %(pwd)/rpm-build" \
@@ -97,7 +104,7 @@ rpms: release
 	-ba koan.spec
 
 # Only build a binary package
-debs: release ## Runs the target release and then creates via debbuild the debs in a directory called deb-build.
+debs: pin-spec-version ## Runs the target release and then creates via debbuild the debs in a directory called deb-build.
 	mkdir -p deb-build
 	# Brace expansion is a bash-ism; Make recipes run under /bin/sh (dash on
 	# Debian), which would otherwise create one literal "{BUILD,...}" dir
