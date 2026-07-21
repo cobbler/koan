@@ -650,7 +650,7 @@ class Koan:
                 )
             if not os.path.exists(os.path.dirname(save_as)):
                 os.makedirs(os.path.dirname(save_as))
-            cmd = ["/usr/bin/curl", url, "--output ", save_as]
+            cmd = ["/usr/bin/curl", url, "--output", save_as]
             utils.subprocess_call(cmd)
 
         return True

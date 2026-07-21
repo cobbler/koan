@@ -110,7 +110,7 @@ def start_install(*args, **kwargs):
     full_config = dict(
         [
             (k, vz_meta[k] if k in vz_meta and k in keys_for_meta else min_config[k])
-            for k in set(min_config.keys() + vz_meta.keys())
+            for k in set(min_config.keys()) | set(vz_meta.keys())
         ]
     )
 
