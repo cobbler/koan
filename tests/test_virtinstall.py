@@ -1,4 +1,5 @@
 import unittest
+from typing import Any, Generator, List
 from unittest.mock import patch
 
 import pytest
@@ -6,11 +7,12 @@ import pytest
 import koan
 import koan.virtinstall
 from koan.cexceptions import InfoException
-from koan.virtinstall import _sanitize_nics, build_commandline, create_image_file
+from koan.virtinstall import _sanitize_nics  # pyright: ignore[reportPrivateUsage]
+from koan.virtinstall import build_commandline, create_image_file
 
 
 @pytest.fixture(autouse=True)
-def force_new_style_virtinst():
+def force_new_style_virtinst() -> Generator[None, None, None]:
     """Force a 'new' virt-install so build_commandline() doesn't disable features.
 
     The expected command lines below were written assuming a truthy
@@ -32,19 +34,19 @@ class OsPathMock:
         "/path/to/imagedir/existfile",
     ]
 
-    def isdir(self, path):
+    def isdir(self, path: str) -> bool:
         if path in self._dir_path:
             return True
         return False
 
-    def exists(self, path):
+    def exists(self, path: str) -> bool:
         if path in self._exist_files:
             return True
         return False
 
 
 class KoanVirtInstallTest(unittest.TestCase):
-    def testXenPVBasic(self):
+    def testXenPVBasic(self) -> None:
         cmd = build_commandline(
             "xen:///",
             name="foo",
@@ -77,7 +79,7 @@ class KoanVirtInstallTest(unittest.TestCase):
             ),
         )
 
-    def testXenFVBasic(self):
+    def testXenFVBasic(self) -> None:
         cmd = build_commandline(
             "xen:///",
             name="foo",
@@ -118,7 +120,7 @@ class KoanVirtInstallTest(unittest.TestCase):
             ),
         )
 
-    def testQemuCDROM(self):
+    def testQemuCDROM(self) -> None:
         cmd = build_commandline(
             "qemu:///system",
             name="foo",
@@ -146,7 +148,7 @@ class KoanVirtInstallTest(unittest.TestCase):
             ),
         )
 
-    def testQemuURL(self):
+    def testQemuURL(self) -> None:
         cmd = build_commandline(
             "qemu:///system",
             name="foo",
@@ -182,7 +184,7 @@ class KoanVirtInstallTest(unittest.TestCase):
             ),
         )
 
-    def testKvmURL(self):
+    def testKvmURL(self) -> None:
         cmd = build_commandline(
             "qemu:///system",
             name="foo",
@@ -219,7 +221,7 @@ class KoanVirtInstallTest(unittest.TestCase):
             ),
         )
 
-    def testImage(self):
+    def testImage(self) -> None:
         cmd = build_commandline(
             "import",
             name="foo",
@@ -248,7 +250,7 @@ class KoanVirtInstallTest(unittest.TestCase):
 
     @patch("koan.virtinstall.utils.subprocess_call")
     @patch("koan.virtinstall.utils.os.path", new_callable=OsPathMock)
-    def test_create_qcow_file(self, mock_path, mock_subprocess):
+    def test_create_qcow_file(self, mock_path: Any, mock_subprocess: Any) -> None:
         disks = [
             ("/path/to/imagedir/new_qcow_file", "30", "qcow"),
             ("/path/to/imagedir/new_qcow2_file", "30", "qcow2"),
@@ -261,9 +263,9 @@ class KoanVirtInstallTest(unittest.TestCase):
         ]
 
         create_image_file(disks)
-        res = []
-        for args, kargs in mock_subprocess.call_args_list:
-            res.append(" ".join(args[0]))
+        res: List[str] = []
+        for call_args in mock_subprocess.call_args_list:
+            res.append(" ".join(call_args.args[0]))
 
         self.assertEqual(
             res,
@@ -276,7 +278,7 @@ class KoanVirtInstallTest(unittest.TestCase):
         )
 
 
-def test_build_commandline_xen_with_image_raises():
+def test_build_commandline_xen_with_image_raises() -> None:
     with pytest.raises(InfoException, match="Xen does not work"):
         build_commandline(
             "xen:///",
@@ -289,7 +291,7 @@ def test_build_commandline_xen_with_image_raises():
         )
 
 
-def test_build_commandline_import_requires_file():
+def test_build_commandline_import_requires_file() -> None:
     with pytest.raises(InfoException, match="Profile 'file' required"):
         build_commandline(
             "import",
@@ -302,7 +304,7 @@ def test_build_commandline_import_requires_file():
         )
 
 
-def test_sanitize_nics_skips_bond_bridge_and_vlan_interfaces():
+def test_sanitize_nics_skips_bond_bridge_and_vlan_interfaces() -> None:
     nics = {
         "bond0": {"interface_type": "bond", "mac_address": "aa:aa:aa:aa:aa:aa"},
         "br0": {"interface_type": "bridge", "mac_address": "bb:bb:bb:bb:bb:bb"},

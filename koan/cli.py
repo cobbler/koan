@@ -17,14 +17,14 @@ from koan.cexceptions import InfoException
 from koan.register import Register
 
 
-def main():
+def main() -> int:
     """
     Command line stuff...
     """
 
     try:
         utils.setupLogging("koan")
-    except:
+    except Exception:
         # most likely running RHEL3, where we don't need virt logging anyway
         pass
 
@@ -284,7 +284,7 @@ def main():
         try:
             getattr(e, "from_koan")
             print(str(e)[1:-1])  # nice exception, no traceback needed
-        except:
+        except Exception:
             print(xa)
             print(xb)
             print("".join(traceback.format_list(traceback.extract_tb(tb))))
@@ -293,7 +293,7 @@ def main():
     return 0
 
 
-def register_main():
+def register_main() -> int:
     """
     Command line stuff...
     """
@@ -350,7 +350,7 @@ def register_main():
         try:
             getattr(e, "from_koan")
             print(str(e)[1:-1])  # nice exception, no traceback needed
-        except:
+        except Exception:
             print(xa)
             print(xb)
             print("".join(traceback.format_list(traceback.extract_tb(tb))))

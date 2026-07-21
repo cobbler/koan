@@ -8,10 +8,12 @@ Virtualization installation functions for image based deployment
 # SPDX-FileCopyrightText: Original version based on virt-image
 # SPDX-FileCopyrightText: David Lutterkort <dlutter@redhat.com>
 
+from typing import Any
+
 from koan import utils, virtinstall
 
 
-def start_install(*args, **kwargs):
+def start_install(*args: Any, **kwargs: Any) -> None:
     cmd = virtinstall.build_commandline("import", *args, **kwargs)
     rc, result, result_stderr = utils.subprocess_get_response(
         cmd, ignore_rc=True, get_stderr=True

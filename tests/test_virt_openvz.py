@@ -1,6 +1,16 @@
+# This file unit-tests koan.virt.openvz's private (`_`-prefixed) helpers
+# directly, by design. reportUnknownMemberType is disabled because
+# pytest-mock's own type stub for MockerFixture.mock_open() is imprecise
+# (its overloaded signature resolves to a partially-Unknown type).
+# pyright: reportPrivateUsage=false
+# pyright: reportUnknownMemberType=false
+
 import os
+from pathlib import Path
+from typing import Any, Dict
 
 import pytest
+from pytest_mock import MockerFixture
 
 from koan.cexceptions import OVZCreateException
 from koan.virt import openvz
@@ -9,7 +19,9 @@ VZCFGVALIDATE = "/usr/sbin/vzcfgvalidate"
 VZCTL = "/usr/sbin/vzctl"
 
 
-def _base_kwargs(autoinstall_meta=None, virt_auto_boot="1"):
+def _base_kwargs(
+    autoinstall_meta: Any = None, virt_auto_boot: Any = "1"
+) -> Dict[str, Any]:
     if autoinstall_meta is None:
         autoinstall_meta = [("vz_ctid", "101")]
     return {
@@ -29,18 +41,27 @@ def _base_kwargs(autoinstall_meta=None, virt_auto_boot="1"):
     }
 
 
+def _neither_tool_present(path: str) -> bool:
+    return False
+
+
+def _only_vzcfgvalidate_present(path: str) -> bool:
+    return path == VZCFGVALIDATE
+
+
+def _only_vzctl_present(path: str) -> bool:
+    return path == VZCTL
+
+
 @pytest.mark.parametrize(
     "exists_side_effect",
     [
-        # neither tool present
-        lambda path: False,
-        # only vzcfgvalidate present
-        lambda path: path == VZCFGVALIDATE,
-        # only vzctl present
-        lambda path: path == VZCTL,
+        _neither_tool_present,
+        _only_vzcfgvalidate_present,
+        _only_vzctl_present,
     ],
 )
-def test_missing_tools_raises(exists_side_effect, mocker):
+def test_missing_tools_raises(exists_side_effect: Any, mocker: MockerFixture) -> None:
     mocker.patch("koan.virt.openvz.os.path.exists", side_effect=exists_side_effect)
 
     with pytest.raises(
@@ -51,7 +72,7 @@ def test_missing_tools_raises(exists_side_effect, mocker):
         openvz.start_install(**_base_kwargs())
 
 
-def test_missing_vz_ctid_raises(mocker):
+def test_missing_vz_ctid_raises(mocker: MockerFixture) -> None:
     mocker.patch("koan.virt.openvz.os.path.exists", return_value=True)
 
     with pytest.raises(
@@ -61,7 +82,9 @@ def test_missing_vz_ctid_raises(mocker):
         openvz.start_install(**_base_kwargs(autoinstall_meta=[]))
 
 
-def test_invalid_ctid_returns_1_and_prints_message(mocker, capsys):
+def test_invalid_ctid_returns_1_and_prints_message(
+    mocker: MockerFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
     mocker.patch("koan.virt.openvz.os.path.exists", return_value=True)
 
     result = openvz.start_install(
@@ -73,21 +96,22 @@ def test_invalid_ctid_returns_1_and_prints_message(mocker, capsys):
     assert "Invalid CTID in autoinstall_meta. Exiting..." in captured.out
 
 
-def test_happy_path_calls_os_system_twice_and_installs_container_tree(mocker):
+def test_happy_path_calls_os_system_twice_and_installs_container_tree(
+    mocker: MockerFixture,
+) -> None:
     mocker.patch("koan.virt.openvz.os.path.exists", return_value=True)
     mock_open = mocker.patch("builtins.open", mocker.mock_open())
-    mock_system = mocker.patch("koan.virt.openvz.os.system", side_effect=[0, 0])
+    mock_call = mocker.patch("koan.virt.openvz.subprocess.call", side_effect=[0, 0])
     mock_install = mocker.patch("koan.virt.openvz._install_container_tree")
 
     result = openvz.start_install(**_base_kwargs())
 
     assert result is None
-    assert mock_system.call_count == 2
+    assert mock_call.call_count == 2
 
-    commands = [call.args[0] for call in mock_system.call_args_list]
-    assert "vzcfgvalidate" in commands[0]
-    assert "/etc/vz/conf/101.conf" in commands[0]
-    assert "vzctl start 101" in commands[1]
+    commands = [call.args[0] for call in mock_call.call_args_list]
+    assert commands[0] == ["/usr/sbin/vzcfgvalidate", "/etc/vz/conf/101.conf"]
+    assert commands[1] == ["/usr/sbin/vzctl", "start", "101"]
 
     mock_install.assert_called_once_with(
         "testvm", "http://server.example.com/autoinst.ks", "/vz/private/101"
@@ -99,14 +123,16 @@ def test_happy_path_calls_os_system_twice_and_installs_container_tree(mocker):
 
 
 @pytest.mark.parametrize("virt_auto_boot", ["1", 1, True, "0", 0, False, ""])
-def test_onboot_not_written_to_config_by_default(virt_auto_boot, mocker):
+def test_onboot_not_written_to_config_by_default(
+    virt_auto_boot: Any, mocker: MockerFixture
+) -> None:
     # ONBOOT is not part of the minimal config and virt_auto_boot is never
     # merged into it unless explicitly provided via autoinstall_meta's
     # "vz_onboot" key, so it should never show up in the written config
     # regardless of virt_auto_boot's value.
     mocker.patch("koan.virt.openvz.os.path.exists", return_value=True)
     mock_open = mocker.patch("builtins.open", mocker.mock_open())
-    mocker.patch("koan.virt.openvz.os.system", side_effect=[0, 0])
+    mocker.patch("koan.virt.openvz.subprocess.call", side_effect=[0, 0])
     mocker.patch("koan.virt.openvz._install_container_tree")
 
     openvz.start_install(**_base_kwargs(virt_auto_boot=virt_auto_boot))
@@ -118,13 +144,13 @@ def test_onboot_not_written_to_config_by_default(virt_auto_boot, mocker):
     assert "ONBOOT" not in written_keys
 
 
-def test_onboot_override_from_autoinstall_meta(mocker):
+def test_onboot_override_from_autoinstall_meta(mocker: MockerFixture) -> None:
     # When "vz_onboot" is provided via autoinstall_meta, its raw value is
     # written verbatim into the config -- it is not affected by the
     # virt_auto_boot-derived yes/no mapping.
     mocker.patch("koan.virt.openvz.os.path.exists", return_value=True)
     mock_open = mocker.patch("builtins.open", mocker.mock_open())
-    mocker.patch("koan.virt.openvz.os.system", side_effect=[0, 0])
+    mocker.patch("koan.virt.openvz.subprocess.call", side_effect=[0, 0])
     mocker.patch("koan.virt.openvz._install_container_tree")
 
     openvz.start_install(
@@ -139,23 +165,23 @@ def test_onboot_override_from_autoinstall_meta(mocker):
     assert 'ONBOOT="no"\n' in written
 
 
-def test_validate_config_failure_raises(mocker):
+def test_validate_config_failure_raises(mocker: MockerFixture) -> None:
     mocker.patch("koan.virt.openvz.os.path.exists", return_value=True)
     mocker.patch("builtins.open", mocker.mock_open())
-    mock_system = mocker.patch("koan.virt.openvz.os.system", side_effect=[1])
+    mock_call = mocker.patch("koan.virt.openvz.subprocess.call", side_effect=[1])
 
     with pytest.raises(
         OVZCreateException, match=r"Container 101 config file is not valid"
     ):
         openvz.start_install(**_base_kwargs())
 
-    assert mock_system.call_count == 1
+    assert mock_call.call_count == 1
 
 
-def test_container_creation_failure_raises(mocker):
+def test_container_creation_failure_raises(mocker: MockerFixture) -> None:
     mocker.patch("koan.virt.openvz.os.path.exists", return_value=True)
     mocker.patch("builtins.open", mocker.mock_open())
-    mock_system = mocker.patch("koan.virt.openvz.os.system", side_effect=[0])
+    mock_call = mocker.patch("koan.virt.openvz.subprocess.call", side_effect=[0])
     mocker.patch(
         "koan.virt.openvz._install_container_tree",
         side_effect=RuntimeError("boom"),
@@ -164,28 +190,28 @@ def test_container_creation_failure_raises(mocker):
     with pytest.raises(OVZCreateException, match=r"Container creation 101 failed"):
         openvz.start_install(**_base_kwargs())
 
-    assert mock_system.call_count == 1
+    assert mock_call.call_count == 1
 
 
-def test_start_container_failure_raises(mocker):
+def test_start_container_failure_raises(mocker: MockerFixture) -> None:
     mocker.patch("koan.virt.openvz.os.path.exists", return_value=True)
     mocker.patch("builtins.open", mocker.mock_open())
-    mock_system = mocker.patch("koan.virt.openvz.os.system", side_effect=[0, 1])
+    mock_call = mocker.patch("koan.virt.openvz.subprocess.call", side_effect=[0, 1])
     mocker.patch("koan.virt.openvz._install_container_tree")
 
     with pytest.raises(OVZCreateException, match=r"Start container 101 failed"):
         openvz.start_install(**_base_kwargs())
 
-    assert mock_system.call_count == 2
+    assert mock_call.call_count == 2
 
 
-def test_extract_rootpw_returns_last_field_of_rootpw_line():
+def test_extract_rootpw_returns_last_field_of_rootpw_line() -> None:
     kickstart = "lang en_US\nrootpw --iscrypted $6$abcdef$somehash\nreboot\n"
 
     assert openvz._extract_rootpw(kickstart) == "$6$abcdef$somehash"
 
 
-def test_extract_rootpw_returns_none_when_absent():
+def test_extract_rootpw_returns_none_when_absent() -> None:
     kickstart = "lang en_US\nreboot\n"
 
     assert openvz._extract_rootpw(kickstart) is None
@@ -199,23 +225,23 @@ def test_extract_rootpw_returns_none_when_absent():
         ("lang en_US\n", "/bin/sh"),
     ],
 )
-def test_extract_post_install_interpreter(kickstart, expected):
+def test_extract_post_install_interpreter(kickstart: Any, expected: Any) -> None:
     assert openvz._extract_post_install_interpreter(kickstart) == expected
 
 
-def test_extract_post_install_script_returns_text_after_post_line():
+def test_extract_post_install_script_returns_text_after_post_line() -> None:
     kickstart = "lang en_US\n%post\necho hi\necho done\n"
 
     assert openvz._extract_post_install_script(kickstart) == "echo hi\necho done"
 
 
-def test_extract_post_install_script_returns_empty_when_no_post_section():
+def test_extract_post_install_script_returns_empty_when_no_post_section() -> None:
     kickstart = "lang en_US\nreboot\n"
 
     assert openvz._extract_post_install_script(kickstart) == ""
 
 
-def test_extract_services_returns_enabled_and_disabled_lists():
+def test_extract_services_returns_enabled_and_disabled_lists() -> None:
     kickstart = "services --disabled=sendmail,cups --enabled=sshd,network\n"
 
     enabled, disabled = openvz._extract_services(kickstart)
@@ -224,7 +250,7 @@ def test_extract_services_returns_enabled_and_disabled_lists():
     assert disabled == ["sendmail", "cups"]
 
 
-def test_extract_services_returns_empty_lists_when_absent():
+def test_extract_services_returns_empty_lists_when_absent() -> None:
     kickstart = "lang en_US\n"
 
     enabled, disabled = openvz._extract_services(kickstart)
@@ -233,7 +259,7 @@ def test_extract_services_returns_empty_lists_when_absent():
     assert disabled == []
 
 
-def test_extract_base_repo_url_returns_url_value():
+def test_extract_base_repo_url_returns_url_value() -> None:
     kickstart = "url --url=http://mirror.example.com/os/x86_64\n"
 
     assert (
@@ -242,7 +268,7 @@ def test_extract_base_repo_url_returns_url_value():
     )
 
 
-def test_extract_base_repo_url_returns_none_when_absent():
+def test_extract_base_repo_url_returns_none_when_absent() -> None:
     kickstart = "lang en_US\n"
 
     assert openvz._extract_base_repo_url(kickstart) is None
@@ -255,7 +281,7 @@ def test_extract_base_repo_url_returns_none_when_absent():
         ("url --url=http://x\n", False),
     ],
 )
-def test_extract_ignoremissing(kickstart, expected):
+def test_extract_ignoremissing(kickstart: Any, expected: Any) -> None:
     assert openvz._extract_ignoremissing(kickstart) == expected
 
 
@@ -266,11 +292,11 @@ def test_extract_ignoremissing(kickstart, expected):
         ("%packages\n@core\n%post\n", False),
     ],
 )
-def test_extract_nobase(kickstart, expected):
+def test_extract_nobase(kickstart: Any, expected: Any) -> None:
     assert openvz._extract_nobase(kickstart) == expected
 
 
-def test_extract_repos_parses_name_and_baseurl():
+def test_extract_repos_parses_name_and_baseurl() -> None:
     kickstart = (
         "repo --name=epel --baseurl=http://example.com/epel\n"
         "repo --name=extras --baseurl=http://example.com/extras\n"
@@ -284,22 +310,22 @@ def test_extract_repos_parses_name_and_baseurl():
     ]
 
 
-def test_extract_repos_returns_empty_list_when_absent():
+def test_extract_repos_returns_empty_list_when_absent() -> None:
     assert openvz._extract_repos("lang en_US\n") == []
 
 
-def test_extract_repos_ignores_lines_not_starting_with_repo_token():
+def test_extract_repos_ignores_lines_not_starting_with_repo_token() -> None:
     # "repository" starts with the substring "repo" but is not the "repo" directive
     kickstart = "repository-note this is not a repo line\n"
 
     assert openvz._extract_repos(kickstart) == []
 
 
-def test_extract_repos_ignores_bare_repo_line_without_directives():
+def test_extract_repos_ignores_bare_repo_line_without_directives() -> None:
     assert openvz._extract_repos("repo\n") == []
 
 
-def test_extract_packages_parses_install_remove_and_group_entries():
+def test_extract_packages_parses_install_remove_and_group_entries() -> None:
     kickstart = (
         "%packages --nobase\n"
         "@core\n"
@@ -320,23 +346,23 @@ def test_extract_packages_parses_install_remove_and_group_entries():
     ]
 
 
-def test_extract_packages_skips_blank_and_comment_lines():
+def test_extract_packages_skips_blank_and_comment_lines() -> None:
     kickstart = "%packages\n\n# a comment\nvim-enhanced\n%post\n"
 
     assert openvz._extract_packages(kickstart) == [("install", False, "vim-enhanced")]
 
 
-def test_extract_packages_returns_empty_list_when_no_packages_section():
+def test_extract_packages_returns_empty_list_when_no_packages_section() -> None:
     assert openvz._extract_packages("lang en_US\n") == []
 
 
-def test_extract_packages_reads_to_end_of_file_when_no_post_section():
+def test_extract_packages_reads_to_end_of_file_when_no_post_section() -> None:
     kickstart = "%packages\nvim-enhanced\n"
 
     assert openvz._extract_packages(kickstart) == [("install", False, "vim-enhanced")]
 
 
-def test_build_yum_config_includes_base_repo_and_main_section():
+def test_build_yum_config_includes_base_repo_and_main_section() -> None:
     config = openvz._build_yum_config(
         base_repo_url="http://mirror.example.com/os", ignore_missing=False, repos=[]
     )
@@ -347,7 +373,7 @@ def test_build_yum_config_includes_base_repo_and_main_section():
     assert "skip_broken=1" not in config
 
 
-def test_build_yum_config_sets_skip_broken_when_ignore_missing():
+def test_build_yum_config_sets_skip_broken_when_ignore_missing() -> None:
     config = openvz._build_yum_config(
         base_repo_url="http://mirror.example.com/os", ignore_missing=True, repos=[]
     )
@@ -355,7 +381,7 @@ def test_build_yum_config_sets_skip_broken_when_ignore_missing():
     assert "skip_broken=1" in config
 
 
-def test_build_yum_config_includes_additional_repo_sections():
+def test_build_yum_config_includes_additional_repo_sections() -> None:
     config = openvz._build_yum_config(
         base_repo_url="http://mirror.example.com/os",
         ignore_missing=False,
@@ -367,7 +393,7 @@ def test_build_yum_config_includes_additional_repo_sections():
     assert "baseurl=http://example.com/epel" in config
 
 
-def test_build_yum_script_includes_extra_packages_and_exclusions():
+def test_build_yum_script_includes_extra_packages_and_exclusions() -> None:
     script = openvz._build_yum_script(packages=[], nobase=False)
 
     assert "config assumeyes True" in script
@@ -378,7 +404,7 @@ def test_build_yum_script_includes_extra_packages_and_exclusions():
     assert "groupremove base" not in script
 
 
-def test_build_yum_script_translates_package_actions():
+def test_build_yum_script_translates_package_actions() -> None:
     packages = [
         ("install", True, "core"),
         ("install", False, "vim-enhanced"),
@@ -394,14 +420,16 @@ def test_build_yum_script_translates_package_actions():
     assert 'groupremove "auto-fedora"' in script
 
 
-def test_build_yum_script_adds_groupremove_base_when_nobase():
+def test_build_yum_script_adds_groupremove_base_when_nobase() -> None:
     script = openvz._build_yum_script(packages=[], nobase=True)
 
     lines = script.splitlines()
     assert lines.index("groupremove base") < lines.index("run")
 
 
-def test_run_yum_install_installs_then_removes_kernel_packages(mocker):
+def test_run_yum_install_installs_then_removes_kernel_packages(
+    mocker: MockerFixture,
+) -> None:
     mock_call = mocker.patch("koan.virt.openvz.utils.subprocess_call")
 
     openvz._run_yum_install("/vz/private/101", "/tmp/x-yum.cfg", "/tmp/x-yum.yum")
@@ -420,7 +448,9 @@ def test_run_yum_install_installs_then_removes_kernel_packages(mocker):
     assert "--installroot=/vz/private/101" in remove_cmd
 
 
-def test_apply_services_script_writes_disabled_then_enabled_and_chroots(mocker):
+def test_apply_services_script_writes_disabled_then_enabled_and_chroots(
+    mocker: MockerFixture,
+) -> None:
     mock_open = mocker.patch("builtins.open", mocker.mock_open())
     mock_move = mocker.patch("koan.virt.openvz.shutil.move")
     mock_call = mocker.patch("koan.virt.openvz.utils.subprocess_call")
@@ -444,7 +474,9 @@ def test_apply_services_script_writes_disabled_then_enabled_and_chroots(mocker):
     )
 
 
-def test_apply_post_install_script_writes_body_and_chroots(mocker):
+def test_apply_post_install_script_writes_body_and_chroots(
+    mocker: MockerFixture,
+) -> None:
     mock_open = mocker.patch("builtins.open", mocker.mock_open())
     mock_move = mocker.patch("koan.virt.openvz.shutil.move")
     mock_call = mocker.patch("koan.virt.openvz.utils.subprocess_call")
@@ -465,7 +497,9 @@ def test_apply_post_install_script_writes_body_and_chroots(mocker):
     )
 
 
-def test_tune_container_tree_applies_expected_filesystem_changes(mocker, tmp_path):
+def test_tune_container_tree_applies_expected_filesystem_changes(
+    mocker: MockerFixture, tmp_path: Path
+) -> None:
     rootdir = tmp_path / "rootdir"
     for relative_dir in (
         "etc/init",
@@ -516,7 +550,9 @@ _SAMPLE_KICKSTART = (
 )
 
 
-def test_install_container_tree_orchestrates_steps_in_order(mocker):
+def test_install_container_tree_orchestrates_steps_in_order(
+    mocker: MockerFixture,
+) -> None:
     mocker.patch("koan.virt.openvz.utils.urlread", return_value=_SAMPLE_KICKSTART)
     mock_open = mocker.patch("builtins.open", mocker.mock_open())
     mocker.patch(
@@ -546,7 +582,7 @@ def test_install_container_tree_orchestrates_steps_in_order(mocker):
     mock_tune.assert_called_once_with("/vz/private/101", "$6$hash")
 
 
-def test_disable_gssapi_authentication_noop_when_file_missing(tmp_path):
+def test_disable_gssapi_authentication_noop_when_file_missing(tmp_path: Path) -> None:
     missing_path = str(tmp_path / "does-not-exist")
 
     openvz._disable_gssapi_authentication(missing_path)
@@ -554,7 +590,7 @@ def test_disable_gssapi_authentication_noop_when_file_missing(tmp_path):
     assert not os.path.exists(missing_path)
 
 
-def test_set_root_password_hash_noop_when_file_missing(tmp_path):
+def test_set_root_password_hash_noop_when_file_missing(tmp_path: Path) -> None:
     missing_path = str(tmp_path / "does-not-exist")
 
     openvz._set_root_password_hash(missing_path, "$6$hash")
@@ -562,7 +598,7 @@ def test_set_root_password_hash_noop_when_file_missing(tmp_path):
     assert not os.path.exists(missing_path)
 
 
-def test_set_root_password_hash_noop_when_rootpw_falsy(tmp_path):
+def test_set_root_password_hash_noop_when_rootpw_falsy(tmp_path: Path) -> None:
     shadow_path = tmp_path / "shadow"
     shadow_path.write_text("root:x:19000:0:99999:7:::\n")
 
@@ -571,7 +607,7 @@ def test_set_root_password_hash_noop_when_rootpw_falsy(tmp_path):
     assert shadow_path.read_text() == "root:x:19000:0:99999:7:::\n"
 
 
-def test_replace_symlink_removes_pre_existing_link(tmp_path):
+def test_replace_symlink_removes_pre_existing_link(tmp_path: Path) -> None:
     link_path = tmp_path / "mtab"
     link_path.symlink_to("/some/stale/target")
 
@@ -580,7 +616,7 @@ def test_replace_symlink_removes_pre_existing_link(tmp_path):
     assert os.readlink(link_path) == "/proc/mounts"
 
 
-def test_install_container_tree_decodes_bytes_kickstart(mocker):
+def test_install_container_tree_decodes_bytes_kickstart(mocker: MockerFixture) -> None:
     mocker.patch(
         "koan.virt.openvz.utils.urlread",
         return_value=_SAMPLE_KICKSTART.encode(),
