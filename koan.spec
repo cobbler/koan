@@ -5,7 +5,7 @@
 # - Fedora: 30, 31, Rawhide
 # - CentOS + EPEL: 9
 # - SLE: 11sp4, 12sp3, 15sp1
-# - openSUSE: Leap 15.6, Tumbleweed
+# - openSUSE: Leap 16.0, Tumbleweed
 # - Debian: 9, 10
 # - Ubuntu: 16.04, 18.04
 #

@@ -82,12 +82,12 @@ jobs:
         env:
           KOAN_VERSION: ${{ inputs.version }}
         run: sed -ri 's/^(Version:\s*).*/\1'"$KOAN_VERSION"'/' koan.spec
-      - name: Build a openSUSE Leap 15 Package
+      - name: Build a openSUSE Leap 16 Package
         shell: 'script -q -e -c "bash {0}"'
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ inputs.version }}
         run: |
-          ./docker/rpms/build-and-install-rpms.sh opensuse-leap docker/rpms/openSUSE_Leap_15/openSUSE_Leap_15.dockerfile
+          ./docker/rpms/build-and-install-rpms.sh opensuse-leap docker/rpms/openSUSE_Leap/openSUSE_Leap.dockerfile
       - name: Rename RPM
         run: |
           file-rename -v -d -e 's/koan-(\d+\.\d+\.\d+)-1\.(\w+)\.rpm/koan-$1-1.leap.$2.rpm/' rpm-build/*.rpm
