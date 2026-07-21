@@ -1,0 +1,5 @@
+koan (3.1.0) unstable; urgency=low
+
+  * Switch Debian packaging from debbuild to native packaging.
+
+ -- The Cobbler Authors <cobbler.project@gmail.com>  Tue, 21 Jul 2026 09:30:00 +0200

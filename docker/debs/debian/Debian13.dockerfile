@@ -7,19 +7,17 @@ ENV DEBIAN_FRONTEND=noninteractive
 # TERM=screen is fairly neutral and works with xterm for example, for others
 # you might need to pass -e TERM=<terminal>, like rxvt-unicode.
 ENV TERM=screen
-ENV OSCODENAME=bullseye
+ENV OSCODENAME=trixie
 
-# Add repo for debbuild and install all packages required
 # hadolint ignore=DL3008,DL3015,DL4006
 RUN apt-get update -qq && \
-    apt-get install -qqy gnupg curl && \
-    mkdir -p /etc/apt/keyrings && \
-    curl -sL http://download.opensuse.org/repositories/Debian:/debbuild/Debian_13/Release.key | gpg --dearmor -o /etc/apt/keyrings/debbuild.gpg && \
-    /bin/sh -c "echo 'deb [signed-by=/etc/apt/keyrings/debbuild.gpg] http://download.opensuse.org/repositories/Debian:/debbuild/Debian_13/ /' > /etc/apt/sources.list.d/debbuild.list" && \
-    apt-get update -qq && \
     apt-get install -qqy \
-    debbuild \
-    debbuild-macros \
+    build-essential \
+    devscripts \
+    dh-python \
+    debhelper \
+    gnupg \
+    curl \
     wget \
     pycodestyle \
     python3-dev \

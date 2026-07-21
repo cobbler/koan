@@ -1,0 +1,10 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: koan
+Upstream-Contact: The Cobbler Authors <cobbler.project@gmail.com>
+Source: https://github.com/cobbler/koan
+
+Files: *
+Copyright: 2006-2026 The Cobbler Team
+License: GPL-2+
+
+# TODO: Add individual copyright of all files having explicit spdx headers
