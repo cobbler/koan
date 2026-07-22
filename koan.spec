@@ -38,6 +38,7 @@ URL:            https://github.com/cobbler/koan
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
+BuildRequires:  git
 BuildRequires:  python%{python3_pkgversion}-%{develsuffix}
 BuildRequires:  python%{python3_pkgversion}-pip
 BuildRequires:  python%{python3_pkgversion}-setuptools
@@ -82,7 +83,7 @@ fi
 %{_bindir}/koan
 %{_bindir}/cobbler-register
 %{python_sitelib}/koan
-%{python_sitelib}/koan-%{version}.dist-info
+%{python_sitelib}/koan-*.dist-info
 
 %changelog
 * Sun Nov 24 2019 Neal Gompa <ngompa13@gmail.com>
