@@ -203,14 +203,13 @@ class Koan:
                 "xenfv",
                 "xen",
                 "vmware",
-                "vmwarew",
                 "auto",
                 "kvm",
             ]:
                 if self.virt_type == "xen":
                     self.virt_type = "xenpv"
                 raise InfoException(
-                    "--virt-type should be qemu, xenpv, xenfv, vmware, vmwarew, kvm, or auto"
+                    "--virt-type should be qemu, xenpv, xenfv, vmware, kvm, or auto"
                 )
 
         # if --qemu-disk-type was called without --virt-type=qemu, then fail
@@ -493,9 +492,8 @@ class Koan:
                     raise InfoException("qemu package needs to be installed")
 
             # for vmware
-            if self.virt_type == "vmware" or self.virt_type == "vmwarew":
-                # FIXME: if any vmware specific checks are required (for deps)
-                # do them here.
+            if self.virt_type == "vmware":
+                # FIXME: if any vmware specific checks are required (for deps) do them here.
                 pass
 
             if self.virt_type == "virt-image":
@@ -516,7 +514,7 @@ class Koan:
             if self.virt_type in ["xenpv"]:
                 # we need to fetch the kernel/initrd to do this
                 download = "/var/lib/xen"
-            elif self.virt_type in ["xenfv", "vmware", "vmwarew"]:
+            elif self.virt_type in ["xenfv", "vmware"]:
                 # we are downloading sufficient metadata to initiate PXE, no
                 # D/L needed
                 download = None
@@ -1464,11 +1462,6 @@ EOF
 
             uuid = None
             creator = vmw.start_install
-        elif self.virt_type == "vmwarew":
-            import vmwwcreate  # pyright: ignore[reportMissingImports, reportUnknownVariableType]
-
-            uuid = None
-            creator = cast(Callable[..., Any], vmwwcreate.start_install)
         elif self.virt_type == "openvz":
             from koan.virt import openvz
 
@@ -1672,8 +1665,6 @@ EOF
                 prefix = "/var/lib/xen/images/"
             elif self.virt_type in ["qemu", "kvm"]:
                 prefix = "/var/lib/libvirt/images/"
-            elif self.virt_type == "vmwarew":
-                prefix = "/var/lib/vmware/%s/" % name
             else:
                 prefix = "/var/lib/vmware/images/"
             if not os.path.exists(prefix):
