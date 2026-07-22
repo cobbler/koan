@@ -83,7 +83,7 @@ fi
 %{_bindir}/koan
 %{_bindir}/cobbler-register
 %{python_sitelib}/koan
-%{python_sitelib}/koan-%{version}.dist-info
+%{python_sitelib}/koan-*.dist-info
 
 %changelog
 * Sun Nov 24 2019 Neal Gompa <ngompa13@gmail.com>
