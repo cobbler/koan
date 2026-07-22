@@ -2,6 +2,7 @@ import sys
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_mock import MockerFixture
 
 from koan.cexceptions import InfoException
 from koan.virt import qemu
@@ -28,13 +29,13 @@ CAPABILITIES_WITHOUT_KVM = """<capabilities>
 </capabilities>"""
 
 
-def _make_conn(capabilities_xml):
+def _make_conn(capabilities_xml: str) -> MagicMock:
     conn = MagicMock()
     conn.getCapabilities.return_value = capabilities_xml
     return conn
 
 
-def test_start_install_detects_kvm(mocker):
+def test_start_install_detects_kvm(mocker: MockerFixture) -> None:
     # Arrange
     conn = _make_conn(CAPABILITIES_WITH_KVM)
     mocker.patch("libvirt.openReadOnly", return_value=conn)
@@ -56,7 +57,7 @@ def test_start_install_detects_kvm(mocker):
     subprocess_get_response.assert_called_once()
 
 
-def test_start_install_no_kvm_leaves_virt_type_unchanged(mocker):
+def test_start_install_no_kvm_leaves_virt_type_unchanged(mocker: MockerFixture) -> None:
     # Arrange
     conn = _make_conn(CAPABILITIES_WITHOUT_KVM)
     mocker.patch("libvirt.openReadOnly", return_value=conn)
@@ -76,7 +77,7 @@ def test_start_install_no_kvm_leaves_virt_type_unchanged(mocker):
     assert build_commandline.call_args.kwargs["virt_type"] == "qemu"
 
 
-def test_start_install_resets_arch_to_none(mocker):
+def test_start_install_resets_arch_to_none(mocker: MockerFixture) -> None:
     # Arrange
     conn = _make_conn(CAPABILITIES_WITHOUT_KVM)
     mocker.patch("libvirt.openReadOnly", return_value=conn)
@@ -96,7 +97,7 @@ def test_start_install_resets_arch_to_none(mocker):
     assert build_commandline.call_args.kwargs["arch"] is None
 
 
-def test_start_install_no_arch_kwarg_not_added(mocker):
+def test_start_install_no_arch_kwarg_not_added(mocker: MockerFixture) -> None:
     # Arrange
     conn = _make_conn(CAPABILITIES_WITHOUT_KVM)
     mocker.patch("libvirt.openReadOnly", return_value=conn)
@@ -115,7 +116,9 @@ def test_start_install_no_arch_kwarg_not_added(mocker):
     assert "arch" not in build_commandline.call_args.kwargs
 
 
-def test_start_install_libvirt_unavailable_raises_info_exception(mocker):
+def test_start_install_libvirt_unavailable_raises_info_exception(
+    mocker: MockerFixture,
+) -> None:
     # Arrange
     mocker.patch.dict(sys.modules, {"libvirt": None})
     mocker.patch("koan.virt.qemu.virtinstall.create_image_file")
@@ -127,7 +130,9 @@ def test_start_install_libvirt_unavailable_raises_info_exception(mocker):
         qemu.start_install()
 
 
-def test_start_install_subprocess_failure_raises_info_exception(mocker):
+def test_start_install_subprocess_failure_raises_info_exception(
+    mocker: MockerFixture,
+) -> None:
     # Arrange
     conn = _make_conn(CAPABILITIES_WITHOUT_KVM)
     mocker.patch("libvirt.openReadOnly", return_value=conn)

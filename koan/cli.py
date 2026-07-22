@@ -17,14 +17,14 @@ from koan.cexceptions import InfoException
 from koan.register import Register
 
 
-def main():
+def main() -> int:
     """
     Command line stuff...
     """
 
     try:
         utils.setupLogging("koan")
-    except:
+    except Exception:
         # most likely running RHEL3, where we don't need virt logging anyway
         pass
 
@@ -58,21 +58,6 @@ def main():
         action="store_true",
         default=None,
         help="update templated files from cobbler config management",
-    )
-    p.add_argument(
-        "-c",
-        "--update-config",
-        dest="is_update_config",
-        action="store_true",
-        default=None,
-        help="update system configuration from cobbler config management",
-    )
-    p.add_argument(
-        "--summary",
-        dest="summary",
-        action="store_true",
-        default=None,
-        help="print configuration run stats",
     )
     p.add_argument(
         "-V",
@@ -254,8 +239,6 @@ def main():
         k.server = options.server
         k.is_virt = options.is_virt
         k.is_update_files = options.is_update_files
-        k.is_update_config = options.is_update_config
-        k.summary = options.summary
         k.is_replace = options.is_replace
         k.is_display = options.is_display
         k.profile = options.profile
@@ -301,7 +284,7 @@ def main():
         try:
             getattr(e, "from_koan")
             print(str(e)[1:-1])  # nice exception, no traceback needed
-        except:
+        except Exception:
             print(xa)
             print(xb)
             print("".join(traceback.format_list(traceback.extract_tb(tb))))
@@ -310,7 +293,7 @@ def main():
     return 0
 
 
-def register_main():
+def register_main() -> int:
     """
     Command line stuff...
     """
@@ -367,7 +350,7 @@ def register_main():
         try:
             getattr(e, "from_koan")
             print(str(e)[1:-1])  # nice exception, no traceback needed
-        except:
+        except Exception:
             print(xa)
             print(xb)
             print("".join(traceback.format_list(traceback.extract_tb(tb))))

@@ -13,15 +13,64 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import time
 import traceback
 import urllib.request
 import xmlrpc.client
+from typing import (
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Protocol,
+    Tuple,
+    Union,
+    cast,
+    overload,
+)
 
 import distro
 import netifaces
 
 from koan.cexceptions import InfoException
+
+
+class CobblerXMLRPCInterface(Protocol):
+    """
+    The subset of Cobbler's XML-RPC surface (``cobbler/remote.py``) that koan
+    calls. Method return types are copied verbatim from the server's declared
+    types, so koan can trust ("assume truthy") the shape the server promises
+    rather than defensively re-validating it at every call site.
+    """
+
+    def ping(self) -> bool: ...
+
+    def extended_version(self) -> Dict[str, Union[str, List[str]]]: ...
+
+    def get_distros(self) -> List[Dict[str, Any]]: ...
+
+    def get_profiles(self) -> List[Dict[str, Any]]: ...
+
+    def get_systems(self) -> List[Dict[str, Any]]: ...
+
+    def get_repos(self) -> List[Dict[str, Any]]: ...
+
+    def get_images(self) -> List[Dict[str, Any]]: ...
+
+    def get_profile_as_rendered(
+        self, name: str
+    ) -> Union[List[Any], Dict[Any, Any], int, str, float]: ...
+
+    def get_system_as_rendered(
+        self, name: str
+    ) -> Union[List[Any], Dict[Any, Any], int, str, float]: ...
+
+    def get_image_as_rendered(
+        self, name: str
+    ) -> Union[List[Any], Dict[Any, Any], int, str, float]: ...
+
+    def register_new_system(self, info: Dict[str, Any]) -> int: ...
+
 
 VIRT_STATE_NAME_MAP = {
     0: "running",
@@ -35,8 +84,10 @@ VIRT_STATE_NAME_MAP = {
 
 VALID_DRIVER_TYPES = ["raw", "qcow", "qcow2", "vmdk", "qed"]
 
+MINIMUM_COBBLER_VERSION = (4, 0, 0)
 
-def setupLogging(appname):
+
+def setupLogging(appname: str) -> None:
     """
     set up logging ... code borrowed/adapted from virt-manager
     """
@@ -64,7 +115,7 @@ def setupLogging(appname):
     rootLogger.addHandler(streamHandler)
 
 
-def urlread(url):
+def urlread(url: Optional[str]) -> Union[str, bytes]:
     """
     to support more distributions, implement (roughly) some
     parts of urlread and urlgrab from urlgrabber, in ways that
@@ -114,18 +165,18 @@ def urlread(url):
         raise InfoException("Unhandled URL protocol: %s" % url)
 
 
-def urlgrab(url, saveto):
+def urlgrab(url: Optional[str], saveto: str) -> None:
     """
     like urlread, but saves contents to disk.
     see comments for urlread as to why it's this way.
     """
     data = urlread(url)
     fd = open(saveto, "w+b")
-    fd.write(data)
+    fd.write(data)  # type: ignore[reportArgumentType]
     fd.close()
 
 
-def subprocess_call(cmd, ignore_rc=0):
+def subprocess_call(cmd: List[str], ignore_rc: Union[int, bool] = 0) -> int:
     """
     Wrapper around subprocess.call(...)
     """
@@ -136,13 +187,21 @@ def subprocess_call(cmd, ignore_rc=0):
     return rc
 
 
-def subprocess_get_response(cmd, ignore_rc=False, get_stderr=False):
+@overload
+def subprocess_get_response(
+    cmd: List[str], ignore_rc: bool = ..., *, get_stderr: Literal[False] = ...
+) -> Tuple[int, str]: ...
+@overload
+def subprocess_get_response(
+    cmd: List[str], ignore_rc: bool = ..., *, get_stderr: Literal[True]
+) -> Tuple[int, str, str]: ...
+def subprocess_get_response(
+    cmd: List[str], ignore_rc: bool = False, get_stderr: bool = False
+) -> Union[Tuple[int, str], Tuple[int, str, str]]:
     """
     Wrapper around subprocess.check_output(...)
     """
     print("- %s" % cmd)
-    rc = 0
-    result = ""
     if get_stderr:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     else:
@@ -156,7 +215,11 @@ def subprocess_get_response(cmd, ignore_rc=False, get_stderr=False):
     return rc, result.decode()
 
 
-def input_string_or_dict(options, delim=None, allow_multiples=True):
+def input_string_or_dict(
+    options: Any,
+    delim: Optional[str] = None,
+    allow_multiples: bool = True,
+) -> Dict[Any, Any]:
     """
     Older cobbler files stored configurations in a flat way, such that all values for strings.
     Newer versions of cobbler allow dictionaries.  This function is used to allow loading
@@ -167,8 +230,8 @@ def input_string_or_dict(options, delim=None, allow_multiples=True):
         return {}
     elif isinstance(options, list):
         raise InfoException("No idea what to do with list: %s" % options)
-    elif isinstance(options, type("")):
-        new_dict = {}
+    elif isinstance(options, str):
+        new_dict: Dict[Any, Any] = {}
         tokens = options.split(delim)
         for t in tokens:
             tokens2 = t.split("=", 1)
@@ -199,14 +262,15 @@ def input_string_or_dict(options, delim=None, allow_multiples=True):
         if "" in new_dict:
             del new_dict[""]
         return new_dict
-    elif isinstance(options, type({})):
+    elif isinstance(options, dict):
+        options = cast(Dict[Any, Any], options)
         options.pop("", None)
         return options
     else:
         raise InfoException("invalid input type: %s" % type(options))
 
 
-def dict_to_string(hash):
+def dict_to_string(hash: Any) -> Any:
     """
     Convert a hash to a printable string.
     used primarily in the kernel options string
@@ -216,6 +280,7 @@ def dict_to_string(hash):
     buffer = ""
     if not isinstance(hash, dict):
         return hash
+    hash = cast(Dict[Any, Any], hash)
     for key in hash:
         value = hash[key]
         if value is None:
@@ -223,14 +288,14 @@ def dict_to_string(hash):
         elif isinstance(value, list):
             # this value is an array, so we print out every
             # key=value
-            for item in value:
+            for item in cast(List[Any], value):
                 buffer = buffer + str(key) + "=" + str(item) + " "
         else:
             buffer = buffer + str(key) + "=" + str(value) + " "
     return buffer
 
 
-def nfsmount(input_path):
+def nfsmount(input_path: str) -> Tuple[str, str]:
     # input:  [user@]server:/foo/bar/x.img as string
     # output:  (dirname where mounted, last part of filename) as 2-element tuple
     # we have to mount it first
@@ -249,7 +314,7 @@ def nfsmount(input_path):
     return (tempdir, filename)
 
 
-def get_vms(conn):
+def get_vms(conn: Any) -> List[Any]:
     """
     Get virtual machines
 
@@ -257,7 +322,7 @@ def get_vms(conn):
     @return list virtual machines
     """
 
-    vms = []
+    vms: List[Any] = []
 
     # this block of code borrowed from virt-manager:
     # get working domain's name
@@ -275,7 +340,7 @@ def get_vms(conn):
     return vms
 
 
-def find_vm(conn, vmid):
+def find_vm(conn: Any, vmid: str) -> Any:
     """
     Extra bonus feature: vmid = -1 returns a list of everything
     This function from Func:  fedorahosted.org/func
@@ -289,7 +354,7 @@ def find_vm(conn, vmid):
     raise InfoException("koan could not find the VM to watch: %s" % vmid)
 
 
-def get_vm_state(conn, vmid):
+def get_vm_state(conn: Any, vmid: str) -> str:
     """
     Returns the state of a libvirt VM, by name.
     From Func:  fedorahosted.org/func
@@ -298,7 +363,7 @@ def get_vm_state(conn, vmid):
     return VIRT_STATE_NAME_MAP.get(state, "unknown")
 
 
-def os_release():
+def os_release() -> Tuple[str, float]:
     """
     This code detects your os with the distro module and return the name and version. If it is not detected correctly it
     returns "unknown" (str) and "0" (float).
@@ -328,12 +393,12 @@ def os_release():
     return "unknown", 0.0
 
 
-def uniqify(lst, purge=None):
-    temp = {}
+def uniqify(lst: List[Any], purge: Optional[Any] = None) -> List[Any]:
+    temp: Dict[Any, int] = {}
     for x in lst:
         temp[x] = 1
     if purge is not None:
-        temp2 = {}
+        temp2: Dict[Any, int] = {}
         for x in temp.keys():
             if x != purge:
                 temp2[x] = 1
@@ -341,8 +406,8 @@ def uniqify(lst, purge=None):
     return list(temp.keys())
 
 
-def get_network_info():
-    interfaces = {}
+def get_network_info() -> Dict[str, Dict[str, Any]]:
+    interfaces: Dict[str, Dict[str, Any]] = {}
     # get names
     inames = netifaces.interfaces()
 
@@ -356,7 +421,7 @@ def get_network_info():
             ip = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]["addr"]
             if ip == "127.0.0.1":
                 ip = "?"
-        except:
+        except Exception:
             ip = "?"
 
         bridge = 0
@@ -364,7 +429,7 @@ def get_network_info():
 
         try:
             nm = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]["netmask"]
-        except:
+        except Exception:
             nm = "?"
 
         interfaces[iname] = {
@@ -379,13 +444,34 @@ def get_network_info():
     return interfaces
 
 
-def connect_to_server(server=None, port=None):
+def __check_cobbler_version(xmlrpc_server: CobblerXMLRPCInterface, url: str) -> None:
+    version_tuple: Optional[Tuple[int, ...]] = None
+    try:
+        version_info = xmlrpc_server.extended_version()
+        version_tuple = tuple(int(x) for x in version_info["version_tuple"])
+    except Exception:
+        version_tuple = None
+
+    if version_tuple is None or version_tuple < MINIMUM_COBBLER_VERSION:
+        found = ".".join(str(x) for x in version_tuple) if version_tuple else "unknown"
+        required = ".".join(str(x) for x in MINIMUM_COBBLER_VERSION)
+        raise InfoException(
+            "Cobbler server at %s reports version %s, which is older than "
+            "the minimum version %s supported by this release of koan. "
+            "Please install a release of koan compatible with your Cobbler "
+            "server." % (url, found, required)
+        )
+
+
+def connect_to_server(
+    server: Optional[str] = None, port: Optional[Union[str, int]] = None
+) -> CobblerXMLRPCInterface:
     if server is None:
         server = os.environ.get("COBBLER_SERVER", "")
     if server == "":
         raise InfoException("--server must be specified")
 
-    try_urls = []
+    try_urls: List[str] = []
     if port is None:
         try_urls = [
             "https://%s:443/cobbler_api" % (server),
@@ -399,13 +485,14 @@ def connect_to_server(server=None, port=None):
 
     for url in try_urls:
         print("- looking for Cobbler at %s" % url)
-        server = __try_connect(url)
-        if server is not None:
-            return server
+        xmlrpc_server = __try_connect(url)
+        if xmlrpc_server is not None:
+            __check_cobbler_version(xmlrpc_server, url)
+            return xmlrpc_server
     raise InfoException("Could not find Cobbler.")
 
 
-def create_xendomains_symlink(name):
+def create_xendomains_symlink(name: str) -> bool:
     """
     Create an /etc/xen/auto/<name> symlink for use with "xendomains"-style
     VM boot upon dom0 reboot.
@@ -438,44 +525,44 @@ def create_xendomains_symlink(name):
         return False
 
 
-def libvirt_enable_autostart(domain_name):
-    import libvirt
+def libvirt_enable_autostart(domain_name: str) -> None:
+    import libvirt  # pyright: ignore[reportMissingTypeStubs]
 
     try:
-        conn = libvirt.open("qemu:///system")
+        conn: Any = libvirt.open("qemu:///system")
         conn.listDefinedDomains()
         domain = conn.lookupByName(domain_name)
         domain.setAutostart(1)
-    except:
+    except Exception:
         raise InfoException("libvirt could not find domain %s" % domain_name)
 
     if not domain.autostart:
         raise InfoException("Could not enable autostart on domain %s." % domain_name)
 
 
-def make_floppy(autoinst):
-    fd, floppy_path = tempfile.mkstemp(suffix=".floppy", prefix="tmp", dir="/tmp")
+def make_floppy(autoinst: str) -> str:
+    _fd, floppy_path = tempfile.mkstemp(suffix=".floppy", prefix="tmp", dir="/tmp")
     print("- creating floppy image at %s" % floppy_path)
 
     # create the floppy image file
-    cmd = "dd if=/dev/zero of=%s bs=1440 count=1024" % floppy_path
+    cmd = ["dd", "if=/dev/zero", "of=%s" % floppy_path, "bs=1440", "count=1024"]
     print("- %s" % cmd)
-    rc = os.system(cmd)
+    rc = subprocess.call(cmd)
     if not rc == 0:
         raise InfoException("dd failed")
 
     # vfatify
-    cmd = "mkdosfs %s" % floppy_path
+    cmd = ["mkdosfs", floppy_path]
     print("- %s" % cmd)
-    rc = os.system(cmd)
+    rc = subprocess.call(cmd)
     if not rc == 0:
         raise InfoException("mkdosfs failed")
 
     # mount the floppy
     mount_path = tempfile.mkdtemp(suffix=".mnt", prefix="tmp", dir="/tmp")
-    cmd = "mount -o loop -t vfat %s %s" % (floppy_path, mount_path)
+    cmd = ["mount", "-o", "loop", "-t", "vfat", floppy_path, mount_path]
     print("- %s" % cmd)
-    rc = os.system(cmd)
+    rc = subprocess.call(cmd)
     if not rc == 0:
         raise InfoException("mount failed")
 
@@ -485,9 +572,9 @@ def make_floppy(autoinst):
     urlgrab(autoinst, save_file)
 
     # umount
-    cmd = "umount %s" % mount_path
+    cmd = ["umount", mount_path]
     print("- %s" % cmd)
-    rc = os.system(cmd)
+    rc = subprocess.call(cmd)
     if not rc == 0:
         raise InfoException("umount failed")
 
@@ -495,36 +582,36 @@ def make_floppy(autoinst):
     return floppy_path
 
 
-def sync_file(ofile, nfile, uid, gid, mode):
+def sync_file(ofile: str, nfile: str, uid: int, gid: int, mode: int) -> None:
     subprocess.call(["/usr/bin/diff", ofile, nfile])
     shutil.copy(nfile, ofile)
     os.chmod(ofile, mode)
     os.chown(ofile, uid, gid)
 
 
-def __try_connect(url):
+def __try_connect(url: str) -> Optional[CobblerXMLRPCInterface]:
     try:
-        xmlrpc_server = xmlrpc.client.ServerProxy(url)
+        xmlrpc_server = cast(CobblerXMLRPCInterface, xmlrpc.client.ServerProxy(url))
         xmlrpc_server.ping()
         return xmlrpc_server
-    except:
+    except Exception:
         traceback.print_exc()
         return None
 
 
-def create_qemu_image_file(path, size, driver_type):
+def create_qemu_image_file(path: str, size: Union[int, str], driver_type: str) -> None:
     if driver_type not in VALID_DRIVER_TYPES:
         raise InfoException("Invalid QEMU image type: %s" % driver_type)
 
     cmd = ["qemu-img", "create", "-f", driver_type, path, "%sG" % size]
     try:
         subprocess_call(cmd)
-    except:
+    except Exception:
         traceback.print_exc()
         raise InfoException("Image file create failed: %s" % " ".join(cmd))
 
 
-def random_mac():
+def random_mac() -> str:
     """
     from xend/server/netif.py
     Generate a random MAC address.
@@ -543,17 +630,13 @@ def random_mac():
     return ":".join(map(lambda x: "%02x" % x, mac))
 
 
-def generate_timestamp():
-    return str(int(time.time()))
-
-
-def check_version_greater_or_equal(version1, version2):
+def check_version_greater_or_equal(version1: str, version2: str) -> bool:
     ass = version1.split(".")
     bss = version2.split(".")
     if len(ass) != len(bss):
         raise Exception("expected version format differs")
-    for i, a in enumerate(ass):
-        a = int(a)
+    for i, a_str in enumerate(ass):
+        a = int(a_str)
         b = int(bss[i])
         if a > b:
             return True
@@ -595,7 +678,7 @@ def get_grub2_mkrelpath_executable() -> str:
     return executable_path
 
 
-def get_grub_real_path(path: str):
+def get_grub_real_path(path: str) -> str:
     """
     This function provides a wrapper to get the real path of a file to be able to write this to a grub config file.
 

@@ -1,10 +1,12 @@
 import re
 import subprocess
+from typing import Any, List, Tuple
 from unittest.mock import MagicMock, mock_open
 
 import distro
 import netifaces
 import pytest
+from pytest_mock import MockerFixture
 
 from koan import utils
 from koan.cexceptions import InfoException
@@ -20,21 +22,21 @@ from tests.conftest import does_not_raise
         ("notexisting", "unknown"),
     ],
 )
-def test_os_release(test_input, expected):
+def test_os_release(test_input: Any, expected: Any) -> None:
     # Arrange
     distro.id = MagicMock(return_value=test_input)
     distro.like = MagicMock(return_value=test_input)
     distro.version = MagicMock(return_value=11)
 
     # Act
-    resname, resnumber = utils.os_release()
+    resname, _resnumber = utils.os_release()
 
     # Assert
     assert resname == expected
 
 
 @pytest.mark.parametrize("os_path_return", [(True), (False)])
-def test_is_uefi_system(os_path_return, mocker):
+def test_is_uefi_system(os_path_return: Any, mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("os.path.exists", return_value=os_path_return)
 
@@ -53,8 +55,8 @@ def test_is_uefi_system(os_path_return, mocker):
     ],
 )
 def test_get_grub2_mkrelpath_executable(
-    shutil_which_return, expected_exception, mocker
-):
+    shutil_which_return: Any, expected_exception: Any, mocker: MockerFixture
+) -> None:
     # Arrange
     mocker.patch("shutil.which", return_value=shutil_which_return)
 
@@ -83,8 +85,11 @@ def test_get_grub2_mkrelpath_executable(
     ],
 )
 def test_get_grub_real_path(
-    mocked_process_result, mocked_os_path_exists, expected_exception, mocker
-):
+    mocked_process_result: Any,
+    mocked_os_path_exists: Any,
+    expected_exception: Any,
+    mocker: MockerFixture,
+) -> None:
     # Arrange
     mocker.patch("subprocess.run", return_value=mocked_process_result)
     mocker.patch("os.path.exists", return_value=mocked_os_path_exists)
@@ -119,7 +124,9 @@ def test_get_grub_real_path(
         ({}, None, True, {}),
     ],
 )
-def test_input_string_or_dict(test_input, delim, allow_multiples, expected):
+def test_input_string_or_dict(
+    test_input: Any, delim: Any, allow_multiples: Any, expected: Any
+) -> None:
     # Act
     result = utils.input_string_or_dict(
         test_input, delim=delim, allow_multiples=allow_multiples
@@ -130,7 +137,7 @@ def test_input_string_or_dict(test_input, delim, allow_multiples, expected):
 
 
 @pytest.mark.parametrize("invalid_input", [["a", "b"], 42, 3.14])
-def test_input_string_or_dict_raises_on_invalid_type(invalid_input):
+def test_input_string_or_dict_raises_on_invalid_type(invalid_input: Any) -> None:
     # Act & Assert
     with pytest.raises(InfoException):
         utils.input_string_or_dict(invalid_input)
@@ -146,7 +153,7 @@ def test_input_string_or_dict_raises_on_invalid_type(invalid_input):
         ("already a string", "already a string"),
     ],
 )
-def test_dict_to_string(test_input, expected):
+def test_dict_to_string(test_input: Any, expected: Any) -> None:
     # Act
     result = utils.dict_to_string(test_input)
 
@@ -154,7 +161,7 @@ def test_dict_to_string(test_input, expected):
     assert result == expected
 
 
-def test_dict_to_string_and_input_string_or_dict_roundtrip():
+def test_dict_to_string_and_input_string_or_dict_roundtrip() -> None:
     # Arrange
     original = {"a": "1"}
 
@@ -180,7 +187,7 @@ def test_dict_to_string_and_input_string_or_dict_roundtrip():
         ([1, 1, 2], None, [1, 2]),
     ],
 )
-def test_uniqify(test_input, purge, expected):
+def test_uniqify(test_input: Any, purge: Any, expected: Any) -> None:
     # Act
     result = utils.uniqify(test_input, purge=purge)
 
@@ -205,7 +212,9 @@ def test_uniqify(test_input, purge, expected):
         ("2.2.2", "2.2.2", True),
     ],
 )
-def test_check_version_greater_or_equal(version1, version2, expected):
+def test_check_version_greater_or_equal(
+    version1: Any, version2: Any, expected: Any
+) -> None:
     # Act
     result = utils.check_version_greater_or_equal(version1, version2)
 
@@ -213,18 +222,18 @@ def test_check_version_greater_or_equal(version1, version2, expected):
     assert result == expected
 
 
-def test_check_version_greater_or_equal_mismatched_format_raises():
+def test_check_version_greater_or_equal_mismatched_format_raises() -> None:
     # Act & Assert
     with pytest.raises(Exception):
         utils.check_version_greater_or_equal("1.2", "1.2.3")
 
 
 # ---------------------------------------------------------------------------
-# random_mac / generate_timestamp
+# random_mac
 # ---------------------------------------------------------------------------
 
 
-def test_random_mac_format():
+def test_random_mac_format() -> None:
     # Act
     result = utils.random_mac()
 
@@ -232,7 +241,7 @@ def test_random_mac_format():
     assert re.match(r"^00:50:56:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}$", result)
 
 
-def test_random_mac_is_callable_multiple_times():
+def test_random_mac_is_callable_multiple_times() -> None:
     # Act
     results = {utils.random_mac() for _ in range(5)}
 
@@ -240,24 +249,12 @@ def test_random_mac_is_callable_multiple_times():
     assert len(results) >= 1
 
 
-def test_generate_timestamp(mocker):
-    # Arrange
-    mocker.patch("time.time", return_value=1234567890.123)
-
-    # Act
-    result = utils.generate_timestamp()
-
-    # Assert
-    assert result == "1234567890"
-    assert result.isdigit()
-
-
 # ---------------------------------------------------------------------------
 # subprocess_call / subprocess_get_response
 # ---------------------------------------------------------------------------
 
 
-def test_subprocess_call_success(mocker):
+def test_subprocess_call_success(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("subprocess.call", return_value=0)
 
@@ -268,7 +265,7 @@ def test_subprocess_call_success(mocker):
     assert result == 0
 
 
-def test_subprocess_call_nonzero_raises(mocker):
+def test_subprocess_call_nonzero_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("subprocess.call", return_value=1)
 
@@ -277,7 +274,7 @@ def test_subprocess_call_nonzero_raises(mocker):
         utils.subprocess_call(["false"])
 
 
-def test_subprocess_call_nonzero_ignored(mocker):
+def test_subprocess_call_nonzero_ignored(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("subprocess.call", return_value=1)
 
@@ -288,7 +285,7 @@ def test_subprocess_call_nonzero_ignored(mocker):
     assert result == 1
 
 
-def test_subprocess_get_response_success(mocker):
+def test_subprocess_get_response_success(mocker: MockerFixture) -> None:
     # Arrange
     mock_popen = MagicMock()
     mock_popen.communicate.return_value = (b"stdout-data", b"")
@@ -303,7 +300,7 @@ def test_subprocess_get_response_success(mocker):
     assert result == "stdout-data"
 
 
-def test_subprocess_get_response_with_stderr(mocker):
+def test_subprocess_get_response_with_stderr(mocker: MockerFixture) -> None:
     # Arrange
     mock_popen = MagicMock()
     mock_popen.communicate.return_value = (b"out", b"errdata")
@@ -319,7 +316,7 @@ def test_subprocess_get_response_with_stderr(mocker):
     assert stderr_result == "errdata"
 
 
-def test_subprocess_get_response_nonzero_raises(mocker):
+def test_subprocess_get_response_nonzero_raises(mocker: MockerFixture) -> None:
     # Arrange
     mock_popen = MagicMock()
     mock_popen.communicate.return_value = (b"", b"")
@@ -331,7 +328,7 @@ def test_subprocess_get_response_nonzero_raises(mocker):
         utils.subprocess_get_response(["false"])
 
 
-def test_subprocess_get_response_nonzero_ignored(mocker):
+def test_subprocess_get_response_nonzero_ignored(mocker: MockerFixture) -> None:
     # Arrange
     mock_popen = MagicMock()
     mock_popen.communicate.return_value = (b"data", b"")
@@ -352,16 +349,16 @@ def test_subprocess_get_response_nonzero_ignored(mocker):
 
 
 @pytest.mark.parametrize("bad_url", [None, ""])
-def test_urlread_invalid_url_raises(bad_url):
+def test_urlread_invalid_url_raises(bad_url: Any) -> None:
     # Act & Assert
     with pytest.raises(InfoException):
         utils.urlread(bad_url)
 
 
-def test_urlread_nfs_success(mocker):
+def test_urlread_nfs_success(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("tempfile.mkdtemp", return_value="/tmp/koan_nfsXXXX")
-    mocker.patch("koan.utils.subprocess_call")
+    mock_subprocess_call = mocker.patch("koan.utils.subprocess_call")
     mocker.patch("builtins.open", mock_open(read_data="filedata"))
 
     # Act
@@ -369,10 +366,10 @@ def test_urlread_nfs_success(mocker):
 
     # Assert
     assert result == "filedata"
-    assert utils.subprocess_call.call_count == 2
+    assert mock_subprocess_call.call_count == 2
 
 
-def test_urlread_nfs_failure_raises(mocker):
+def test_urlread_nfs_failure_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("tempfile.mkdtemp", return_value="/tmp/koan_nfsXXXX")
     mocker.patch("koan.utils.subprocess_call", side_effect=Exception("mount failed"))
@@ -382,7 +379,7 @@ def test_urlread_nfs_failure_raises(mocker):
         utils.urlread("nfs://server:/path/to/file.txt")
 
 
-def test_urlread_http_success(mocker):
+def test_urlread_http_success(mocker: MockerFixture) -> None:
     # Arrange
     fd = MagicMock()
     fd.read.return_value = b"webdata"
@@ -396,7 +393,7 @@ def test_urlread_http_success(mocker):
     fd.close.assert_called_once()
 
 
-def test_urlread_http_failure_raises(mocker):
+def test_urlread_http_failure_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("urllib.request.urlopen", side_effect=Exception("network error"))
 
@@ -405,7 +402,7 @@ def test_urlread_http_failure_raises(mocker):
         utils.urlread("http://example.com/file")
 
 
-def test_urlread_file_success(mocker):
+def test_urlread_file_success(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("builtins.open", mock_open(read_data="filecontent"))
 
@@ -416,7 +413,7 @@ def test_urlread_file_success(mocker):
     assert result == "filecontent"
 
 
-def test_urlread_file_failure_raises(mocker):
+def test_urlread_file_failure_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("builtins.open", side_effect=OSError("no such file"))
 
@@ -425,13 +422,13 @@ def test_urlread_file_failure_raises(mocker):
         utils.urlread("file:///tmp/does_not_exist.txt")
 
 
-def test_urlread_unhandled_protocol_raises():
+def test_urlread_unhandled_protocol_raises() -> None:
     # Act & Assert
     with pytest.raises(InfoException):
         utils.urlread("ftp://example.com/file")
 
 
-def test_urlgrab_writes_downloaded_data(mocker):
+def test_urlgrab_writes_downloaded_data(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("koan.utils.urlread", return_value=b"content")
     m = mock_open()
@@ -450,9 +447,9 @@ def test_urlgrab_writes_downloaded_data(mocker):
 # ---------------------------------------------------------------------------
 
 
-def test_get_network_info(mocker):
+def test_get_network_info(mocker: MockerFixture) -> None:
     # Arrange
-    def fake_ifaddresses(iname):
+    def fake_ifaddresses(iname: str) -> Any:
         data = {
             "eth0": {
                 netifaces.AF_LINK: [{"addr": "aa:bb:cc:dd:ee:ff"}],
@@ -495,7 +492,7 @@ def test_get_network_info(mocker):
 # ---------------------------------------------------------------------------
 
 
-def test_connect_to_server_no_server_raises(mocker):
+def test_connect_to_server_no_server_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("os.environ.get", return_value="")
 
@@ -504,9 +501,10 @@ def test_connect_to_server_no_server_raises(mocker):
         utils.connect_to_server(server=None)
 
 
-def test_connect_to_server_success(mocker):
+def test_connect_to_server_success(mocker: MockerFixture) -> None:
     # Arrange
     mock_proxy = MagicMock()
+    mock_proxy.extended_version.return_value = {"version_tuple": [4, 0, 0]}
     mocker.patch("xmlrpc.client.ServerProxy", return_value=mock_proxy)
 
     # Act
@@ -517,10 +515,12 @@ def test_connect_to_server_success(mocker):
     mock_proxy.ping.assert_called_once()
 
 
-def test_connect_to_server_uses_custom_port(mocker):
+def test_connect_to_server_uses_custom_port(mocker: MockerFixture) -> None:
     # Arrange
+    mock_proxy = MagicMock()
+    mock_proxy.extended_version.return_value = {"version_tuple": [4, 0, 0]}
     mock_server_proxy = mocker.patch(
-        "xmlrpc.client.ServerProxy", return_value=MagicMock()
+        "xmlrpc.client.ServerProxy", return_value=mock_proxy
     )
 
     # Act
@@ -530,11 +530,63 @@ def test_connect_to_server_uses_custom_port(mocker):
     mock_server_proxy.assert_any_call("https://myserver:25151/cobbler_api")
 
 
-def test_connect_to_server_all_urls_fail_raises(mocker):
+def test_connect_to_server_all_urls_fail_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch(
         "xmlrpc.client.ServerProxy", side_effect=Exception("connection refused")
     )
+
+    # Act & Assert
+    with pytest.raises(InfoException):
+        utils.connect_to_server(server="myserver")
+
+
+def test_connect_to_server_refuses_old_version(mocker: MockerFixture) -> None:
+    # Arrange
+    mock_proxy = MagicMock()
+    mock_proxy.extended_version.return_value = {"version_tuple": [3, 3, 3]}
+    mocker.patch("xmlrpc.client.ServerProxy", return_value=mock_proxy)
+
+    # Act & Assert
+    with pytest.raises(InfoException):
+        utils.connect_to_server(server="myserver")
+
+
+def test_connect_to_server_accepts_exact_minimum_version(mocker: MockerFixture) -> None:
+    # Arrange
+    mock_proxy = MagicMock()
+    mock_proxy.extended_version.return_value = {"version_tuple": [4, 0, 0]}
+    mocker.patch("xmlrpc.client.ServerProxy", return_value=mock_proxy)
+
+    # Act
+    result = utils.connect_to_server(server="myserver")
+
+    # Assert
+    assert result is mock_proxy
+
+
+def test_connect_to_server_accepts_newer_version(mocker: MockerFixture) -> None:
+    # Arrange
+    mock_proxy = MagicMock()
+    mock_proxy.extended_version.return_value = {"version_tuple": [4, 1, 2]}
+    mocker.patch("xmlrpc.client.ServerProxy", return_value=mock_proxy)
+
+    # Act
+    result = utils.connect_to_server(server="myserver")
+
+    # Assert
+    assert result is mock_proxy
+
+
+def test_connect_to_server_refuses_when_extended_version_rpc_fails(
+    mocker: MockerFixture,
+) -> None:
+    # Arrange
+    import xmlrpc.client as xmlrpclib
+
+    mock_proxy = MagicMock()
+    mock_proxy.extended_version.side_effect = xmlrpclib.Fault(1, "no such method")
+    mocker.patch("xmlrpc.client.ServerProxy", return_value=mock_proxy)
 
     # Act & Assert
     with pytest.raises(InfoException):
@@ -546,7 +598,7 @@ def test_connect_to_server_all_urls_fail_raises(mocker):
 # ---------------------------------------------------------------------------
 
 
-def test_create_xendomains_symlink_dst_exists(mocker):
+def test_create_xendomains_symlink_dst_exists(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("os.path.exists", return_value=True)
 
@@ -557,7 +609,7 @@ def test_create_xendomains_symlink_dst_exists(mocker):
     assert result is False
 
 
-def test_create_xendomains_symlink_dst_not_writable(mocker):
+def test_create_xendomains_symlink_dst_not_writable(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("os.path.exists", return_value=False)
     mocker.patch("os.access", return_value=False)
@@ -569,7 +621,7 @@ def test_create_xendomains_symlink_dst_not_writable(mocker):
     assert result is False
 
 
-def test_create_xendomains_symlink_src_missing(mocker):
+def test_create_xendomains_symlink_src_missing(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("os.path.exists", side_effect=[False, False])
     mocker.patch("os.access", return_value=True)
@@ -581,7 +633,7 @@ def test_create_xendomains_symlink_src_missing(mocker):
     assert result is False
 
 
-def test_create_xendomains_symlink_success(mocker):
+def test_create_xendomains_symlink_success(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("os.path.exists", side_effect=[False, True])
     mocker.patch("os.access", return_value=True)
@@ -600,7 +652,7 @@ def test_create_xendomains_symlink_success(mocker):
 # ---------------------------------------------------------------------------
 
 
-def test_sync_file(mocker):
+def test_sync_file(mocker: MockerFixture) -> None:
     # Arrange
     mock_call = mocker.patch("subprocess.call")
     mock_copy = mocker.patch("shutil.copy")
@@ -624,7 +676,7 @@ def test_sync_file(mocker):
 # ---------------------------------------------------------------------------
 
 
-def test_create_qemu_image_file_invalid_driver_raises(mocker):
+def test_create_qemu_image_file_invalid_driver_raises(mocker: MockerFixture) -> None:
     # Arrange
     mock_subprocess_call = mocker.patch("koan.utils.subprocess_call")
 
@@ -635,7 +687,9 @@ def test_create_qemu_image_file_invalid_driver_raises(mocker):
 
 
 @pytest.mark.parametrize("driver_type", ["raw", "qcow", "qcow2", "vmdk", "qed"])
-def test_create_qemu_image_file_success(driver_type, mocker):
+def test_create_qemu_image_file_success(
+    driver_type: Any, mocker: MockerFixture
+) -> None:
     # Arrange
     mock_subprocess_call = mocker.patch("koan.utils.subprocess_call")
 
@@ -648,7 +702,9 @@ def test_create_qemu_image_file_success(driver_type, mocker):
     )
 
 
-def test_create_qemu_image_file_subprocess_failure_raises(mocker):
+def test_create_qemu_image_file_subprocess_failure_raises(
+    mocker: MockerFixture,
+) -> None:
     # Arrange
     mocker.patch(
         "koan.utils.subprocess_call", side_effect=InfoException("command failed")
@@ -664,7 +720,7 @@ def test_create_qemu_image_file_subprocess_failure_raises(mocker):
 # ---------------------------------------------------------------------------
 
 
-def test_libvirt_enable_autostart_success(mocker):
+def test_libvirt_enable_autostart_success(mocker: MockerFixture) -> None:
     # Arrange
     domain = MagicMock()
     domain.autostart = 1
@@ -679,7 +735,7 @@ def test_libvirt_enable_autostart_success(mocker):
     domain.setAutostart.assert_called_once_with(1)
 
 
-def test_libvirt_enable_autostart_connect_failure_raises(mocker):
+def test_libvirt_enable_autostart_connect_failure_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("libvirt.open", side_effect=Exception("no connection"))
 
@@ -688,7 +744,7 @@ def test_libvirt_enable_autostart_connect_failure_raises(mocker):
         utils.libvirt_enable_autostart("myvm")
 
 
-def test_libvirt_enable_autostart_not_enabled_raises(mocker):
+def test_libvirt_enable_autostart_not_enabled_raises(mocker: MockerFixture) -> None:
     # Arrange
     domain = MagicMock()
     domain.autostart = 0
@@ -706,7 +762,7 @@ def test_libvirt_enable_autostart_not_enabled_raises(mocker):
 # ---------------------------------------------------------------------------
 
 
-def _make_fake_conn():
+def _make_fake_conn() -> "Tuple[MagicMock, List[MagicMock]]":
     vm1 = MagicMock(name="vm1")
     vm1.name.return_value = "vm1"
     vm2 = MagicMock(name="vm2")
@@ -714,15 +770,18 @@ def _make_fake_conn():
     vm3 = MagicMock(name="vm3")
     vm3.name.return_value = "vm3"
 
+    def _lookup_by_id(id_: int) -> MagicMock:
+        return {1: vm1, 2: vm2}[id_]
+
     conn = MagicMock()
     conn.listDomainsID.return_value = [1, 2]
-    conn.lookupByID.side_effect = lambda id_: {1: vm1, 2: vm2}[id_]
+    conn.lookupByID.side_effect = _lookup_by_id
     conn.listDefinedDomains.return_value = ["vm3"]
     conn.lookupByName.return_value = vm3
     return conn, [vm1, vm2, vm3]
 
 
-def test_get_vms():
+def test_get_vms() -> None:
     # Arrange
     conn, expected_vms = _make_fake_conn()
 
@@ -733,7 +792,7 @@ def test_get_vms():
     assert result == expected_vms
 
 
-def test_find_vm_found():
+def test_find_vm_found() -> None:
     # Arrange
     conn, expected_vms = _make_fake_conn()
 
@@ -744,7 +803,7 @@ def test_find_vm_found():
     assert result is expected_vms[1]
 
 
-def test_find_vm_not_found_raises():
+def test_find_vm_not_found_raises() -> None:
     # Arrange
     conn, _ = _make_fake_conn()
 
@@ -763,7 +822,7 @@ def test_find_vm_not_found_raises():
         (99, "unknown"),
     ],
 )
-def test_get_vm_state(state_code, expected):
+def test_get_vm_state(state_code: Any, expected: Any) -> None:
     # Arrange
     conn, expected_vms = _make_fake_conn()
     expected_vms[1].info.return_value = [state_code]
@@ -780,11 +839,11 @@ def test_get_vm_state(state_code, expected):
 # ---------------------------------------------------------------------------
 
 
-def test_make_floppy_success(mocker):
+def test_make_floppy_success(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("tempfile.mkstemp", return_value=(5, "/tmp/floppy123"))
     mocker.patch("tempfile.mkdtemp", return_value="/tmp/mnt123")
-    mocker.patch("os.system", return_value=0)
+    mocker.patch("subprocess.call", return_value=0)
     mock_urlgrab = mocker.patch("koan.utils.urlgrab")
 
     # Act
@@ -797,42 +856,42 @@ def test_make_floppy_success(mocker):
     )
 
 
-def test_make_floppy_dd_failure_raises(mocker):
+def test_make_floppy_dd_failure_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("tempfile.mkstemp", return_value=(5, "/tmp/floppy123"))
-    mocker.patch("os.system", return_value=1)
+    mocker.patch("subprocess.call", return_value=1)
 
     # Act & Assert
     with pytest.raises(InfoException):
         utils.make_floppy("http://example.com/ks.cfg")
 
 
-def test_make_floppy_mkdosfs_failure_raises(mocker):
+def test_make_floppy_mkdosfs_failure_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("tempfile.mkstemp", return_value=(5, "/tmp/floppy123"))
-    mocker.patch("os.system", side_effect=[0, 1])
+    mocker.patch("subprocess.call", side_effect=[0, 1])
 
     # Act & Assert
     with pytest.raises(InfoException):
         utils.make_floppy("http://example.com/ks.cfg")
 
 
-def test_make_floppy_mount_failure_raises(mocker):
+def test_make_floppy_mount_failure_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("tempfile.mkstemp", return_value=(5, "/tmp/floppy123"))
     mocker.patch("tempfile.mkdtemp", return_value="/tmp/mnt123")
-    mocker.patch("os.system", side_effect=[0, 0, 1])
+    mocker.patch("subprocess.call", side_effect=[0, 0, 1])
 
     # Act & Assert
     with pytest.raises(InfoException):
         utils.make_floppy("http://example.com/ks.cfg")
 
 
-def test_make_floppy_umount_failure_raises(mocker):
+def test_make_floppy_umount_failure_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("tempfile.mkstemp", return_value=(5, "/tmp/floppy123"))
     mocker.patch("tempfile.mkdtemp", return_value="/tmp/mnt123")
-    mocker.patch("os.system", side_effect=[0, 0, 0, 1])
+    mocker.patch("subprocess.call", side_effect=[0, 0, 0, 1])
     mocker.patch("koan.utils.urlgrab")
 
     # Act & Assert
@@ -845,7 +904,7 @@ def test_make_floppy_umount_failure_raises(mocker):
 # ---------------------------------------------------------------------------
 
 
-def test_nfsmount_success(mocker):
+def test_nfsmount_success(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("tempfile.mkdtemp", return_value="/tmp/koan_abcd.mnt")
     mocker.patch("subprocess.call", return_value=0)
@@ -857,7 +916,7 @@ def test_nfsmount_success(mocker):
     assert result == ("/tmp/koan_abcd.mnt", "x.img")
 
 
-def test_nfsmount_failure_raises(mocker):
+def test_nfsmount_failure_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("tempfile.mkdtemp", return_value="/tmp/koan_abcd.mnt")
     mocker.patch("subprocess.call", return_value=1)

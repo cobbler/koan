@@ -1,12 +1,14 @@
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_mock import MockerFixture
 
 from koan.cexceptions import InfoException
 from koan.register import Register
 
 
-def make_register(**attrs):
+def make_register(**attrs: Any) -> Register:
     """Build a Register() instance with the given attributes overridden."""
     reg = Register()
     for key, value in attrs.items():
@@ -14,7 +16,7 @@ def make_register(**attrs):
     return reg
 
 
-def test_run_requires_root(mocker):
+def test_run_requires_root(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=1000)
     reg = make_register()
@@ -24,7 +26,7 @@ def test_run_requires_root(mocker):
         reg.run()
 
 
-def test_run_happy_path(mocker):
+def test_run_happy_path(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
     mock_conn = MagicMock()
@@ -56,7 +58,7 @@ def test_run_happy_path(mocker):
     )
 
 
-def test_run_hostname_auto_with_unresolvable_fqdn(mocker):
+def test_run_hostname_auto_with_unresolvable_fqdn(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
     mock_conn = MagicMock()
@@ -88,7 +90,7 @@ def test_run_hostname_auto_with_unresolvable_fqdn(mocker):
     )
 
 
-def test_run_hostname_blank_resolves_via_getfqdn(mocker):
+def test_run_hostname_blank_resolves_via_getfqdn(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
     mock_conn = MagicMock()
@@ -119,7 +121,7 @@ def test_run_hostname_blank_resolves_via_getfqdn(mocker):
     )
 
 
-def test_run_missing_fqdn_raises(mocker):
+def test_run_missing_fqdn_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
     mock_conn = MagicMock()
@@ -142,7 +144,7 @@ def test_run_missing_fqdn_raises(mocker):
     mock_conn.register_new_system.assert_not_called()
 
 
-def test_run_missing_profile_raises(mocker):
+def test_run_missing_profile_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
     mock_conn = MagicMock()
@@ -165,7 +167,7 @@ def test_run_missing_profile_raises(mocker):
     mock_conn.register_new_system.assert_not_called()
 
 
-def test_run_profile_not_found_raises(mocker):
+def test_run_profile_not_found_raises(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
     mock_conn = MagicMock()
@@ -190,7 +192,7 @@ def test_run_profile_not_found_raises(mocker):
     mock_conn.register_new_system.assert_not_called()
 
 
-def test_run_batch_registration_succeeds(mocker):
+def test_run_batch_registration_succeeds(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
     mock_conn = MagicMock()
@@ -214,7 +216,7 @@ def test_run_batch_registration_succeeds(mocker):
     mock_conn.register_new_system.assert_called_once()
 
 
-def test_run_batch_swallows_registration_failure(mocker):
+def test_run_batch_swallows_registration_failure(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
     mock_conn = MagicMock()
