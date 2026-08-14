@@ -1560,7 +1560,10 @@ EOF
 
         err = False
         try:
-            int(size)
+            # Cobbler's VirtOption.file_size is typed as float and renders whole numbers
+            # as e.g. "12.0" - int("12.0") raises ValueError even though the value is
+            # perfectly valid, so parse via float() first rather than int() directly.
+            int(float(size))
         except Exception:
             err = True
         if size is None or size == "":
@@ -1568,7 +1571,7 @@ EOF
         if err:
             print("invalid file size specified, using defaults")
             return default_filesize
-        return int(size)  # pyright: ignore[reportArgumentType]
+        return int(float(size))  # pyright: ignore[reportArgumentType]
 
     def calc_virt_drivers(self, data: Dict[str, Any]) -> List[str]:
         driver = self.safe_load(data, "virt_disk_driver", default="raw")
