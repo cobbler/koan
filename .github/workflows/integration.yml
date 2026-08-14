@@ -1,0 +1,101 @@
+name: Integration Tests
+
+# Runs against ghcr.io/cobbler/cobblerd:latest (Cobbler's rolling/main build), so a
+# server-side schema/API change - like Cobbler 4.0 nesting virt_ram/virt_cpus/etc.
+# under a single "virt" Options object, which silently broke koan's calc_virt_*
+# methods - is caught here as soon as it lands on Cobbler's main branch, rather than
+# being discovered manually after the fact.
+#
+# The compose topology (traefik + cobblerd + http-api + cobbler-tftp) is vendored in
+# tests/integration/docker/compose.yml rather than checked out live from the
+# cobbler/cobbler repo, so this suite doesn't depend on being able to clone Cobbler's
+# source at CI time. Keep that file (and its settings.yaml) in sync with Cobbler's own
+# compose.yml + docker/compose/{base,tftp}.yml by hand if Cobbler's reference topology
+# changes.
+#
+# Kept as its own workflow (not a job in testing.yml) because it needs a real Docker
+# daemon on the runner (testing.yml's job runs inside a container image with none) and
+# has very different failure semantics/timing (network- and container-dependent,
+# much slower) than the fast, fully-mocked unit test suite.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    # Catches drift introduced purely on Cobbler's side, with zero koan-side changes.
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout koan
+        # https://github.com/actions/checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        # https://github.com/actions/setup-python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        # libvirt-dev/pkg-config/gcc: koan's install_requires includes libvirt-python,
+        # which needs to compile against libvirt's headers. virtinst: koan/virtinstall.py
+        # shells out to `virt-install --version` at import time (even though no guest
+        # install actually runs in this suite).
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libvirt-dev pkg-config gcc virtinst
+
+      - name: Install koan
+        run: pip install .[test]
+
+      - name: Start the Cobbler stack
+        run: docker compose -f tests/integration/docker/compose.yml up -d --no-build
+
+      - name: Wait for Cobbler's XML-RPC endpoint to be reachable through Traefik
+        run: |
+          request='<?xml version="1.0"?><methodCall><methodName>ping</methodName><params></params></methodCall>'
+          attempts=30
+          for i in $(seq 1 "${attempts}"); do
+            if response="$(curl -fsS -X POST -H 'Content-Type: text/xml' --data "${request}" http://localhost/cobbler_api)" \
+                && echo "${response}" | grep -q '<methodResponse>'; then
+              echo "Cobbler's XML-RPC endpoint is up:"
+              echo "${response}"
+              exit 0
+            fi
+            echo "not ready yet (attempt ${i}/${attempts}), retrying in 5s..."
+            sleep 5
+          done
+          echo "::error::Cobbler's XML-RPC endpoint never became reachable through Traefik"
+          docker compose -f tests/integration/docker/compose.yml logs
+          exit 1
+
+      - name: Seed fixture kernel/initrd files
+        # tests/integration/conftest.py's create_distro fixture points every seeded
+        # Distro's kernel/initrd at these fixed paths. Cobbler validates kernel/initrd
+        # server-side (they must exist on cobblerd's own filesystem), and these are
+        # placed in the "cobbler-var-lib" named volume so they survive for the whole
+        # job - empty files are sufficient, their content is never read.
+        run: |
+          docker compose -f tests/integration/docker/compose.yml exec -T cobblerd sh -c \
+            "mkdir -p /var/lib/cobbler/fixtures && touch /var/lib/cobbler/fixtures/vmlinuz_test /var/lib/cobbler/fixtures/initrd_test.img"
+
+      - name: Run integration tests
+        run: pytest tests/integration -m integration -v
+
+      - name: Dump Cobbler logs on failure
+        if: failure()
+        run: docker compose -f tests/integration/docker/compose.yml logs
+
+      - name: Tear down the stack
+        if: always()
+        run: docker compose -f tests/integration/docker/compose.yml down -v
