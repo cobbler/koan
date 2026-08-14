@@ -1342,6 +1342,15 @@ EOF
         driver_list = self.calc_virt_drivers(pd)
         if self.virt_type == "openvz":
             disks = None
+        elif self.image is not None and pd.get("image_type") == "virt-clone":
+            # A virt-clone image install boots straight from the existing image file
+            # (passed through as the profile's "file", prepended as the first --disk by
+            # virtinstall.build_commandline's "import" mode) - it is not a fresh OS
+            # install that needs a disk created for it. Cobbler's virt_file_size always
+            # resolves to a real value (5.0 by default) even when never explicitly set,
+            # so without this the default disk-creation path below would always attach a
+            # second, unwanted, wrongly-sized disk alongside the actual cloned image.
+            disks = []
         else:
             disks = self.merge_disk_data(path_list, size_list, driver_list)
         virt_auto_boot = self.calc_virt_autoboot(pd, self.virt_auto_boot)

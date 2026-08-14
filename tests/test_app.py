@@ -624,6 +624,49 @@ def test_virt_net_install_flattens_virt_before_reaching_create_func(
     assert passed_profile_data["virt_auto_boot"] is True
 
 
+def test_virt_net_install_virt_clone_image_skips_disk_creation(
+    mocker: MockerFixture,
+) -> None:
+    # Regression test: a virt-clone image install boots directly from the existing image
+    # file (passed through as "file", prepended as the first --disk by virtinstall's
+    # "import" mode) - it must not also get a freshly-sized disk created and attached,
+    # which used to happen unconditionally since Cobbler's virt_file_size always resolves
+    # to a real value (5.0 by default) even when never explicitly set on the Image item.
+    k = Koan()
+    k.image = "my-image"
+    k.virt_type = "kvm"
+    k.virt_bridge = None
+    k.virt_auto_boot = False
+    k.virt_pxe_boot = False
+    k.qemu_disk_type = None
+    k.qemu_net_type = None
+    k.qemu_machine_type = None
+    k.virtinstall_wait = True
+    k.virtinstall_noreboot = False
+    k.virtinstall_osimport = False
+    k.gfx_type = None
+    k.should_poll = False
+
+    profile_data: Dict[str, Any] = {
+        "name": "myguest",
+        "image_type": "virt-clone",
+        "file": "/var/lib/libvirt/images/appliance.qcow2",
+        "virt": _nested_virt_options(),
+    }
+    _flatten_virt_options(profile_data)
+
+    mocker.patch.object(k, "load_virt_modules")
+    create_func = MagicMock(return_value="ok")
+    mocker.patch.object(k, "virt_choose", return_value=(None, create_func, True, None))
+
+    # Act
+    k.virt_net_install(profile_data)
+
+    # Assert
+    kwargs = create_func.call_args.kwargs
+    assert kwargs["disks"] == []
+
+
 def test_calc_virt_mac_not_virt_returns_none() -> None:
     # Arrange
     k = Koan()
