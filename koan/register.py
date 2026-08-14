@@ -47,6 +47,13 @@ class Register:
         reg_info: Dict[str, Any] = {}
         print("- gathering network info")
         netinfo = utils.get_network_info()
+        # "?" is koan's own "unknown" sentinel for display purposes (see get_network_info()) and was never meant to
+        # reach Cobbler - send "" instead, which register_new_system() already treats as "no address/netmask provided".
+        for iface in netinfo.values():
+            if iface.get("ip_address") == "?":
+                iface["ip_address"] = ""
+            if iface.get("netmask") == "?":
+                iface["netmask"] = ""
         reg_info["interfaces"] = netinfo
         print("- checking hostname")
         sysname = ""
