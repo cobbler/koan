@@ -289,6 +289,7 @@ def _nested_virt_options(**overrides: Any) -> Dict[str, Any]:
         "pxe_boot": False,
         "ram": 64,
         "type": "auto",
+        "uefi": False,
     }
     virt.update(overrides)
     return virt
@@ -306,6 +307,7 @@ def test_flatten_virt_options_populates_flat_keys() -> None:
             pxe_boot=True,
             auto_boot=True,
             type="qemu",
+            uefi=True,
         )
     }
 
@@ -321,6 +323,7 @@ def test_flatten_virt_options_populates_flat_keys() -> None:
     assert data["virt_pxe_boot"] is True
     assert data["virt_auto_boot"] is True
     assert data["virt_type"] == "qemu"
+    assert data["virt_uefi"] is True
 
 
 def test_flatten_virt_options_missing_field_raises() -> None:
@@ -651,7 +654,7 @@ def test_virt_net_install_virt_clone_image_skips_disk_creation(
         "name": "myguest",
         "image_type": "virt-clone",
         "file": "/var/lib/libvirt/images/appliance.qcow2",
-        "virt": _nested_virt_options(),
+        "virt": _nested_virt_options(uefi=True),
     }
     _flatten_virt_options(profile_data)
 
@@ -665,6 +668,7 @@ def test_virt_net_install_virt_clone_image_skips_disk_creation(
     # Assert
     kwargs = create_func.call_args.kwargs
     assert kwargs["disks"] == []
+    assert kwargs["uefi"] is True
 
 
 def test_calc_virt_mac_not_virt_returns_none() -> None:

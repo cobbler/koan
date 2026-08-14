@@ -237,6 +237,7 @@ SEEDED_VIRT_VALUES = {
     "pxe_boot": True,
     "auto_boot": True,
     "type": "qemu",
+    "uefi": True,
 }
 
 
