@@ -199,6 +199,7 @@ def build_commandline(
     wait: Union[int, str] = 0,
     noreboot: bool = False,
     osimport: bool = False,
+    uefi: bool = False,
 ) -> List[str]:
     # Set flags for CLI arguments based on the virtinst_version
     # tuple above. Older versions of python-virtinst don't have
@@ -365,6 +366,9 @@ def build_commandline(
 
     if is_qemu and machine_type and not disable_machine_type:
         cmd += "--machine %s " % machine_type
+
+    if uefi:
+        cmd += "--boot uefi "
 
     if fullvirt or is_qemu or is_import:
         if fullvirt is not None:

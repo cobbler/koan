@@ -62,6 +62,7 @@ _VIRT_OPTION_FIELDS = (
     "pxe_boot",
     "ram",
     "type",
+    "uefi",
 )
 
 
@@ -1377,6 +1378,7 @@ EOF
             wait=self.virtinstall_wait,
             noreboot=self.virtinstall_noreboot,
             osimport=self.virtinstall_osimport,
+            uefi=bool(self.safe_load(pd, "virt_uefi", default=False)),
         )
 
         # print results
