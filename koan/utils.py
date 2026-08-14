@@ -23,6 +23,7 @@ from typing import (
     Literal,
     Optional,
     Protocol,
+    Set,
     Tuple,
     Union,
     cast,
@@ -410,12 +411,26 @@ def get_network_info() -> Dict[str, Dict[str, Any]]:
     interfaces: Dict[str, Dict[str, Any]] = {}
     # get names
     inames = netifaces.interfaces()
+    seen_macs: Set[str] = set()
 
     for iname in inames:
         mac = netifaces.ifaddresses(iname)[netifaces.AF_LINK][0]["addr"]
 
         if mac == "00:00:00:00:00:00":
             mac = "?"
+
+        # Azure/Hyper-V accelerated networking (SR-IOV) exposes both a synthetic netvsc interface and the underlying VF
+        # interface with the *same* MAC for one physical NIC. Submitting the same MAC twice makes cobbler-register's
+        # register_new_system() reject the whole registration outright (Cobbler enforces one system per MAC), so keep
+        # only the first interface seen per MAC address - the duplicates are different names for the same NIC anyway.
+        if mac != "?" and mac in seen_macs:
+            print(
+                "- warning: skipping interface %s, its MAC address %s is already in use by another interface"
+                % (iname, mac)
+            )
+            continue
+        if mac != "?":
+            seen_macs.add(mac)
 
         try:
             ip = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]["addr"]
