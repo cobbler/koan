@@ -185,6 +185,46 @@ def test_start_install_happy_path_creates_dirs(mocker: MockerFixture) -> None:
     start_vm.assert_called_once_with(vmx)
 
 
+def test_start_install_accepts_full_virt_net_install_kwargs(
+    mocker: MockerFixture,
+) -> None:
+    """
+    Regression test: virt_net_install() calls every installer backend's start_install()
+    with the same full kwarg set (virt_pxe_boot, qemu_machine_type, wait, noreboot,
+    osimport, uefi included) regardless of virt_type. vmw.start_install() didn't declare
+    several of these, so any real --virt-type=vmware install crashed outright with
+    "unexpected keyword argument" before ever reaching this function's own logic - it
+    must at least accept them, even though none of them apply to this VMX-based backend.
+    """
+    # Arrange
+    mocker.patch("koan.virt.vmw.os.path.exists", return_value=True)
+    mocker.patch("koan.virt.vmw.os.makedirs")
+    mocker.patch("koan.virt.vmw.make_disk")
+    mocker.patch("koan.virt.vmw.make_vmx")
+    mocker.patch("koan.virt.vmw.register_vmx")
+    mocker.patch("koan.virt.vmw.start_vm")
+
+    profile_data = {"interfaces": {"eth0": {"mac_address": "AA:BB:CC:DD:EE:FF"}}}
+    disks = [("/dev/whatever", 10)]
+
+    # Act
+    result = vmw.start_install(
+        name="foo",
+        ram=512,
+        disks=disks,
+        profile_data=profile_data,
+        virt_pxe_boot=False,
+        qemu_machine_type=None,
+        wait=0,
+        noreboot=False,
+        osimport=False,
+        uefi=False,
+    )
+
+    # Assert
+    assert result is None
+
+
 def test_start_install_does_not_create_dirs_when_they_exist(
     mocker: MockerFixture,
 ) -> None:
