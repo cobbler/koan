@@ -134,8 +134,8 @@ def main() -> int:
         "-g",
         "--graphics",
         dest="gfx_type",
-        default="vnc",
-        help="specify the graphics type: vnc, sdl, spice, none",
+        default=None,
+        help="specify the graphics type: vnc, sdl, spice, none (default: vnc)",
     )
     p.add_argument(
         "--virt-auto-boot",
@@ -275,8 +275,10 @@ def main() -> int:
             )
         if options.gfx_type == "none" or options.no_gfx is not None:
             k.gfx_type = None
-        else:
+        elif options.gfx_type is not None:
             k.gfx_type = options.gfx_type
+        else:
+            k.gfx_type = "vnc"
         k.run()
 
     except Exception as e:
