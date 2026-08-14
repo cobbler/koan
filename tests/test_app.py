@@ -427,6 +427,11 @@ def test_calc_virt_filesize_default_when_missing() -> None:
         ("bogus", 5, 5),
         (None, 5, 5),
         ("", 5, 5),
+        # Regression: Cobbler's VirtOption.file_size is typed as float and renders whole
+        # numbers as e.g. "12.0" (via str(12.0) upstream in calc_virt_filesize) - int()
+        # can't parse that directly even though it's a perfectly valid size.
+        ("12.0", 1, 12),
+        (12.0, 1, 12),
     ],
 )
 def test_calc_virt_filesize2(size: Any, default_filesize: Any, expected: Any) -> None:
@@ -438,6 +443,19 @@ def test_calc_virt_filesize2(size: Any, default_filesize: Any, expected: Any) ->
 
     # Assert
     assert result == expected
+
+
+def test_calc_virt_filesize_uses_nested_float_value_not_default() -> None:
+    # Arrange
+    k = Koan()
+    data: Dict[str, Any] = {"virt": _nested_virt_options(file_size=12.0)}
+    _flatten_virt_options(data)
+
+    # Act
+    result = k.calc_virt_filesize(data)
+
+    # Assert
+    assert result == [12]
 
 
 def test_calc_virt_drivers_valid_and_invalid_mixed() -> None:
