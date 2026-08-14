@@ -110,13 +110,20 @@ def _sanitize_nics(
     ret: List[Tuple[Optional[str], Optional[str]]] = []
 
     if network_count is not None and not nics:
-        # Fill in some stub nics so we can take advantage of the loop logic
+        # Fill in some stub nics so we can take advantage of the loop logic. "virt_bridge"
+        # must be "" (matching what a real interface's unset virt_bridge renders as), not
+        # None: the per-nic fallback logic below only substitutes profile_bridge when
+        # intf_bridge == "", so a None here bypasses that fallback entirely and later gets
+        # passed straight through to "--network bridge=%s", producing the literal, invalid
+        # "bridge=None" (this is the network_count-based stub-nic path Image items without
+        # an explicit "interfaces" dict always take, so this broke every such image install
+        # unless a bridge was set via --bridge or Cobbler's virt_bridge default).
         nics = {}
         for i in range(int(network_count)):
             nics["foo%s" % i] = {
                 "interface_type": "na",
                 "mac_address": None,
-                "virt_bridge": None,
+                "virt_bridge": "",
             }
 
     if not nics:
@@ -399,43 +406,44 @@ def build_commandline(
                     cmd += '--extra-args="%s" ' % extra
 
     if breed and breed != "other":
-        if os_version and os_version != "other":
-            if breed == "suse":
-                suse_version_re = re.compile(r"^(opensuse[0-9]+)\.([0-9]+)$")
-                suse_match = suse_version_re.match(os_version)
-                if suse_match:
-                    os_version = suse_match.groups()[0]
-                elif os_version == "generic":
-                    os_version = "sles11"
-                elif os_version.endswith("generic"):
-                    os_version = os_version.replace("generic", "")
+        # An unset/"other" os_version used to fall back to the deprecated "--os-type"
+        # flag below instead of "--os-variant". Modern virt-install treats --os-type as a
+        # silent no-op ("is deprecated and does nothing") and hard-requires an OS to be
+        # named via --os-variant/--osinfo, so that fallback left virt-install with no OS
+        # hint at all and it refused to run. Treat a missing os_version the same as an
+        # unrecognized one instead, and always emit --os-variant (defaulting to
+        # "generic", same as the unrecognized-os_version case just below).
+        if not os_version or os_version == "other":
+            os_version = "generic"
 
-            # make sure virt-install knows about our os_version,
-            # otherwise default it to generic
-            # found = False
-            if os_version in supported_variants:
-                pass  # os_version is correct
-            elif os_version + ".0" in supported_variants:
-                # osinfo based virt-install only knows about major.minor
-                # variants, not just major variants like it used to. Default
-                # to major.0 variant in that case. Lack of backwards
-                # compatibility in virt-install grumble grumble.
-                os_version = os_version + ".0"
-            else:
-                os_version = "generic"
-                print(
-                    "- warning: virt-install doesn't know this os_version, defaulting to %s"
-                    % os_version
-                )
-            cmd += "--os-variant %s " % os_version
+        if breed == "suse":
+            suse_version_re = re.compile(r"^(opensuse[0-9]+)\.([0-9]+)$")
+            suse_match = suse_version_re.match(os_version)
+            if suse_match:
+                os_version = suse_match.groups()[0]
+            elif os_version == "generic":
+                os_version = "sles11"
+            elif os_version.endswith("generic"):
+                os_version = os_version.replace("generic", "")
+
+        # make sure virt-install knows about our os_version,
+        # otherwise default it to generic
+        # found = False
+        if os_version in supported_variants:
+            pass  # os_version is correct
+        elif os_version + ".0" in supported_variants:
+            # osinfo based virt-install only knows about major.minor
+            # variants, not just major variants like it used to. Default
+            # to major.0 variant in that case. Lack of backwards
+            # compatibility in virt-install grumble grumble.
+            os_version = os_version + ".0"
         else:
-            distro = "unix"
-            if breed in ["debian", "suse", "redhat"]:
-                distro = "linux"
-            elif breed in ["windows"]:
-                distro = "windows"
-
-            cmd += "--os-type %s " % distro
+            os_version = "generic"
+            print(
+                "- warning: virt-install doesn't know this os_version, defaulting to %s"
+                % os_version
+            )
+        cmd += "--os-variant %s " % os_version
 
     if importpath:
         # This needs to be the first disk for import to work
