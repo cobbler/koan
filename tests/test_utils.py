@@ -487,6 +487,48 @@ def test_get_network_info(mocker: MockerFixture) -> None:
     assert result["eth1"]["netmask"] == "?"
 
 
+def test_get_network_info_dedupes_shared_mac_addresses(
+    mocker: MockerFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Arrange
+    # Azure/Hyper-V accelerated networking (SR-IOV) exposes both a synthetic netvsc
+    # interface (here "eth0") and the underlying VF interface ("enP1s1") for one
+    # physical NIC, reporting the identical MAC address for both - submitting both
+    # to register_new_system() trips Cobbler's per-system MAC-uniqueness check.
+    def fake_ifaddresses(iname: str) -> Any:
+        data = {
+            "eth0": {
+                netifaces.AF_LINK: [{"addr": "aa:bb:cc:dd:ee:ff"}],
+                netifaces.AF_INET: [
+                    {"addr": "192.168.1.5", "netmask": "255.255.255.0"}
+                ],
+            },
+            "enP1s1": {
+                netifaces.AF_LINK: [{"addr": "aa:bb:cc:dd:ee:ff"}],
+            },
+            "lo": {
+                netifaces.AF_LINK: [{"addr": "00:00:00:00:00:00"}],
+                netifaces.AF_INET: [{"addr": "127.0.0.1", "netmask": "255.0.0.0"}],
+            },
+        }
+        return data[iname]
+
+    mocker.patch("netifaces.interfaces", return_value=["eth0", "enP1s1", "lo"])
+    mocker.patch("netifaces.ifaddresses", side_effect=fake_ifaddresses)
+
+    # Act
+    result = utils.get_network_info()
+
+    # Assert
+    assert "eth0" in result
+    assert "enP1s1" not in result
+    assert "lo" in result
+
+    captured = capsys.readouterr()
+    assert "enP1s1" in captured.out
+    assert "aa:bb:cc:dd:ee:ff" in captured.out
+
+
 # ---------------------------------------------------------------------------
 # connect_to_server
 # ---------------------------------------------------------------------------
