@@ -61,6 +61,52 @@ def test_run_happy_path(mocker: MockerFixture) -> None:
     )
 
 
+def test_run_sanitizes_unknown_ip_and_netmask_sentinels(
+    mocker: MockerFixture,
+) -> None:
+    # "?" is koan's own "unknown" sentinel (see utils.get_network_info()) and must
+    # not reach register_new_system() as a literal string - Cobbler's remote.py
+    # passes ip_address/netmask straight into an ipaddress.IPv4Address-validating
+    # setter, which raises AddressValueError on "?" (it only special-cases "").
+    mocker.patch("koan.register.os.getuid", return_value=0)
+    mock_conn = MagicMock()
+    mock_conn.get_profiles.return_value = [
+        {"name": "webserver", "uid": "webserver-uid"}
+    ]
+    mocker.patch("koan.register.utils.connect_to_server", return_value=mock_conn)
+    mocker.patch(
+        "koan.register.utils.get_network_info",
+        return_value={
+            "eth0": {
+                "ip_address": "?",
+                "mac_address": "aa:bb:cc:dd:ee:ff",
+                "netmask": "?",
+                "bridge": 0,
+                "module": "",
+            }
+        },
+    )
+
+    reg = make_register(
+        server="cobbler.example.com",
+        port="80",
+        profile="webserver",
+        hostname="myhost.example.com",
+        batch="",
+    )
+
+    # Act
+    reg.run()
+
+    # Assert
+    interfaces = mock_conn.register_new_system.call_args[0][0]["interfaces"]
+    assert interfaces["eth0"]["ip_address"] == ""
+    assert interfaces["eth0"]["netmask"] == ""
+    # MAC's "?" convention is unrelated - Cobbler explicitly skips such
+    # interfaces server-side - and must be left untouched.
+    assert interfaces["eth0"]["mac_address"] == "aa:bb:cc:dd:ee:ff"
+
+
 def test_run_hostname_auto_with_unresolvable_fqdn(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("koan.register.os.getuid", return_value=0)
