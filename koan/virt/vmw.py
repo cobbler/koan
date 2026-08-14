@@ -116,9 +116,22 @@ def start_install(
     bridge: Optional[str] = None,
     virt_type: Optional[str] = None,
     virt_auto_boot: bool = False,
+    virt_pxe_boot: bool = False,
     qemu_driver_type: Optional[str] = None,
     qemu_net_type: Optional[str] = None,
+    qemu_machine_type: Optional[str] = None,
+    wait: Union[int, str] = 0,
+    noreboot: bool = False,
+    osimport: bool = False,
+    uefi: bool = False,
 ) -> Optional[int]:
+    # virt_pxe_boot/qemu_machine_type/wait/noreboot/osimport/uefi are all virt-install-specific
+    # concepts (see koan.virtinstall.build_commandline) that don't apply here: this backend
+    # never invokes virt-install, it drives VMware's own vmware-vdiskmanager/vmware-cmd tools
+    # directly. They must still be accepted, though - virt_net_install() passes them to every
+    # installer backend unconditionally, and previously not accepting them here made any real
+    # --virt-type=vmware install crash outright with "unexpected keyword argument" before ever
+    # reaching this function's own logic.
     profile_data = cast(Dict[str, Any], profile_data)
 
     if "file" in profile_data:
