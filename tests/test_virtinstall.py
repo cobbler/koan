@@ -366,3 +366,46 @@ def test_build_commandline_import_uses_os_variant_not_deprecated_os_type() -> No
     assert "bridge=None" not in cmd
     assert "bridge=virbr0" in cmd
     assert cmd.count("--disk") == 1  # only the imported file, no synthesized extra disk
+
+
+def test_build_commandline_uefi_flag() -> None:
+    """
+    Cobbler's virt.uefi models guests/images with no BIOS-compatible boot path at all (e.g.
+    systemd-boot-based appliance images) - verified live against a real one, which failed to
+    boot ("This disk is only UEFI bootable") until virt-install was given --boot uefi.
+    """
+    cmd = build_commandline(
+        "import",
+        name="foo",
+        ram=512,
+        vcpus=1,
+        disks=[],
+        uefi=True,
+        profile_data={
+            "breed": "suse",
+            "file": "/var/lib/libvirt/images/appliance.qcow2",
+            "network_count": 1,
+            "virt_bridge": "virbr0",
+        },
+    )
+
+    assert "--boot" in cmd
+    assert "uefi" in cmd
+
+
+def test_build_commandline_no_uefi_flag_by_default() -> None:
+    cmd = build_commandline(
+        "import",
+        name="foo",
+        ram=512,
+        vcpus=1,
+        disks=[],
+        profile_data={
+            "breed": "suse",
+            "file": "/var/lib/libvirt/images/appliance.qcow2",
+            "network_count": 1,
+            "virt_bridge": "virbr0",
+        },
+    )
+
+    assert "--boot" not in cmd
