@@ -88,7 +88,7 @@ Everything lives in the `koan/` package, mostly flat aside from the `koan/virt/`
 - **`app.py`** — the real core of the program: the `Koan` class implements almost all of the
   `koan` CLI's behavior as a plain business-logic class with no argument parsing of its own —
   `cli.py`'s `main()` populates its attributes and calls `Koan.run()`, which drives a single
-  top-level action (`--virt`, `--replace-self`, `--update-files`, `--update-config`, `--list`,
+  top-level action (`--virt`, `--replace-self`, `--update-files`, `--list`,
   etc). Key method groups:
   - `net_install()` / `get_distro_files()` / `calc_kernel_args()` — fetch profile/system data
     from the Cobbler server and compute kernel/initrd/kernel-options for network installs and
@@ -100,14 +100,11 @@ Everything lives in the `koan/` package, mostly flat aside from the `koan/virt/`
     per-VM settings from Cobbler profile/system data plus command-line overrides plus defaults —
     this layered override pattern (CLI arg > profile data > hardcoded default) is used
     throughout and is the main thing to preserve when touching option handling.
-  - `update_files()` / `update_config()` — pull config-management templates/packages/repos from
-    Cobbler for an already-installed system and hand off to `configurator.KoanConfigure`.
+  - `update_files()` — pull config-management templates from Cobbler for an already-installed
+    system via the `template_files` item field and download them over HTTP.
   - `get_install_tree_from_autoinst()` still uses `optparse.OptionParser` internally — that's
     parsing `url=`/`nfs=` args embedded in a downloaded kickstart/autoinst file, unrelated to the
     `koan` command line, so it wasn't touched by the `cli.py` extraction/argparse migration.
-- **`configurator.py`** — `KoanConfigure`: applies repo/package/file configuration pushed down
-  from Cobbler's config-management data to the local system (currently only implements YUM repo
-  configuration; `yum` import is optional/best-effort).
 - **`virtinstall.py`** — builds a `virt-install`/libvirt command line (disk/NIC sanitization,
   `build_commandline()`) for KVM/qemu and Xen-via-libvirt guests.
 - **`koan/virt/{xen,qemu,openvz,vmw,image}.py`** — one module per hypervisor/guest backend, each
@@ -116,9 +113,10 @@ Everything lives in the `koan/` package, mostly flat aside from the `koan/virt/`
   files and register/start guests through VMware. When adding a new virt backend, follow this
   same `start_install(**kwargs)` contract so it plugs into `app.py` unchanged.
 - **`utils.py`** — shared grab-bag: XML-RPC connection to the Cobbler server
-  (`connect_to_server`), network/OS introspection (`get_network_info`, `os_release`,
-  `is_uefi_system`), subprocess helpers, and misc file/MAC/UUID utilities used across the other
-  modules.
+  (`connect_to_server`), which refuses to proceed (raises `InfoException`) if the server reports
+  a version older than `MINIMUM_COBBLER_VERSION` or the version RPC call fails outright; also
+  network/OS introspection (`get_network_info`, `os_release`, `is_uefi_system`), subprocess
+  helpers, and misc file/MAC/UUID utilities used across the other modules.
 - **`register.py`** — a second, much smaller business-logic class (`Register`) backing the
   `cobbler-register` command (its `argparse` entrypoint is `cli.py`'s `register_main()`), which
   just registers the current system with a Cobbler server (distinct from the main provisioning

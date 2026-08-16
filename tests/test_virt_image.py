@@ -1,4 +1,7 @@
+from typing import Any
+
 import pytest
+from pytest_mock import MockerFixture
 
 from koan.cexceptions import InfoException
 from koan.virt import image
@@ -12,7 +15,9 @@ from tests.conftest import does_not_raise
         ((1, "", "boom"), pytest.raises(InfoException)),
     ],
 )
-def test_start_install(subprocess_response, expected_exception, mocker):
+def test_start_install(
+    subprocess_response: Any, expected_exception: Any, mocker: MockerFixture
+) -> None:
     # Arrange
     fake_cmd = ["virt-install", "--foo"]
     build_commandline_mock = mocker.patch(
