@@ -49,7 +49,7 @@ def test_cobbler_register_creates_system_when_enabled(
 
     systems = [s["name"] for s in remote.get_systems()]
     assert fqdn in systems
-    remote.remove_system(fqdn, token)
+    remote.remove_system(remote.get_system_handle(fqdn), token)
 
 
 @pytest.mark.integration
@@ -72,7 +72,7 @@ def test_cobbler_register_hostname_override(
 
     system = remote.get_system_as_rendered(fqdn)
     assert system["hostname"] == fqdn
-    remote.remove_system(fqdn, token)
+    remote.remove_system(remote.get_system_handle(fqdn), token)
 
 
 @pytest.mark.integration

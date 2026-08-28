@@ -66,7 +66,7 @@ def test_get_image_as_rendered_virt_matches_seeded_values(
         rendered = remote.get_image_as_rendered(name)
         assert rendered["virt"] == SEEDED_VIRT_VALUES
     finally:
-        remote.remove_image(name, token)
+        remote.remove_image(iid, token)
         remote.remove_distro(did, token)
 
 

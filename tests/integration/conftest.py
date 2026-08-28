@@ -22,7 +22,7 @@ import time
 import urllib.parse
 import uuid
 import xmlrpc.client
-from typing import Any, Callable, Generator, List, Optional, Tuple
+from typing import Any, Callable, Generator, List, Tuple
 
 import pytest
 
@@ -127,15 +127,6 @@ def fixture_unique_mac() -> Callable[[], str]:
     return _unique_mac
 
 
-def _name_from_args(args: AttrArgs) -> Optional[str]:
-    """remove_distro/remove_profile/remove_system all take a NAME, not a uid - pull
-    it out of the (["name"], value) pair every caller is expected to include."""
-    for key, value in args:
-        if key == ["name"]:
-            return str(value)
-    return None
-
-
 @pytest.fixture(name="create_distro")
 def fixture_create_distro(
     remote: Any, token: str
@@ -147,16 +138,14 @@ def fixture_create_distro(
         for key, value in args:
             remote.modify_distro(did, key, value, token)
         remote.save_distro(did, True, True, "new", token)
-        name = _name_from_args(args)
-        if name is not None:
-            created.append(name)
+        created.append(did)
         return did
 
     yield _create_distro
 
-    for name in created:
+    for uid in created:
         try:
-            remote.remove_distro(name, token)
+            remote.remove_distro(uid, token)
         except xmlrpc.client.Fault:
             pass
 
@@ -172,16 +161,14 @@ def fixture_create_profile(
         for key, value in args:
             remote.modify_profile(pid, key, value, token)
         remote.save_profile(pid, True, True, "new", token)
-        name = _name_from_args(args)
-        if name is not None:
-            created.append(name)
+        created.append(pid)
         return pid
 
     yield _create_profile
 
-    for name in created:
+    for uid in created:
         try:
-            remote.remove_profile(name, token)
+            remote.remove_profile(uid, token)
         except xmlrpc.client.Fault:
             pass
 
@@ -197,16 +184,14 @@ def fixture_create_system(
         for key, value in args:
             remote.modify_system(sid, key, value, token)
         remote.save_system(sid, True, True, "new", token)
-        name = _name_from_args(args)
-        if name is not None:
-            created.append(name)
+        created.append(sid)
         return sid
 
     yield _create_system
 
-    for name in created:
+    for uid in created:
         try:
-            remote.remove_system(name, token)
+            remote.remove_system(uid, token)
         except xmlrpc.client.Fault:
             pass
 
