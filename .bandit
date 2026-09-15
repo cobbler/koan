@@ -1,0 +1,5 @@
+# Auto-discovered by bandit (no -c/--configfile needed) to point it at the
+# real plugin configuration in pyproject.toml's [tool.bandit] tables - see the
+# assert_used.skips comment there for why.
+[bandit]
+configfile = pyproject.toml
