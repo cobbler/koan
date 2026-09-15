@@ -59,15 +59,15 @@ class CobblerXMLRPCInterface(Protocol):
     def get_images(self) -> List[Dict[str, Any]]: ...
 
     def get_profile_as_rendered(
-        self, name: str
+        self, object_id: str
     ) -> Union[List[Any], Dict[Any, Any], int, str, float]: ...
 
     def get_system_as_rendered(
-        self, name: str
+        self, object_id: str
     ) -> Union[List[Any], Dict[Any, Any], int, str, float]: ...
 
     def get_image_as_rendered(
-        self, name: str
+        self, object_id: str
     ) -> Union[List[Any], Dict[Any, Any], int, str, float]: ...
 
     def register_new_system(self, info: Dict[str, Any]) -> int: ...

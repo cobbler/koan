@@ -751,6 +751,7 @@ def test_get_data_singular_calls_get_x_as_rendered() -> None:
     # Arrange
     k = Koan()
     k.xmlrpc_server = MagicMock()
+    k.xmlrpc_server.get_profiles.return_value = []
     k.xmlrpc_server.get_profile_as_rendered.return_value = {"name": "p1"}
 
     # Act
@@ -759,6 +760,28 @@ def test_get_data_singular_calls_get_x_as_rendered() -> None:
     # Assert
     assert result == {"name": "p1"}
     k.xmlrpc_server.get_profile_as_rendered.assert_called_once_with("p1")
+
+
+def test_get_data_singular_resolves_name_to_uid_before_as_rendered() -> None:
+    # Arrange
+    # Cobbler >= 4.0.0b6's get_profile_as_rendered/get_system_as_rendered/get_image_as_rendered
+    # do a strict uid-keyed lookup server-side (silently returning {} on a name), so get_data()
+    # must resolve the user-supplied name to its uid via get_profiles()/get_systems()/get_images()
+    # first, mirroring register.py's profile lookup.
+    k = Koan()
+    k.xmlrpc_server = MagicMock()
+    k.xmlrpc_server.get_profiles.return_value = [
+        {"name": "other", "uid": "other-uid"},
+        {"name": "p1", "uid": "p1-uid"},
+    ]
+    k.xmlrpc_server.get_profile_as_rendered.return_value = {"name": "p1"}
+
+    # Act
+    result = k.get_data("profile", "p1")
+
+    # Assert
+    assert result == {"name": "p1"}
+    k.xmlrpc_server.get_profile_as_rendered.assert_called_once_with("p1-uid")
 
 
 @pytest.mark.parametrize(
