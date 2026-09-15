@@ -1051,6 +1051,17 @@ EOF
             "Could not communicate with %s:%s" % (self.server, self.port)
         )
 
+    def _resolve_uid(self, items: List[Dict[str, Any]], name: Optional[str]) -> str:
+        """
+        Cobbler >= 4.0's get_profile_as_rendered/get_system_as_rendered/get_image_as_rendered
+        do a strict uid-keyed lookup server-side (silently returning {} on a name), so resolve
+        the user-supplied name to its uid first, mirroring register.py's profile lookup.
+        """
+        for item in items:
+            if item.get("name") == name:
+                return cast(str, item.get("uid", name))
+        return cast(str, name)
+
     def get_data(self, what: str, name: Optional[str] = None) -> Any:
         if what not in (
             "distros",
@@ -1076,17 +1087,14 @@ EOF
             elif what == "images":
                 data = server.get_images()
             elif what == "profile":
-                data = cast(
-                    Dict[str, Any], server.get_profile_as_rendered(cast(str, name))
-                )
+                profile_uid = self._resolve_uid(server.get_profiles(), name)
+                data = cast(Dict[str, Any], server.get_profile_as_rendered(profile_uid))
             elif what == "system":
-                data = cast(
-                    Dict[str, Any], server.get_system_as_rendered(cast(str, name))
-                )
+                system_uid = self._resolve_uid(server.get_systems(), name)
+                data = cast(Dict[str, Any], server.get_system_as_rendered(system_uid))
             else:
-                data = cast(
-                    Dict[str, Any], server.get_image_as_rendered(cast(str, name))
-                )
+                image_uid = self._resolve_uid(server.get_images(), name)
+                data = cast(Dict[str, Any], server.get_image_as_rendered(image_uid))
         except Exception:
             traceback.print_exc()
             self.connect_fail()

@@ -70,9 +70,10 @@ def test_cobbler_register_hostname_override(
 
     assert result.returncode == 0, result.stdout + result.stderr
 
-    system = remote.get_system_as_rendered(fqdn)
+    system_uid = remote.get_system_handle(fqdn)
+    system = remote.get_system_as_rendered(system_uid)
     assert system["hostname"] == fqdn
-    remote.remove_system(remote.get_system_handle(fqdn), token)
+    remote.remove_system(system_uid, token)
 
 
 @pytest.mark.integration

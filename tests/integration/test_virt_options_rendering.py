@@ -18,9 +18,9 @@ from tests.integration.conftest import SEEDED_VIRT_VALUES, AttrArgs
 def test_get_profile_as_rendered_virt_matches_seeded_values(
     remote: Any, seed_profile_with_virt: Tuple[str, str]
 ) -> None:
-    _, name = seed_profile_with_virt
+    uid, _ = seed_profile_with_virt
 
-    rendered = remote.get_profile_as_rendered(name)
+    rendered = remote.get_profile_as_rendered(uid)
 
     assert rendered["virt"] == SEEDED_VIRT_VALUES
 
@@ -29,9 +29,9 @@ def test_get_profile_as_rendered_virt_matches_seeded_values(
 def test_get_system_as_rendered_virt_matches_seeded_values(
     remote: Any, seed_system_with_virt: Tuple[str, str]
 ) -> None:
-    _, name = seed_system_with_virt
+    uid, _ = seed_system_with_virt
 
-    rendered = remote.get_system_as_rendered(name)
+    rendered = remote.get_system_as_rendered(uid)
 
     assert rendered["virt"] == SEEDED_VIRT_VALUES
     # Per-NIC virt_bridge is a separate, unaffected-by-this-migration mechanism -
@@ -63,7 +63,7 @@ def test_get_image_as_rendered_virt_matches_seeded_values(
         remote.modify_image(iid, key, value, token)
     remote.save_image(iid, True, True, "new", token)
     try:
-        rendered = remote.get_image_as_rendered(name)
+        rendered = remote.get_image_as_rendered(iid)
         assert rendered["virt"] == SEEDED_VIRT_VALUES
     finally:
         remote.remove_image(iid, token)
@@ -89,7 +89,7 @@ def test_modify_profile_virt_requires_two_element_path(
     # New two-element attribute-path contract: succeeds and actually takes effect.
     assert remote.modify_profile(pid, ["virt", "cpus"], 2, token) is True
     remote.save_profile(pid, True, True, "bypass", token)
-    assert remote.get_profile_as_rendered(name)["virt"]["cpus"] == 2
+    assert remote.get_profile_as_rendered(pid)["virt"]["cpus"] == 2
 
     # Old flat single-string attribute path ("virt_cpus" as one string, not a
     # ["virt", "cpus"] path) is iterated character-by-character by modify_item's
@@ -99,7 +99,7 @@ def test_modify_profile_virt_requires_two_element_path(
     # attribute name would hit against a >= 4.0 server.
     remote.modify_profile(pid, "virt_cpus", 4, token)
     remote.save_profile(pid, True, True, "bypass", token)
-    assert remote.get_profile_as_rendered(name)["virt"]["cpus"] == 2
+    assert remote.get_profile_as_rendered(pid)["virt"]["cpus"] == 2
 
 
 @pytest.mark.integration
