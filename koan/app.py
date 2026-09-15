@@ -11,6 +11,7 @@ used with 'cobbler'. see manpage for usage.
 # SPDX-FileCopyrightText: Michael DeHaan <michael.dehaan AT gmail>
 
 import errno
+import importlib
 import os
 import random
 import re
@@ -1440,11 +1441,9 @@ EOF
 
     def load_virt_modules(self) -> None:
         try:
-            from koan.virt import image, qemu, xen
-
-            assert xen
-            assert qemu
-            assert image
+            importlib.import_module("koan.virt.xen")
+            importlib.import_module("koan.virt.qemu")
+            importlib.import_module("koan.virt.image")
         except Exception:
             traceback.print_exc()
             raise InfoException("no virtualization support available,\

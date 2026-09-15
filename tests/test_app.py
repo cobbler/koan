@@ -239,6 +239,26 @@ def test_merge_disk_data_no_paths_raises() -> None:
         k.merge_disk_data([], [], [])
 
 
+def test_load_virt_modules_succeeds_when_virt_submodules_import_cleanly() -> None:
+    k = Koan()
+
+    k.load_virt_modules()  # must not raise
+
+
+def test_load_virt_modules_raises_info_exception_on_import_failure(
+    mocker: MockerFixture,
+) -> None:
+    # Regression test: load_virt_modules() used to do `assert xen` etc. purely to give the
+    # `from koan.virt import image, qemu, xen` names a use pyflakes wouldn't flag as unused -
+    # assert is stripped under python -O, so a real import failure would silently vanish
+    # there instead of raising InfoException.
+    mocker.patch("koan.app.importlib.import_module", side_effect=ImportError("boom"))
+    k = Koan()
+
+    with pytest.raises(InfoException, match="no virtualization support available"):
+        k.load_virt_modules()
+
+
 def test_calc_virt_name_explicit_override() -> None:
     # Arrange
     k = Koan()
