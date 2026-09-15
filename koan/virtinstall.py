@@ -14,6 +14,7 @@ Currently somewhat Xen/paravirt specific, will evolve later.
 import os
 import re
 import shlex
+from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 from koan import utils
 from koan.cexceptions import InfoException
@@ -25,8 +26,9 @@ from koan.cexceptions import InfoException
 # python-virtinst (and now the new virt-install rpm).
 # virt-install 1.0.1 responds to --version on stderr. WTF? Check both.
 rc, response, stderr_response = utils.subprocess_get_response(
-    shlex.split("virt-install --version"), True, True
+    shlex.split("virt-install --version"), True, get_stderr=True
 )
+virtinst_version: Optional[str]
 if rc == 0:
     if response:
         virtinst_version = response
@@ -45,19 +47,21 @@ else:
 # provides a library and tools for querying valid OS values. Until
 # that's available and pervasive the best we can do is to use the
 # module if it's availabe and if not parse the command output.
-supported_variants = set()
+supported_variants: Set[str] = set()
 try:
-    from virtinst import osdict
+    import virtinst.osdict as _osdict  # pyright: ignore[reportMissingImports, reportUnknownVariableType]
+
+    osdict = cast(Any, _osdict)
 
     for ostype in osdict.OS_TYPES.keys():
         for variant in osdict.OS_TYPES[ostype]["variants"].keys():
             supported_variants.add(variant)
-except:
+except Exception:
     try:
         # Gobble stderr to avoid confusing error messages from being output if this fails
         # This method has the advantage over osinfo-query of gettting aliases like debianbookworm
         rc, response, stderr_respose = utils.subprocess_get_response(
-            shlex.split("virt-install --os-variant list"), False, True
+            shlex.split("virt-install --os-variant list"), False, get_stderr=True
         )
         variants = response.split("\n")
         for variant in variants:
@@ -65,7 +69,7 @@ except:
             if re.match(r"^[a-z]", variant):
                 # Each line can be a , separated list of aliases
                 supported_variants.update(variant.split(", "))
-    except:
+    except Exception:
         try:
             # maybe on newer os using osinfo-query?
             rc, response = utils.subprocess_get_response(
@@ -74,13 +78,14 @@ except:
             variants = response.split("\n")
             for variant in variants:
                 supported_variants.add(variant.strip())
-        except:
+        except Exception:
             # okay, probably on old os and we'll just use generic
             pass
 
 
-def _sanitize_disks(disks):
-    ret = []
+def _sanitize_disks(disks: Optional[List[Any]]) -> List[Tuple[Any, Any, Optional[str]]]:
+    disks = cast(List[Any], disks)
+    ret: List[Tuple[Any, Any, Optional[str]]] = []
     for d in disks:
         driver_type = None
         if len(d) > 2:
@@ -96,17 +101,29 @@ def _sanitize_disks(disks):
     return ret
 
 
-def _sanitize_nics(nics, bridge, profile_bridge, network_count):
-    ret = []
+def _sanitize_nics(
+    nics: Optional[Dict[str, Dict[str, Any]]],
+    bridge: Optional[str],
+    profile_bridge: Optional[str],
+    network_count: Optional[Union[str, int]],
+) -> List[Tuple[Optional[str], Optional[str]]]:
+    ret: List[Tuple[Optional[str], Optional[str]]] = []
 
     if network_count is not None and not nics:
-        # Fill in some stub nics so we can take advantage of the loop logic
+        # Fill in some stub nics so we can take advantage of the loop logic. "virt_bridge"
+        # must be "" (matching what a real interface's unset virt_bridge renders as), not
+        # None: the per-nic fallback logic below only substitutes profile_bridge when
+        # intf_bridge == "", so a None here bypasses that fallback entirely and later gets
+        # passed straight through to "--network bridge=%s", producing the literal, invalid
+        # "bridge=None" (this is the network_count-based stub-nic path Image items without
+        # an explicit "interfaces" dict always take, so this broke every such image install
+        # unless a bridge was set via --bridge or Cobbler's virt_bridge default).
         nics = {}
         for i in range(int(network_count)):
             nics["foo%s" % i] = {
                 "interface_type": "na",
                 "mac_address": None,
-                "virt_bridge": None,
+                "virt_bridge": "",
             }
 
     if not nics:
@@ -148,9 +165,9 @@ def _sanitize_nics(nics, bridge, profile_bridge, network_count):
     return ret
 
 
-def create_image_file(disks=None, **kwargs):
-    disks = _sanitize_disks(disks)
-    for path, size, driver_type in disks:
+def create_image_file(disks: Optional[List[Any]] = None, **kwargs: Any) -> None:
+    sanitized_disks = _sanitize_disks(disks)
+    for path, size, driver_type in sanitized_disks:
         if driver_type is None:
             continue
         if os.path.isdir(path) or os.path.exists(path):
@@ -161,32 +178,35 @@ def create_image_file(disks=None, **kwargs):
 
 
 def build_commandline(
-    uri,
-    name=None,
-    ram=None,
-    disks=None,
-    uuid=None,
-    extra=None,
-    vcpus=None,
-    profile_data=None,
-    arch=None,
-    gfx_type=None,
-    fullvirt=False,
-    bridge=None,
-    virt_type=None,
-    virt_auto_boot=False,
-    virt_pxe_boot=False,
-    qemu_driver_type=None,
-    qemu_net_type=None,
-    qemu_machine_type=None,
-    wait=0,
-    noreboot=False,
-    osimport=False,
-):
+    uri: str,
+    name: Optional[str] = None,
+    ram: Optional[int] = None,
+    disks: Optional[List[Any]] = None,
+    uuid: Optional[str] = None,
+    extra: Optional[str] = None,
+    vcpus: Optional[int] = None,
+    profile_data: Optional[Dict[str, Any]] = None,
+    arch: Optional[str] = None,
+    gfx_type: Optional[str] = None,
+    fullvirt: Optional[bool] = False,
+    bridge: Optional[str] = None,
+    virt_type: Optional[str] = None,
+    virt_auto_boot: bool = False,
+    virt_pxe_boot: bool = False,
+    qemu_driver_type: Optional[str] = None,
+    qemu_net_type: Optional[str] = None,
+    qemu_machine_type: Optional[str] = None,
+    wait: Union[int, str] = 0,
+    noreboot: bool = False,
+    osimport: bool = False,
+    uefi: bool = False,
+) -> List[str]:
     # Set flags for CLI arguments based on the virtinst_version
     # tuple above. Older versions of python-virtinst don't have
     # a version easily accessible, so it will be None and we can
     # easily disable features based on that (RHEL5 and older usually)
+
+    profile_data = cast(Dict[str, Any], profile_data)
 
     disable_autostart = False
     disable_virt_type = False
@@ -232,7 +252,9 @@ def build_commandline(
         else:
             fullvirt = None
         # is libvirt new enough?
-        if not utils.check_version_greater_or_equal(virtinst_version, "0.2.0"):
+        if not utils.check_version_greater_or_equal(
+            cast(str, virtinst_version), "0.2.0"
+        ):
             raise InfoException(
                 "need python-virtinst >= 0.2 or virt-install package to do installs for qemu/kvm (depending on your OS)"
             )
@@ -279,7 +301,7 @@ def build_commandline(
 
         location = profile_data["install_tree"]
 
-    disks = _sanitize_disks(disks)
+    sanitized_disks = _sanitize_disks(disks)
     nics = _sanitize_nics(
         profile_data.get("interfaces"),
         bridge,
@@ -345,6 +367,9 @@ def build_commandline(
     if is_qemu and machine_type and not disable_machine_type:
         cmd += "--machine %s " % machine_type
 
+    if uefi:
+        cmd += "--boot uefi "
+
     if fullvirt or is_qemu or is_import:
         if fullvirt is not None:
             cmd += "--hvm "
@@ -385,48 +410,50 @@ def build_commandline(
                     cmd += '--extra-args="%s" ' % extra
 
     if breed and breed != "other":
-        if os_version and os_version != "other":
-            if breed == "suse":
-                suse_version_re = re.compile(r"^(opensuse[0-9]+)\.([0-9]+)$")
-                if suse_version_re.match(os_version):
-                    os_version = suse_version_re.match(os_version).groups()[0]
-                elif os_version == "generic":
-                    os_version = "sles11"
-                elif os_version.endswith("generic"):
-                    os_version = os_version.replace("generic", "")
+        # An unset/"other" os_version used to fall back to the deprecated "--os-type"
+        # flag below instead of "--os-variant". Modern virt-install treats --os-type as a
+        # silent no-op ("is deprecated and does nothing") and hard-requires an OS to be
+        # named via --os-variant/--osinfo, so that fallback left virt-install with no OS
+        # hint at all and it refused to run. Treat a missing os_version the same as an
+        # unrecognized one instead, and always emit --os-variant (defaulting to
+        # "generic", same as the unrecognized-os_version case just below).
+        if not os_version or os_version == "other":
+            os_version = "generic"
 
-            # make sure virt-install knows about our os_version,
-            # otherwise default it to generic
-            # found = False
-            if os_version in supported_variants:
-                pass  # os_version is correct
-            elif os_version + ".0" in supported_variants:
-                # osinfo based virt-install only knows about major.minor
-                # variants, not just major variants like it used to. Default
-                # to major.0 variant in that case. Lack of backwards
-                # compatibility in virt-install grumble grumble.
-                os_version = os_version + ".0"
-            else:
-                os_version = "generic"
-                print(
-                    "- warning: virt-install doesn't know this os_version, defaulting to %s"
-                    % os_version
-                )
-            cmd += "--os-variant %s " % os_version
+        if breed == "suse":
+            suse_version_re = re.compile(r"^(opensuse[0-9]+)\.([0-9]+)$")
+            suse_match = suse_version_re.match(os_version)
+            if suse_match:
+                os_version = suse_match.groups()[0]
+            elif os_version == "generic":
+                os_version = "sles11"
+            elif os_version.endswith("generic"):
+                os_version = os_version.replace("generic", "")
+
+        # make sure virt-install knows about our os_version,
+        # otherwise default it to generic
+        # found = False
+        if os_version in supported_variants:
+            pass  # os_version is correct
+        elif os_version + ".0" in supported_variants:
+            # osinfo based virt-install only knows about major.minor
+            # variants, not just major variants like it used to. Default
+            # to major.0 variant in that case. Lack of backwards
+            # compatibility in virt-install grumble grumble.
+            os_version = os_version + ".0"
         else:
-            distro = "unix"
-            if breed in ["debian", "suse", "redhat"]:
-                distro = "linux"
-            elif breed in ["windows"]:
-                distro = "windows"
-
-            cmd += "--os-type %s " % distro
+            os_version = "generic"
+            print(
+                "- warning: virt-install doesn't know this os_version, defaulting to %s"
+                % os_version
+            )
+        cmd += "--os-variant %s " % os_version
 
     if importpath:
         # This needs to be the first disk for import to work
         cmd += "--disk path=%s " % importpath
 
-    for path, size, driver_type in disks:
+    for path, size, driver_type in sanitized_disks:
         print(
             "- adding disk: %s of size %s (driver type=%s)" % (path, size, driver_type)
         )

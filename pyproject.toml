@@ -14,3 +14,16 @@ __builddate__ = "{scm_version.time}"
 
 [tool.isort]
 profile = "black"
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "strict"
+useLibraryCodeForTypes = true
+exclude = ["build", "venv", ".venv", "node_modules"]
+
+[tool.bandit.assert_used]
+# B101 (use of assert) is desired in tests - pytest relies on plain assert
+# statements, and none of them survive python -O the way production code would
+# need to. Only skip it for test files; assert in koan/ itself should still be
+# flagged (see koan/app.py's virt-module asserts).
+skips = ["*_test.py", "*test_*.py", "*conftest.py"]
