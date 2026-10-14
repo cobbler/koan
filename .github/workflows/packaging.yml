@@ -29,7 +29,7 @@ jobs:
           ./docker/rpms/build-and-install-rpms.sh rl10 docker/rpms/RockyLinux10/RockyLinux10.dockerfile
       - name: Archive RPMs
         # https://github.com/actions/upload-artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: rpms-rockylinux
           path: |
@@ -51,7 +51,7 @@ jobs:
           ./docker/rpms/build-and-install-rpms.sh fc43 docker/rpms/Fedora/Fedora.dockerfile
       - name: Archive RPMs
         # https://github.com/actions/upload-artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: rpms-fedora
           path: |
@@ -78,7 +78,7 @@ jobs:
           file-rename -v -d -e 's/koan-(\d+\.\d+\.\d+)-1\.(\w+)\.rpm/koan-$1-1.leap.$2.rpm/' rpm-build/*.rpm
       - name: Archive RPMs
         # https://github.com/actions/upload-artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: rpms-opensuse-leap
           path: |
@@ -105,7 +105,7 @@ jobs:
           file-rename -v -d -e 's/koan-(\d+\.\d+\.\d+)-1\.(\w+)\.rpm/koan-$1-1.tw.$2.rpm/' rpm-build/*.rpm
       - name: Archive RPMs
         # https://github.com/actions/upload-artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: rpms-opensuse-tumbleweed
           path: |
@@ -127,7 +127,7 @@ jobs:
           ./docker/debs/build-and-install-debs.sh deb13 docker/debs/debian/Debian13.dockerfile
       - name: Archive DEBs
         # https://github.com/actions/upload-artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: debs-debian
           path: |
@@ -173,7 +173,7 @@ jobs:
         run: tree
       - name: Archive Wheel
         # https://github.com/actions/upload-artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: wheel
           path: |
