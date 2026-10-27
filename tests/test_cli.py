@@ -1,3 +1,6 @@
+import pytest
+from pytest_mock import MockerFixture
+
 from koan import cli
 from koan.cexceptions import InfoException
 
@@ -6,7 +9,7 @@ from koan.cexceptions import InfoException
 # ---------------------------------------------------------------------------
 
 
-def test_main_minimal_invocation_runs_koan(mocker):
+def test_main_minimal_invocation_runs_koan(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("sys.argv", ["koan"])
     koan_cls = mocker.patch("koan.cli.Koan")
@@ -19,7 +22,7 @@ def test_main_minimal_invocation_runs_koan(mocker):
     koan_cls.return_value.run.assert_called_once()
 
 
-def test_main_sets_representative_attributes(mocker):
+def test_main_sets_representative_attributes(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch(
         "sys.argv",
@@ -57,7 +60,7 @@ def test_main_sets_representative_attributes(mocker):
     k.run.assert_called_once()
 
 
-def test_main_virt_name_and_port_not_set_when_absent(mocker):
+def test_main_virt_name_and_port_not_set_when_absent(mocker: MockerFixture) -> None:
     # Arrange: options.virt_name/options.port default to None when the flags are absent,
     # so the "if options.x is not None" guards should skip assigning k.virt_name/k.port
     # entirely, leaving them as untouched auto-speccing MagicMock attributes.
@@ -76,7 +79,9 @@ def test_main_virt_name_and_port_not_set_when_absent(mocker):
     assert isinstance(k.port, MagicMock)
 
 
-def test_main_nogfx_and_graphics_conflict_raises_before_run(mocker):
+def test_main_nogfx_and_graphics_conflict_raises_before_run(
+    mocker: MockerFixture,
+) -> None:
     # Arrange
     mocker.patch("sys.argv", ["koan", "-n", "-g", "vnc"])
     koan_cls = mocker.patch("koan.cli.Koan")
@@ -89,7 +94,7 @@ def test_main_nogfx_and_graphics_conflict_raises_before_run(mocker):
     koan_cls.return_value.run.assert_not_called()
 
 
-def test_main_graphics_none_maps_to_none(mocker):
+def test_main_graphics_none_maps_to_none(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("sys.argv", ["koan", "-g", "none"])
     koan_cls = mocker.patch("koan.cli.Koan")
@@ -102,7 +107,7 @@ def test_main_graphics_none_maps_to_none(mocker):
     assert koan_cls.return_value.gfx_type is None
 
 
-def test_main_graphics_default_is_vnc(mocker):
+def test_main_graphics_default_is_vnc(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("sys.argv", ["koan"])
     koan_cls = mocker.patch("koan.cli.Koan")
@@ -115,7 +120,7 @@ def test_main_graphics_default_is_vnc(mocker):
     assert koan_cls.return_value.gfx_type == "vnc"
 
 
-def test_main_graphics_explicit_value_is_passed_through(mocker):
+def test_main_graphics_explicit_value_is_passed_through(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("sys.argv", ["koan", "-g", "spice"])
     koan_cls = mocker.patch("koan.cli.Koan")
@@ -128,23 +133,27 @@ def test_main_graphics_explicit_value_is_passed_through(mocker):
     assert koan_cls.return_value.gfx_type == "spice"
 
 
-def test_main_nogfx_alone_sets_gfx_type_none(mocker):
-    # Arrange: -n alone (no explicit -g) does not trip the mutual-exclusion check because
-    # options.gfx_type defaults to "vnc" (not None) while options.no_gfx is True -- the
-    # code still raises since gfx_type default "vnc" is "not None". Verify actual behavior.
+def test_main_nogfx_alone_sets_gfx_type_none(mocker: MockerFixture) -> None:
+    # Regression test: -g/--graphics used to default to "vnc" (a non-None string) rather
+    # than None, so the mutual-exclusion check ("gfx_type is not None and no_gfx is not
+    # None") fired even when only -n was ever passed, making -n/--nogfx unusable on its
+    # own. -g now defaults to None like -n does, with "vnc" applied afterward only when
+    # neither flag was given.
     mocker.patch("sys.argv", ["koan", "-n"])
     koan_cls = mocker.patch("koan.cli.Koan")
 
     # Act
     result = cli.main()
 
-    # Assert: gfx_type has a default of "vnc" (never None), so combined with no_gfx being
-    # True this always hits the InfoException branch in the current implementation.
-    assert result == 1
-    koan_cls.return_value.run.assert_not_called()
+    # Assert
+    assert result == 0
+    assert koan_cls.return_value.gfx_type is None
+    koan_cls.return_value.run.assert_called_once()
 
 
-def test_main_from_koan_exception_returns_clean_error(mocker, capsys):
+def test_main_from_koan_exception_returns_clean_error(
+    mocker: MockerFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
     # Arrange
     mocker.patch("sys.argv", ["koan"])
     koan_cls = mocker.patch("koan.cli.Koan")
@@ -160,7 +169,9 @@ def test_main_from_koan_exception_returns_clean_error(mocker, capsys):
     assert "Traceback" not in captured.out
 
 
-def test_main_generic_exception_returns_error_with_traceback(mocker, capsys):
+def test_main_generic_exception_returns_error_with_traceback(
+    mocker: MockerFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
     # Arrange
     mocker.patch("sys.argv", ["koan"])
     koan_cls = mocker.patch("koan.cli.Koan")
@@ -180,7 +191,7 @@ def test_main_generic_exception_returns_error_with_traceback(mocker, capsys):
 # ---------------------------------------------------------------------------
 
 
-def test_register_main_minimal_invocation_runs_register(mocker):
+def test_register_main_minimal_invocation_runs_register(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch("sys.argv", ["cobbler-register"])
     register_cls = mocker.patch("koan.cli.Register")
@@ -193,7 +204,7 @@ def test_register_main_minimal_invocation_runs_register(mocker):
     register_cls.return_value.run.assert_called_once()
 
 
-def test_register_main_sets_representative_attributes(mocker):
+def test_register_main_sets_representative_attributes(mocker: MockerFixture) -> None:
     # Arrange
     mocker.patch(
         "sys.argv",
@@ -226,7 +237,9 @@ def test_register_main_sets_representative_attributes(mocker):
     k.run.assert_called_once()
 
 
-def test_register_main_from_koan_exception_returns_clean_error(mocker, capsys):
+def test_register_main_from_koan_exception_returns_clean_error(
+    mocker: MockerFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
     # Arrange
     mocker.patch("sys.argv", ["cobbler-register"])
     register_cls = mocker.patch("koan.cli.Register")
@@ -242,7 +255,9 @@ def test_register_main_from_koan_exception_returns_clean_error(mocker, capsys):
     assert "Traceback" not in captured.out
 
 
-def test_register_main_generic_exception_returns_error_with_traceback(mocker, capsys):
+def test_register_main_generic_exception_returns_error_with_traceback(
+    mocker: MockerFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
     # Arrange
     mocker.patch("sys.argv", ["cobbler-register"])
     register_cls = mocker.patch("koan.cli.Register")

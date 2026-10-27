@@ -1,0 +1,29 @@
+# Cobbler settings for koan's live-server integration suite. Mirrors the defaults
+# Cobbler's own docker/compose/base.yml inlines, but with register_new_installs and
+# allow_dynamic_settings baked in from the start - the latter can only be changed by
+# editing this file and restarting cobblerd, it cannot be flipped live via
+# modify_setting(), so it has to be set here rather than patched onto a running stack.
+tftpboot_location: "/srv/tftpboot"
+webdir: "/srv/www/cobbler"
+manage_tftpd: false
+allow_dynamic_settings: true
+register_new_installs: true
+
+modules:
+  authentication:
+    module: "authentication.configfile"
+    hash_algorithm: "sha3_512"
+  authorization:
+    module: "authorization.allowall"
+  dns:
+    module: "managers.bind"
+  dhcp:
+    module: "managers.isc"
+  httpd:
+    module: "managers.dynamic_httpd"
+  tftpd:
+    module: "managers.dynamic_tftp"
+  process_management:
+    module: "auto"
+  serializers:
+    module: "serializers.file"

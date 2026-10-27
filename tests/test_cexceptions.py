@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 from koan.cexceptions import (
@@ -14,7 +16,7 @@ from koan.cexceptions import (
     "cls",
     [KoanException, KX, FileNotFoundException, InfoException],
 )
-def test_koan_style_exception_without_args(cls):
+def test_koan_style_exception_without_args(cls: Any) -> None:
     exc = cls("plain message")
 
     assert exc.value == "plain message"
@@ -26,7 +28,7 @@ def test_koan_style_exception_without_args(cls):
     "cls",
     [KoanException, KX, FileNotFoundException, InfoException],
 )
-def test_koan_style_exception_with_args(cls):
+def test_koan_style_exception_with_args(cls: Any) -> None:
     exc = cls("msg %s %d", "foo", 3)
 
     assert exc.value == "msg foo 3"
@@ -35,14 +37,14 @@ def test_koan_style_exception_with_args(cls):
 
 
 @pytest.mark.parametrize("cls", [KX, FileNotFoundException])
-def test_koan_exception_subclasses_are_koan_exceptions(cls):
+def test_koan_exception_subclasses_are_koan_exceptions(cls: Any) -> None:
     exc = cls("boom")
 
     assert isinstance(exc, KoanException)
 
 
 @pytest.mark.parametrize("cls", [VirtCreateException, OVZCreateException])
-def test_plain_exception_subclasses(cls):
+def test_plain_exception_subclasses(cls: Any) -> None:
     exc = cls("boom")
 
     assert isinstance(exc, Exception)
