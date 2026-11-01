@@ -593,6 +593,22 @@ class Koan:
         Get the tree path from autoinstall_meta. Generate the install_tree
            using the http_server and the tree.
 
+        This is breed-agnostic by design: ``autoinstall_meta["tree"]`` is set by Cobbler on
+        the distro for any breed (see ``import_signatures.py``'s ``set_install_tree()``), not
+        derived from the rendered autoinstall file's own content -- so this same lookup
+        already covers AutoYaST and Agama (JSON) "suse"-breed profiles just as much as
+        Kickstart/preseed ones; neither AutoYaST's XML nor Agama's JSON actually embeds an
+        install-tree URL of its own to parse out.
+
+        For the "suse" breed specifically, raises :class:`InfoException` with an actionable
+        message when no install tree can be determined at all (neither via
+        ``autoinstall_meta["tree"]`` nor a ``kernel_options`` ``install=`` override) -- this is
+        the situation that previously surfaced downstream as the much more confusing
+        "Cannot find install source in autoinst file, aborting." (which wrongly implies the
+        autoinst file itself was the thing being parsed for this). The most common real cause
+        is a distro that was never run through a real ``cobbler import`` (which is what
+        actually populates ``autoinstall_meta["tree"]``), e.g. a hand-built/fake test distro.
+        Other breeds keep their previous silent-fallthrough behavior unchanged.
         """
 
         try:
@@ -612,15 +628,28 @@ class Koan:
                 print("install_tree:", profile_data["install_tree"])
             else:
                 print("warning: autoinst found but no install_tree found")
-        except:
+        except Exception:
             if profile_data["breed"] == "suse":
-                options = profile_data["kernel_options"].split(" ")
+                options = self.safe_load(
+                    profile_data, "kernel_options", default=""
+                ).split(" ")
                 for opt in options:
                     if opt.startswith("install="):
                         profile_data["install_tree"] = opt.replace("install=", "")
                         break
             else:
                 pass
+
+        if profile_data.get("breed") == "suse" and not self.safe_load(
+            profile_data, "install_tree"
+        ):
+            raise InfoException(
+                "No install tree found for this profile (breed=suse). For AutoYaST/Agama "
+                "(openSUSE) profiles, this usually means the distro was never imported via "
+                "a real 'cobbler import' (which sets autoinstall_meta['tree'] automatically "
+                "for any breed), or kernel_options needs an explicit 'install=<url>' "
+                "override."
+            )
 
     def list(self, what: str) -> bool:
         if what not in ["images", "profiles", "systems", "distros", "repos"]:

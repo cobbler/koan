@@ -2118,3 +2118,50 @@ def test_get_install_tree_from_profile_data_non_suse_exception_is_swallowed() ->
 
     # Assert
     assert "install_tree" not in profile_data
+
+
+def test_get_install_tree_from_profile_data_suse_raises_when_unresolvable() -> None:
+    # Arrange
+    # Regression test: this is the real-world shape of an Agama/openSUSE profile whose distro
+    # was never run through a real 'cobbler import' (e.g. a hand-built/fake test distro) -- no
+    # autoinstall_meta["tree"] and no kernel_options "install=" override, so there is no way
+    # to resolve an install tree. This used to fall through silently here and only fail much
+    # later downstream with the generic, misleading "Cannot find install source in autoinst
+    # file, aborting." (misleading because this code path never even looks at the autoinst
+    # file's own content -- Agama's JSON autoinstall format has no install-tree/source field of
+    # its own to parse, see koan/app.py's get_install_tree_from_profile_data docstring).
+    k = Koan()
+    profile_data = {
+        "name": "leap161-x86_64",
+        "breed": "suse",
+        "kernel_options": "",
+    }
+
+    # Act / Assert
+    with pytest.raises(InfoException, match="No install tree found for this profile"):
+        k.get_install_tree_from_profile_data(profile_data)
+
+
+def test_get_install_tree_from_profile_data_suse_with_tree_does_not_raise() -> None:
+    # Arrange
+    # Positive-path companion to the regression test above: a "suse"-breed profile (covers
+    # AutoYaST and Agama alike, since this lookup never inspects the rendered autoinstall file
+    # format) whose distro *was* imported normally still resolves correctly and must not raise.
+    k = Koan()
+    profile_data = {
+        "name": "leap161-x86_64",
+        "breed": "suse",
+        "autoinstall_meta": {
+            "tree": "http://cobbler.example.com/cblr/links/leap161-x86_64"
+        },
+        "http_server": "cobbler.example.com",
+    }
+
+    # Act
+    k.get_install_tree_from_profile_data(profile_data)
+
+    # Assert
+    assert (
+        profile_data["install_tree"]
+        == "http://cobbler.example.com/cblr/links/leap161-x86_64"
+    )
