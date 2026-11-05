@@ -1047,6 +1047,31 @@ def test_calc_kernel_args_suse_breed() -> None:
     assert result == "autoyast=http://x/ks.cfg "
 
 
+def test_calc_kernel_args_suse_breed_agama_uses_inst_auto() -> None:
+    # Arrange
+    # openSUSE Leap 16.x / SLES profiles tagged "agama" use the new Agama installer, which
+    # reads its auto-installation profile via Anaconda-style inst.auto=, not AutoYaST's
+    # legacy autoyast= -- the built-in Agama template (tags: ["agama", "default"]) is the only
+    # reliable signal available at kernel-arg-construction time to distinguish the two, since
+    # both breeds share breed="suse" and os_version strings aren't a stable long-term signal.
+    k = Koan()
+    pd = {
+        "autoinst": "http://x/cblr/svc/op/autoinstall/profile/leap161-x86_64",
+        "breed": "suse",
+        "kernel_options": "",
+        "os_version": "opensuse16.1",
+        "autoinstall": {"name": "built-in-autoinst.json", "tags": ["agama", "default"]},
+    }
+
+    # Act
+    result = k.calc_kernel_args(pd)
+
+    # Assert
+    assert (
+        result == "inst.auto=http://x/cblr/svc/op/autoinstall/profile/leap161-x86_64 "
+    )
+
+
 def test_calc_kernel_args_debian_breed() -> None:
     # Arrange
     k = Koan()

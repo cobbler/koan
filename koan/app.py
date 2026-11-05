@@ -1227,7 +1227,21 @@ EOF
         kextra = ""
         if autoinst is not None and autoinst != "":
             if breed is not None and breed == "suse":
-                kextra = "autoyast=" + autoinst
+                # openSUSE Leap 16.x / SLES profiles using the new Agama installer (tagged
+                # "agama" on their built-in autoinstall template) read their profile via
+                # Anaconda-style inst.auto=, not AutoYaST's legacy autoyast= -- both breeds
+                # share breed="suse", so the template's own tags are the signal, not
+                # os_version string-matching.
+                autoinstall_template = self.safe_load(
+                    pd, "autoinstall"
+                ) or self.safe_load(pd, "kickstart")
+                is_agama = isinstance(
+                    autoinstall_template, dict
+                ) and "agama" in autoinstall_template.get("tags", [])
+                if is_agama:
+                    kextra = "inst.auto=" + autoinst
+                else:
+                    kextra = "autoyast=" + autoinst
             elif breed is not None and breed == "debian" or breed == "ubuntu":
                 kextra = "auto-install/enable=true priority=critical url=" + autoinst
             else:
