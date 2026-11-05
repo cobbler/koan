@@ -300,6 +300,22 @@ def build_commandline(
             profile_data["install_tree"] = profile_data["install_tree"] + "/"
 
         location = profile_data["install_tree"]
+        distro_arch = profile_data.get("arch")
+        if profile_data.get("breed") == "suse" and distro_arch:
+            # virt-install's own osinfo-based install-tree auto-detection does not recognize
+            # SUSE/Agama media's layout (top-level EFI/LiveOS/boot/install, with the classic
+            # .treeinfo-bearing tree nested under install/) and rejects an otherwise-valid,
+            # already-PXE-proven install tree as "not an installable distribution". SUSE
+            # install media has used boot/<arch>/loader/{linux,initrd} for its kernel/initrd
+            # regardless of that detection, so pass them explicitly to bypass it. Deliberately
+            # uses profile_data["arch"] (the distro's architecture), not the "arch" parameter
+            # above -- koan.virt.qemu.start_install() always nulls that parameter for KVM
+            # ("use host arch for kvm acceleration"), a different concept from which
+            # architecture's media layout this is.
+            location += ",kernel=boot/%s/loader/linux,initrd=boot/%s/loader/initrd" % (
+                distro_arch,
+                distro_arch,
+            )
 
     sanitized_disks = _sanitize_disks(disks)
     nics = _sanitize_nics(

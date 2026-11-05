@@ -227,6 +227,46 @@ class KoanVirtInstallTest(unittest.TestCase):
             ),
         )
 
+    def testKvmURLSuseBreedIncludesKernelInitrdOverride(self) -> None:
+        # virt-install's own osinfo-based install-tree auto-detection does not recognize
+        # SUSE/Agama media's layout (top-level EFI/LiveOS/boot/install, with the classic
+        # .treeinfo-bearing tree nested under install/) and rejects an otherwise-valid,
+        # already-PXE-proven install tree as "not an installable distribution". SUSE install
+        # media has used boot/<arch>/loader/{linux,initrd} as its kernel/initrd location for a
+        # long time regardless of that detection, so pass them explicitly to bypass it.
+        #
+        # arch=None here deliberately matches koan.virt.qemu.start_install(), which always
+        # nulls the "arch" build_commandline() parameter for KVM ("use host arch for kvm
+        # acceleration") -- the real distro architecture must come from profile_data["arch"]
+        # instead, not the "arch" parameter (a different concept: virt-install's own --arch flag).
+        cmd = build_commandline(
+            "qemu:///system",
+            name="foo",
+            ram=256,
+            vcpus=1,
+            disks=[("/tmp/foo1.img", 8), ("/dev/foo1", 0)],
+            fullvirt=None,
+            arch=None,
+            bridge="br0",
+            virt_type="kvm",
+            qemu_driver_type="virtio",
+            qemu_net_type="virtio",
+            qemu_machine_type="pc-1.0",
+            profile_data={
+                "breed": "suse",
+                "os_version": "opensuse16.1",
+                "arch": "x86_64",
+                "install_tree": "http://example.com/cblr/links/leap161-x86_64",
+            },
+            extra="autoyast=http://example.com/cblr/svc/op/autoinstall/profile/leap161-x86_64",
+        )
+
+        cmd = " ".join(cmd)
+        assert (
+            "--location http://example.com/cblr/links/leap161-x86_64/,"
+            "kernel=boot/x86_64/loader/linux,initrd=boot/x86_64/loader/initrd "
+        ) in cmd
+
     def testImage(self) -> None:
         cmd = build_commandline(
             "import",
