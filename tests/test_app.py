@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, call
 import pytest
 from pytest_mock import MockerFixture
 
-from koan.app import Koan, _flatten_virt_options
+from koan.app import Koan, _flatten_dns_options, _flatten_virt_options
 from koan.cexceptions import InfoException
 
 
@@ -404,6 +404,56 @@ def test_flatten_virt_options_noop_when_virt_absent() -> None:
 
     # Act
     _flatten_virt_options(data)
+
+    # Assert
+    assert data == {"name": "d1"}
+
+
+def test_flatten_dns_options_populates_flat_key() -> None:
+    # Arrange
+    # Cobbler >= 4.0 renders Profile/System/Image DNS attributes as a nested "dns" Options
+    # object instead of a flat top-level name_servers key -- calc_kernel_args's
+    # --static-interface path reads the flat key and silently got an empty nameserver list
+    # for every static-IP install without this.
+    data: Dict[str, Any] = {
+        "dns": {
+            "name_servers": ["8.8.8.8", "8.8.4.4"],
+            "name_servers_search": ["example.com"],
+        }
+    }
+
+    # Act
+    _flatten_dns_options(data)
+
+    # Assert
+    assert data["name_servers"] == ["8.8.8.8", "8.8.4.4"]
+
+
+def test_flatten_dns_options_missing_field_raises() -> None:
+    # Arrange
+    data: Dict[str, Any] = {"dns": {"name_servers_search": []}}
+
+    # Act / Assert
+    with pytest.raises(InfoException, match="missing expected field.*name_servers"):
+        _flatten_dns_options(data)
+
+
+def test_flatten_dns_options_wrong_type_raises() -> None:
+    # Arrange
+    data: Dict[str, Any] = {"dns": "not-a-dict"}
+
+    # Act / Assert
+    with pytest.raises(InfoException, match="Unexpected type"):
+        _flatten_dns_options(data)
+
+
+def test_flatten_dns_options_noop_when_dns_absent() -> None:
+    # Arrange
+    # Distro data has no "dns" key at all - this must not be treated as an error.
+    data: Dict[str, Any] = {"name": "d1"}
+
+    # Act
+    _flatten_dns_options(data)
 
     # Assert
     assert data == {"name": "d1"}

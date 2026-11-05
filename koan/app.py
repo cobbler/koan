@@ -97,6 +97,38 @@ def _flatten_virt_options(data: Dict[str, Any]) -> None:
         data["virt_%s" % field] = virt[field]
 
 
+_DNS_OPTION_FIELDS = ("name_servers", "name_servers_search")
+
+
+def _flatten_dns_options(data: Dict[str, Any]) -> None:
+    """
+    Cobbler >= 4.0 renders Profile/System/Image DNS attributes as a nested "dns" Options
+    object (data["dns"] = {"name_servers": [...], "name_servers_search": [...]}) instead of
+    a flat top-level name_servers key. Flatten it back into that legacy flat key in place,
+    since calc_kernel_args's --static-interface path still expects it. Distro data has no
+    "dns" key at all, which is a legitimate no-op, not an error. Any other shape is a
+    Cobbler-compatibility problem worth failing loudly on, rather than silently falling back
+    to an empty nameserver list for every static-IP install.
+    """
+    dns = data.get("dns")
+    if dns is None:
+        return
+    if not isinstance(dns, dict):
+        raise InfoException(
+            "Unexpected type for rendered 'dns' property from Cobbler (expected dict, "
+            "got %s); koan may be incompatible with this Cobbler server version."
+            % type(dns).__name__
+        )
+    missing = [field for field in _DNS_OPTION_FIELDS if field not in dns]
+    if missing:
+        raise InfoException(
+            "Cobbler server's rendered 'dns' options are missing expected field(s): %s; "
+            "koan may be incompatible with this Cobbler server version."
+            % ", ".join(missing)
+        )
+    data["name_servers"] = dns["name_servers"]
+
+
 class Koan:
     xmlrpc_server: CobblerXMLRPCInterface
 
@@ -1143,6 +1175,7 @@ EOF
             raise InfoException("No entry/entries found")
         if what in ("profile", "system", "image"):
             _flatten_virt_options(data)
+            _flatten_dns_options(data)
         return data
 
     def get_ips(self, strdata: str) -> List[str]:
