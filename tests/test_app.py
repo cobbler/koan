@@ -76,6 +76,39 @@ def test_get_install_tree_from_autoinst_uses_http_server_port(
     )
 
 
+def test_get_install_tree_from_profile_data_handles_flattened_autoinstall_meta(
+    mocker: MockerFixture,
+) -> None:
+    # Arrange
+    # get_profile_as_rendered()/get_system_as_rendered() (used by get_data()) flatten
+    # autoinstall_meta into a "key=value " string via blender()'s documented remove_dicts=True
+    # contract -- same as kernel_options -- so profile_data["autoinstall_meta"] is a string here,
+    # not the dict this function used to assume. The "tree" value actually lives on the distro
+    # (set by import_signatures.py), so it must be fetched unflattened from there instead of
+    # changing blender()'s contract.
+    k = Koan()
+    k.xmlrpc_server = MagicMock()
+    k.xmlrpc_server.get_distro.return_value = {
+        "autoinstall_meta": {"tree": "http://@@http_server@@/cblr/links/leap161-x86_64"}
+    }
+    profile_data: Dict[str, Any] = {
+        "breed": "suse",
+        "distro": "distro-uid-123",
+        "http_server": "cobbler.example.com",
+        "autoinstall_meta": "tree=http://@@http_server@@/cblr/links/leap161-x86_64 ",
+    }
+
+    # Act
+    k.get_install_tree_from_profile_data(profile_data)
+
+    # Assert
+    k.xmlrpc_server.get_distro.assert_called_once_with("distro-uid-123", False, True)
+    assert (
+        profile_data["install_tree"]
+        == "http://cobbler.example.com/cblr/links/leap161-x86_64"
+    )
+
+
 # ---------------------------------------------------------------------------
 # GROUP 1 - pure "calculator" methods
 # ---------------------------------------------------------------------------

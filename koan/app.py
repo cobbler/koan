@@ -612,7 +612,18 @@ class Koan:
         """
 
         try:
-            tree = profile_data["autoinstall_meta"]["tree"]
+            autoinstall_meta = profile_data["autoinstall_meta"]
+            if not isinstance(autoinstall_meta, dict) and profile_data.get("distro"):
+                # get_profile_as_rendered()/get_system_as_rendered() (used by get_data())
+                # flatten autoinstall_meta into a "key=value " string, same as kernel_options,
+                # per blender()'s documented remove_dicts=True contract -- that contract is not
+                # to be changed here. The "tree" value is set by Cobbler on the distro (see this
+                # function's docstring), so fetch it unflattened straight from there instead.
+                distro_data = self.xmlrpc_server.get_distro(
+                    profile_data["distro"], False, True
+                )
+                autoinstall_meta = distro_data.get("autoinstall_meta", {})
+            tree = autoinstall_meta["tree"]
             tree_re = re.compile("(https?|ftp|nfs):")
             # Next check for installation tree on remote server
             if tree_re.match(tree):
