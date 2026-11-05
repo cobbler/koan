@@ -1122,6 +1122,35 @@ def test_calc_kernel_args_suse_breed_agama_uses_inst_auto() -> None:
     )
 
 
+def test_calc_kernel_args_suse_breed_agama_adds_live_root_from_install_tree() -> None:
+    # Arrange
+    # Agama's install media boots a live root filesystem (dmsquash-live's
+    # LiveOS/squashfs.img convention) rather than a classic netinstall tree -- the kernel's
+    # own baked-in /etc/cmdline.d default (root=live:LABEL=Install-...) makes dracut wait
+    # forever for a local labeled device when there isn't one (koan/virt-install boots this
+    # kernel directly, bypassing the ISO's own GRUB menu, which would normally compute this
+    # dynamically). Pointing root=live: at the already-resolved install_tree's squashfs.img
+    # over HTTP makes dracut's livenet module fetch it over the network instead.
+    k = Koan()
+    pd = {
+        "autoinst": "http://x/cblr/svc/op/autoinstall/profile/leap161-x86_64",
+        "breed": "suse",
+        "kernel_options": "",
+        "os_version": "opensuse16.1",
+        "autoinstall": {"name": "built-in-autoinst.json", "tags": ["agama", "default"]},
+        "install_tree": "http://x/cblr/links/leap161-x86_64/",
+    }
+
+    # Act
+    result = k.calc_kernel_args(pd)
+
+    # Assert
+    assert result == (
+        "inst.auto=http://x/cblr/svc/op/autoinstall/profile/leap161-x86_64 "
+        "root=live:http://x/cblr/links/leap161-x86_64/LiveOS/squashfs.img "
+    )
+
+
 def test_calc_kernel_args_debian_breed() -> None:
     # Arrange
     k = Koan()

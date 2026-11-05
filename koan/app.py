@@ -1273,6 +1273,13 @@ EOF
                 ) and "agama" in autoinstall_template.get("tags", [])
                 if is_agama:
                     kextra = "inst.auto=" + autoinst
+                    install_tree = self.safe_load(pd, "install_tree")
+                    if install_tree:
+                        kextra += (
+                            " root=live:"
+                            + install_tree.rstrip("/")
+                            + "/LiveOS/squashfs.img"
+                        )
                 else:
                     kextra = "autoyast=" + autoinst
             elif breed is not None and breed == "debian" or breed == "ubuntu":
