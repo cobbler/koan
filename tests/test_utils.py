@@ -529,6 +529,50 @@ def test_get_network_info_dedupes_shared_mac_addresses(
     assert "aa:bb:cc:dd:ee:ff" in captured.out
 
 
+def test_get_network_info_dedupes_shared_mac_prefers_interface_with_ip(
+    mocker: MockerFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Arrange
+    # Same Azure/Hyper-V SR-IOV scenario as above, but inverted: the synthetic
+    # interface ("eth0") enumerates first and has no IP, while the real VF
+    # interface ("enP1s1") enumerates second and does have one. Keeping
+    # whichever interface is merely "first seen" would discard the only
+    # interface with a usable IP address.
+    def fake_ifaddresses(iname: str) -> Any:
+        data = {
+            "eth0": {
+                netifaces.AF_LINK: [{"addr": "aa:bb:cc:dd:ee:ff"}],
+            },
+            "enP1s1": {
+                netifaces.AF_LINK: [{"addr": "aa:bb:cc:dd:ee:ff"}],
+                netifaces.AF_INET: [
+                    {"addr": "192.168.1.5", "netmask": "255.255.255.0"}
+                ],
+            },
+            "lo": {
+                netifaces.AF_LINK: [{"addr": "00:00:00:00:00:00"}],
+                netifaces.AF_INET: [{"addr": "127.0.0.1", "netmask": "255.0.0.0"}],
+            },
+        }
+        return data[iname]
+
+    mocker.patch("netifaces.interfaces", return_value=["eth0", "enP1s1", "lo"])
+    mocker.patch("netifaces.ifaddresses", side_effect=fake_ifaddresses)
+
+    # Act
+    result = utils.get_network_info()
+
+    # Assert
+    assert "enP1s1" in result
+    assert result["enP1s1"]["ip_address"] == "192.168.1.5"
+    assert "eth0" not in result
+    assert "lo" in result
+
+    captured = capsys.readouterr()
+    assert "eth0" in captured.out
+    assert "aa:bb:cc:dd:ee:ff" in captured.out
+
+
 # ---------------------------------------------------------------------------
 # connect_to_server
 # ---------------------------------------------------------------------------

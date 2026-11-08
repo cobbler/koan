@@ -23,7 +23,6 @@ from typing import (
     Literal,
     Optional,
     Protocol,
-    Set,
     Tuple,
     Union,
     cast,
@@ -411,26 +410,13 @@ def get_network_info() -> Dict[str, Dict[str, Any]]:
     interfaces: Dict[str, Dict[str, Any]] = {}
     # get names
     inames = netifaces.interfaces()
-    seen_macs: Set[str] = set()
+    kept_iname_for_mac: Dict[str, str] = {}
 
     for iname in inames:
         mac = netifaces.ifaddresses(iname)[netifaces.AF_LINK][0]["addr"]
 
         if mac == "00:00:00:00:00:00":
             mac = "?"
-
-        # Azure/Hyper-V accelerated networking (SR-IOV) exposes both a synthetic netvsc interface and the underlying VF
-        # interface with the *same* MAC for one physical NIC. Submitting the same MAC twice makes cobbler-register's
-        # register_new_system() reject the whole registration outright (Cobbler enforces one system per MAC), so keep
-        # only the first interface seen per MAC address - the duplicates are different names for the same NIC anyway.
-        if mac != "?" and mac in seen_macs:
-            print(
-                "- warning: skipping interface %s, its MAC address %s is already in use by another interface"
-                % (iname, mac)
-            )
-            continue
-        if mac != "?":
-            seen_macs.add(mac)
 
         try:
             ip = netifaces.ifaddresses(iname)[netifaces.AF_INET][0]["addr"]
@@ -447,13 +433,40 @@ def get_network_info() -> Dict[str, Dict[str, Any]]:
         except Exception:
             nm = "?"
 
-        interfaces[iname] = {
+        entry = {
             "ip_address": ip,
             "mac_address": mac,
             "netmask": nm,
             "bridge": bridge,
             "module": module,
         }
+
+        # Azure/Hyper-V accelerated networking (SR-IOV) exposes both a synthetic netvsc interface and the underlying VF
+        # interface with the *same* MAC for one physical NIC. Submitting the same MAC twice makes cobbler-register's
+        # register_new_system() reject the whole registration outright (Cobbler enforces one system per MAC), so keep
+        # only one interface per MAC address - the duplicates are different names for the same NIC anyway. Prefer
+        # whichever one actually resolved a usable IP address, since the synthetic interface isn't guaranteed to
+        # enumerate (and thus be "first seen") before the real one.
+        if mac != "?" and mac in kept_iname_for_mac:
+            kept_iname = kept_iname_for_mac[mac]
+            if interfaces[kept_iname]["ip_address"] == "?" and ip != "?":
+                print(
+                    "- warning: skipping interface %s, its MAC address %s is already in use by another interface"
+                    % (kept_iname, mac)
+                )
+                del interfaces[kept_iname]
+                interfaces[iname] = entry
+                kept_iname_for_mac[mac] = iname
+            else:
+                print(
+                    "- warning: skipping interface %s, its MAC address %s is already in use by another interface"
+                    % (iname, mac)
+                )
+            continue
+
+        if mac != "?":
+            kept_iname_for_mac[mac] = iname
+        interfaces[iname] = entry
 
     # print interfaces
     return interfaces
