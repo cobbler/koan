@@ -409,6 +409,34 @@ def test_flatten_virt_options_noop_when_virt_absent() -> None:
     assert data == {"name": "d1"}
 
 
+def test_flatten_virt_options_wrong_value_type_raises() -> None:
+    # Arrange
+    # Regression test: every expected field being merely *present* used to be treated as
+    # sufficient - a malformed-but-present value (e.g. "path" rendered as a list instead of
+    # a string) slipped straight through and only surfaced much later as a confusing raw
+    # AttributeError deep inside calc_virt_path()'s string parsing, instead of the clear,
+    # actionable InfoException the presence/container-type checks already raise for other
+    # Cobbler-incompatibility shapes.
+    data: Dict[str, Any] = {
+        "virt": _nested_virt_options(path=["/var/lib/libvirt/images"])
+    }
+
+    # Act / Assert
+    with pytest.raises(InfoException, match="unexpected value type.*path"):
+        _flatten_virt_options(data)
+
+
+def test_flatten_virt_options_bool_rejected_for_numeric_field() -> None:
+    # Arrange
+    # bool is a subclass of int in Python, so a naive isinstance(value, (int, float)) check
+    # would silently accept True/False for a numeric field like "ram" - still malformed data.
+    data: Dict[str, Any] = {"virt": _nested_virt_options(ram=True)}
+
+    # Act / Assert
+    with pytest.raises(InfoException, match="unexpected value type.*ram"):
+        _flatten_virt_options(data)
+
+
 def test_flatten_dns_options_populates_flat_key() -> None:
     # Arrange
     # Cobbler >= 4.0 renders Profile/System/Image DNS attributes as a nested "dns" Options

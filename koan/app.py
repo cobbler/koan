@@ -66,6 +66,27 @@ _VIRT_OPTION_FIELDS = (
     "uefi",
 )
 
+_VIRT_OPTION_FIELD_TYPES: Dict[str, Tuple[type, ...]] = {
+    "auto_boot": (bool,),
+    "cpus": (int, float),
+    "disk_driver": (str,),
+    "file_size": (int, float),
+    "path": (str,),
+    "pxe_boot": (bool,),
+    "ram": (int, float),
+    "type": (str,),
+    "uefi": (bool,),
+}
+
+
+def _has_expected_virt_option_type(field: str, value: Any) -> bool:
+    expected = _VIRT_OPTION_FIELD_TYPES[field]
+    if expected == (int, float) and isinstance(value, bool):
+        # bool is a subclass of int in Python; a server sending True/False for a
+        # numeric field (cpus/file_size/ram) is still malformed.
+        return False
+    return isinstance(value, expected)
+
 
 def _flatten_virt_options(data: Dict[str, Any]) -> None:
     """
@@ -92,6 +113,20 @@ def _flatten_virt_options(data: Dict[str, Any]) -> None:
             "Cobbler server's rendered 'virt' options are missing expected field(s): %s; "
             "koan may be incompatible with this Cobbler server version."
             % ", ".join(missing)
+        )
+    wrong_type = [
+        field
+        for field in _VIRT_OPTION_FIELDS
+        if not _has_expected_virt_option_type(field, virt[field])
+    ]
+    if wrong_type:
+        details = ", ".join(
+            "%s (got %s)" % (field, type(virt[field]).__name__) for field in wrong_type
+        )
+        raise InfoException(
+            "Cobbler server's rendered 'virt' options have unexpected value type(s) "
+            "for field(s): %s; koan may be incompatible with this Cobbler server version."
+            % details
         )
     for field in _VIRT_OPTION_FIELDS:
         data["virt_%s" % field] = virt[field]
