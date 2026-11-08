@@ -2302,3 +2302,29 @@ def test_get_install_tree_from_profile_data_suse_with_tree_does_not_raise() -> N
         profile_data["install_tree"]
         == "http://cobbler.example.com/cblr/links/leap161-x86_64"
     )
+
+
+def test_get_install_tree_from_profile_data_suse_rpc_failure_propagates_not_mislabeled() -> (
+    None
+):
+    # Arrange
+    # Regression test: the try block here both parses local dict data (KeyError/TypeError on
+    # missing/malformed fields - the real "distro was never imported" case) and makes a live
+    # XML-RPC call to fetch the distro's unflattened autoinstall_meta. A bare "except Exception"
+    # used to swallow a transient RPC/network failure from that call exactly like a missing key,
+    # mislabeling it with the suse-specific "No install tree found" InfoException even though the
+    # real cause was unrelated to the distro ever being imported. The RPC failure must propagate
+    # unchanged instead.
+    k = Koan()
+    k.xmlrpc_server = MagicMock()
+    k.xmlrpc_server.get_distro.side_effect = ConnectionError("connection refused")
+    profile_data: Dict[str, Any] = {
+        "breed": "suse",
+        "distro": "distro-uid-123",
+        "http_server": "cobbler.example.com",
+        "autoinstall_meta": "tree=http://@@http_server@@/cblr/links/leap161-x86_64 ",
+    }
+
+    # Act / Assert
+    with pytest.raises(ConnectionError, match="connection refused"):
+        k.get_install_tree_from_profile_data(profile_data)

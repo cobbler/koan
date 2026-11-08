@@ -671,7 +671,7 @@ class Koan:
                 print("install_tree:", profile_data["install_tree"])
             else:
                 print("warning: autoinst found but no install_tree found")
-        except Exception:
+        except (KeyError, TypeError):
             if profile_data["breed"] == "suse":
                 options = self.safe_load(
                     profile_data, "kernel_options", default=""
