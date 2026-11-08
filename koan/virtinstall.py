@@ -383,6 +383,13 @@ def build_commandline(
     if is_qemu and machine_type and not disable_machine_type:
         cmd += "--machine %s " % machine_type
 
+    if uefi and not (fullvirt or is_qemu or is_import):
+        raise InfoException(
+            "virt_uefi is not supported for a paravirtualized Xen guest "
+            "(virt_type=xenpv); UEFI firmware requires a fully virtualized "
+            "guest (e.g. virt_type=xenfv, qemu/kvm, or --import)."
+        )
+
     if uefi:
         cmd += "--boot uefi "
 

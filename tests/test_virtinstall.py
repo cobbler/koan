@@ -449,3 +449,71 @@ def test_build_commandline_no_uefi_flag_by_default() -> None:
     )
 
     assert "--boot" not in cmd
+
+
+def test_build_commandline_uefi_with_xenpv_raises() -> None:
+    """
+    Regression test: "--boot uefi" used to be appended unconditionally, regardless of
+    virt_type. A paravirtualized Xen guest (virt_type=xenpv) has no firmware/boot-loader
+    layer for UEFI to apply to, and this code path also unconditionally appends its own
+    "--boot kernel=...,initrd=...,kernel_args=..." - so virt-install would have received
+    two conflicting --boot arguments on one command line. UEFI only makes sense for a
+    fully virtualized guest (xenfv/qemu/kvm/import), so this combination must raise
+    instead of silently emitting a broken command line.
+    """
+    with pytest.raises(
+        InfoException, match="not supported for a paravirtualized Xen guest"
+    ):
+        build_commandline(
+            "xen:///",
+            name="foo",
+            ram=256,
+            uuid="ad6611b9-98e4-82c8-827f-051b6b6680d7",
+            vcpus=1,
+            bridge="br0",
+            disks=[("/tmp/foo1.img", 8), ("/dev/foo1", 0)],
+            virt_type="xenpv",
+            qemu_driver_type="virtio",
+            qemu_net_type="virtio",
+            profile_data={
+                "kernel_local": "kernel",
+                "initrd_local": "initrd",
+                "install_tree": "http://example.com/tree",
+            },
+            extra="ks=http://example.com/ks.ks",
+            uefi=True,
+        )
+
+
+def test_build_commandline_uefi_with_xenfv_still_sets_boot_uefi() -> None:
+    """
+    Positive-path companion to the xenpv regression test above: a fully virtualized Xen
+    guest (virt_type=xenfv, fullvirt=True) does have a firmware layer UEFI applies to, so
+    this combination must keep emitting "--boot uefi" and must not raise.
+    """
+    cmd = build_commandline(
+        "xen:///",
+        name="foo",
+        ram=256,
+        vcpus=1,
+        disks=[("/dev/foo1", 0)],
+        fullvirt=True,
+        arch="x86_64",
+        bridge="br0,br1",
+        virt_type="xenfv",
+        uefi=True,
+        profile_data={
+            "breed": "redhat",
+            "os_version": "fedora14",
+            "install_tree": "http://example.com/tree",
+            "interfaces": {
+                "eth0": {
+                    "interface_type": "na",
+                    "mac_address": "11:22:33:44:55:66",
+                },
+            },
+        },
+    )
+
+    cmd = " ".join(cmd)
+    assert "--boot uefi" in cmd
