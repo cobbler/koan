@@ -21,6 +21,18 @@ setup(
         "write_to_template": _version_template,
         "fallback_version": "3.0.2",
     },
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.11",
+        "Topic :: System :: Installation/Setup",
+        "Topic :: System :: Systems Administration",
+        "Intended Audience :: System Administrators",
+        "Natural Language :: English",
+        "Operating System :: POSIX :: Linux",
+    ],
+    python_requires=">=3.11",
     packages=["koan", "koan.virt"],
     entry_points={
         "console_scripts": [

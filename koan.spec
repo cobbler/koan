@@ -1,10 +1,9 @@
 #
 # RPM spec file for Koan
 #
-# Supported/tested build targets:
-# - Fedora: 30, 31, Rawhide
-# - CentOS + EPEL: 9
-# - SLE: 11sp4, 12sp3, 15sp1
+# Supported/tested build targets (see docker/rpms/ and .github/workflows/packaging.yml):
+# - Fedora: 43
+# - RockyLinux: 10
 # - openSUSE: Leap 16.0, Tumbleweed
 #
 # If it doesn't build on the Open Build Service (OBS) it's a bug.
