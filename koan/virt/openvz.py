@@ -9,12 +9,14 @@ import glob
 import os
 import re
 import shutil
+import subprocess
+from typing import Any, Dict, List, Optional, Tuple
 
 from koan import utils
 from koan.cexceptions import OVZCreateException
 
 
-def _extract_rootpw(kickstart_text):
+def _extract_rootpw(kickstart_text: str) -> Optional[str]:
     """
     Extract the root password hash/value from a "rootpw ..." kickstart line.
     """
@@ -26,7 +28,7 @@ def _extract_rootpw(kickstart_text):
     return None
 
 
-def _extract_post_install_interpreter(kickstart_text):
+def _extract_post_install_interpreter(kickstart_text: str) -> str:
     """
     Extract the interpreter from "%post --interpreter <shell>", defaulting to /bin/sh.
     """
@@ -39,7 +41,7 @@ def _extract_post_install_interpreter(kickstart_text):
     return "/bin/sh"
 
 
-def _extract_post_install_script(kickstart_text):
+def _extract_post_install_script(kickstart_text: str) -> str:
     """
     Return everything after the first "%post" line, as the post-install script body.
     """
@@ -50,12 +52,12 @@ def _extract_post_install_script(kickstart_text):
     return ""
 
 
-def _extract_services(kickstart_text):
+def _extract_services(kickstart_text: str) -> Tuple[List[str], List[str]]:
     """
     Extract enabled/disabled service lists from a "services --enabled=... --disabled=..." line.
     """
-    enabled = []
-    disabled = []
+    enabled: List[str] = []
+    disabled: List[str] = []
     for line in kickstart_text.splitlines():
         if not line.startswith("services"):
             continue
@@ -69,7 +71,7 @@ def _extract_services(kickstart_text):
     return enabled, disabled
 
 
-def _extract_base_repo_url(kickstart_text):
+def _extract_base_repo_url(kickstart_text: str) -> Optional[str]:
     """
     Extract the base install tree URL from a "url --url=..." line.
     """
@@ -81,15 +83,15 @@ def _extract_base_repo_url(kickstart_text):
     return None
 
 
-def _extract_ignoremissing(kickstart_text):
+def _extract_ignoremissing(kickstart_text: str) -> bool:
     return "--ignoremissing" in kickstart_text
 
 
-def _extract_nobase(kickstart_text):
+def _extract_nobase(kickstart_text: str) -> bool:
     return "--nobase" in kickstart_text
 
 
-def _extract_repos(kickstart_text):
+def _extract_repos(kickstart_text: str) -> List[Tuple[str, str, str]]:
     """
     Extract additional yum repos from "repo --name=... --baseurl=..." lines.
 
@@ -97,7 +99,7 @@ def _extract_repos(kickstart_text):
     name_directive/rest_directive are the raw "key=value" tokens intended to be
     written verbatim into a yum repo config file.
     """
-    repos = []
+    repos: List[Tuple[str, str, str]] = []
     for line in kickstart_text.splitlines():
         tokens = line.split()
         if not tokens or tokens[0] != "repo":
@@ -112,7 +114,7 @@ def _extract_repos(kickstart_text):
     return repos
 
 
-def _extract_packages(kickstart_text):
+def _extract_packages(kickstart_text: str) -> List[Tuple[str, bool, str]]:
     """
     Extract package/group install-or-remove entries from the "%packages" section.
 
@@ -120,7 +122,7 @@ def _extract_packages(kickstart_text):
     "install" or "remove".
     """
     lines = kickstart_text.splitlines()
-    start_index = None
+    start_index: Optional[int] = None
     for index, line in enumerate(lines):
         if line.strip().startswith("%packages"):
             start_index = index + 1
@@ -134,7 +136,7 @@ def _extract_packages(kickstart_text):
             end_index = index
             break
 
-    packages = []
+    packages: List[Tuple[str, bool, str]] = []
     for line in lines[start_index:end_index]:
         stripped = line.strip()
         if not stripped or stripped.startswith("#") or stripped.startswith("%"):
@@ -158,7 +160,11 @@ _EXCLUDED_PACKAGES = "selinux-policy-targeted kernel* *firmware* b43*"
 _EXTRA_PACKAGES = "vim-minimal ssh-clients openssh-server logrotate"
 
 
-def _build_yum_config(base_repo_url, ignore_missing, repos):
+def _build_yum_config(
+    base_repo_url: Optional[str],
+    ignore_missing: bool,
+    repos: List[Tuple[str, str, str]],
+) -> str:
     """
     Build the contents of a temporary yum config restricted to the base install
     tree repo plus any additional repos declared in the kickstart file.
@@ -210,7 +216,7 @@ def _build_yum_config(base_repo_url, ignore_missing, repos):
     return "\n".join(lines) + "\n"
 
 
-def _build_yum_script(packages, nobase):
+def _build_yum_script(packages: List[Tuple[str, bool, str]], nobase: bool) -> str:
     """
     Build a "yum shell" script installing/removing the given packages/groups.
     """
@@ -229,7 +235,7 @@ def _build_yum_script(packages, nobase):
     return "\n".join(lines) + "\n"
 
 
-def _run_yum_install(rootdir, yum_config_path, yum_script_path):
+def _run_yum_install(rootdir: str, yum_config_path: str, yum_script_path: str) -> None:
     """
     Install the container's package set via "yum shell", then remove the
     kernel-related packages that don't belong inside an OpenVZ container.
@@ -269,7 +275,7 @@ def _run_yum_install(rootdir, yum_config_path, yum_script_path):
     print("Packages installed")
 
 
-def _move_script_into_chroot(rootdir, script_path, content):
+def _move_script_into_chroot(rootdir: str, script_path: str, content: str) -> None:
     """
     Write `content` to `script_path` and move it under `rootdir`, so it's
     reachable at the same path once chrooted into `rootdir`.
@@ -279,7 +285,9 @@ def _move_script_into_chroot(rootdir, script_path, content):
     shutil.move(script_path, os.path.join(rootdir, script_path.lstrip("/")))
 
 
-def _apply_services_script(rootdir, sysname, enabled, disabled):
+def _apply_services_script(
+    rootdir: str, sysname: str, enabled: List[str], disabled: List[str]
+) -> None:
     """
     Generate a chkconfig on/off script from the kickstart's services directive
     and run it inside the container via chroot.
@@ -293,7 +301,9 @@ def _apply_services_script(rootdir, sysname, enabled, disabled):
     utils.subprocess_call(["chroot", rootdir, "/bin/bash", script_path], ignore_rc=True)
 
 
-def _apply_post_install_script(rootdir, sysname, interpreter, script_body):
+def _apply_post_install_script(
+    rootdir: str, sysname: str, interpreter: str, script_body: str
+) -> None:
     """
     Write out the kickstart's %post script and run it inside the container
     via chroot, using the interpreter declared in the kickstart file.
@@ -347,7 +357,7 @@ _STDIO_SYMLINKS = [
 ]
 
 
-def _comment_out_console_lines(path):
+def _comment_out_console_lines(path: str) -> None:
     if not os.path.exists(path):
         return
     with open(path) as fh:
@@ -357,7 +367,7 @@ def _comment_out_console_lines(path):
         fh.write(content)
 
 
-def _disable_gssapi_authentication(path):
+def _disable_gssapi_authentication(path: str) -> None:
     if not os.path.exists(path):
         return
     with open(path) as fh:
@@ -367,7 +377,7 @@ def _disable_gssapi_authentication(path):
         fh.write(content)
 
 
-def _set_root_password_hash(path, rootpw):
+def _set_root_password_hash(path: str, rootpw: Optional[str]) -> None:
     if not rootpw or not os.path.exists(path):
         return
     with open(path) as fh:
@@ -377,13 +387,13 @@ def _set_root_password_hash(path, rootpw):
         fh.write(content)
 
 
-def _replace_symlink(link_path, target):
+def _replace_symlink(link_path: str, target: str) -> None:
     if os.path.lexists(link_path):
         os.remove(link_path)
     os.symlink(target, link_path)
 
 
-def _recreate_device_nodes(device_dir):
+def _recreate_device_nodes(device_dir: str) -> None:
     utils.subprocess_call(
         ["/sbin/MAKEDEV", "-d", device_dir, "-x"]
         + _PTY_DEVICE_NAMES
@@ -394,7 +404,7 @@ def _recreate_device_nodes(device_dir):
         _replace_symlink(os.path.join(device_dir, name), target)
 
 
-def _tune_container_tree(rootdir, rootpw):
+def _tune_container_tree(rootdir: str, rootpw: Optional[str]) -> None:
     """
     Adjust a freshly-installed root filesystem to be suitable for running as
     an OpenVZ container (as opposed to a standalone/physical install).
@@ -434,7 +444,7 @@ def _tune_container_tree(rootdir, rootpw):
     os.chmod(os.path.join(rootdir, "var/tmp"), 0o1777)
 
 
-def _install_container_tree(sysname, kickstart_url, rootdir):
+def _install_container_tree(sysname: str, kickstart_url: str, rootdir: str) -> None:
     """
     Populate an OpenVZ container's root filesystem from a kickstart file:
     install packages via yum, enable/disable services, run the post-install
@@ -473,7 +483,7 @@ def _install_container_tree(sysname, kickstart_url, rootdir):
     print("All done")
 
 
-def start_install(*args, **kwargs):
+def start_install(*args: Any, **kwargs: Any) -> Optional[int]:
     # check for Openvz tools presence
     # can be this apps installed in some other place?
     vzcfgvalidate = "/usr/sbin/vzcfgvalidate"
@@ -528,8 +538,8 @@ def start_install(*args, **kwargs):
 
     # we get [0,1] ot [False,True] and have to map it to [no,yes]
     onboot = "yes" if onboot == "1" or onboot else "no"
-    CTID = None
-    vz_meta = {}
+    ctid: Optional[int] = None
+    vz_meta: Dict[str, Any] = {}
 
     # get all vz_ parameters from autoinstall_meta
     for key, value in kwargs["profile_data"]["autoinstall_meta"]:
@@ -538,7 +548,7 @@ def start_install(*args, **kwargs):
 
     if "CTID" in vz_meta and vz_meta["CTID"]:
         try:
-            CTID = int(vz_meta["CTID"])
+            ctid = int(vz_meta["CTID"])
             del vz_meta["CTID"]
         except ValueError:
             print("Invalid CTID in autoinstall_meta. Exiting...")
@@ -548,7 +558,7 @@ def start_install(*args, **kwargs):
             'Mandatory "vz_ctid" parameter not found in autoinstall_meta!'
         )
 
-    confiname = "/etc/vz/conf/%d.conf" % CTID
+    confiname = "/etc/vz/conf/%d.conf" % ctid
 
     # this is the minimal config. we can define additional parameters or
     # override some of them in autoinstall_meta
@@ -583,23 +593,21 @@ def start_install(*args, **kwargs):
         f.write('%s="%s"\n' % (key, val))
     f.close()
 
-    # validate the config file. confiname/CTID are derived from the
-    # already-validated integer CTID, not attacker-controlled input, so
-    # os.system() here and for the vzctl start below is safe.
-    cmd = "%s %s" % (vzcfgvalidate, confiname)
-    if not os.system(cmd.strip()):
+    # validate the config file
+    cmd = [vzcfgvalidate, confiname]
+    if subprocess.call(cmd) == 0:
         # now install the container tree
         try:
             _install_container_tree(
                 sysname,
                 autoinst,
-                full_config["VE_PRIVATE"].replace("$VEID", "%d" % CTID),
+                full_config["VE_PRIVATE"].replace("$VEID", "%d" % ctid),
             )
         except Exception:
-            raise OVZCreateException("Container creation %s failed" % CTID)
+            raise OVZCreateException("Container creation %s failed" % ctid)
         # if everything fine, start the container
-        cmd = "%s start %s" % (vzctl, CTID)
-        if os.system(cmd.strip()):
-            raise OVZCreateException("Start container %s failed" % CTID)
+        cmd = [vzctl, "start", str(ctid)]
+        if subprocess.call(cmd) != 0:
+            raise OVZCreateException("Start container %s failed" % ctid)
     else:
-        raise OVZCreateException("Container %s config file is not valid" % CTID)
+        raise OVZCreateException("Container %s config file is not valid" % ctid)

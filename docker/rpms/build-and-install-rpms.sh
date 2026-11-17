@@ -22,24 +22,24 @@ docker build -t "$IMAGE" -f "$DOCKERFILE" .
 # Build RPMs
 echo "==> Build RPMs ..."
 mkdir -p rpm-build
-docker run -ti -e SETUPTOOLS_SCM_PRETEND_VERSION -v "$PWD/rpm-build:/usr/src/koan/rpm-build" "$IMAGE"
+docker run -e SETUPTOOLS_SCM_PRETEND_VERSION -v "$PWD/rpm-build:/usr/src/koan/rpm-build" "$IMAGE"
 
 # Launch container and install koan
 echo "==> Start container ..."
 docker run -t -d --name koan -v "$PWD/rpm-build:/usr/src/koan/rpm-build" "$IMAGE" /bin/bash
 
 echo "==> Install fresh RPMs ..."
-docker exec -it koan bash -c 'rpm -Uvh rpm-build/koan-*.noarch.rpm'
+docker exec koan bash -c 'rpm -Uvh rpm-build/koan-*.noarch.rpm'
 
 # Does not work because of wrong exit code. Koan has not help or version switch which means we need to skip this for now
 #echo "==> Show Koan version ..."
-#docker exec -it koan bash -c 'koan version'
+#docker exec koan bash -c 'koan version'
 
 if $RUN_TESTS; then
     echo "==> Running tests ..."
-    docker exec -it koan bash -c 'pip3 install coverage distro setuptools sphinx requests netifaces'
-    docker exec -it koan bash -c 'pip3 install pyflakes pycodestyle pytest pytest-cov codecov'
-    docker exec -it koan bash -c 'pytest'
+    docker exec koan bash -c 'pip3 install coverage distro setuptools sphinx requests netifaces'
+    docker exec koan bash -c 'pip3 install pyflakes pycodestyle pytest pytest-cov codecov'
+    docker exec koan bash -c 'pytest'
 fi
 
 # Clean up

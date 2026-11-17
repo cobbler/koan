@@ -10,25 +10,29 @@ import os
 import socket
 import time
 import traceback
+from typing import Any, Dict, Optional
 
 from koan import utils
 from koan.cexceptions import InfoException
+from koan.utils import CobblerXMLRPCInterface
 
 # usage: cobbler-register [--server=server] [--fqdn=hostname] --profile=foo
 
 
 class Register:
-    def __init__(self):
+    conn: CobblerXMLRPCInterface
+
+    def __init__(self) -> None:
         """
         Constructor.  Arguments will be filled in by optparse...
         """
-        self.server = ""
-        self.port = ""
-        self.profile = ""
-        self.hostname = ""
-        self.batch = ""
+        self.server: str = ""
+        self.port: str = ""
+        self.profile: str = ""
+        self.hostname: str = ""
+        self.batch: Optional[bool] = None
 
-    def run(self):
+    def run(self) -> None:
         """
         Commence with the registration already.
         """
@@ -40,9 +44,16 @@ class Register:
 
         print("- preparing to koan home")
         self.conn = utils.connect_to_server(self.server, self.port)
-        reg_info = {}
+        reg_info: Dict[str, Any] = {}
         print("- gathering network info")
         netinfo = utils.get_network_info()
+        # "?" is koan's own "unknown" sentinel for display purposes (see get_network_info()) and was never meant to
+        # reach Cobbler - send "" instead, which register_new_system() already treats as "no address/netmask provided".
+        for iface in netinfo.values():
+            if iface.get("ip_address") == "?":
+                iface["ip_address"] = ""
+            if iface.get("netmask") == "?":
+                iface["netmask"] = ""
         reg_info["interfaces"] = netinfo
         print("- checking hostname")
         sysname = ""
@@ -68,17 +79,20 @@ class Register:
         # remote end.
 
         avail_profiles = self.conn.get_profiles()
-        matched_profile = False
+        matched_profile_uid = None
         for x in avail_profiles:
             if x.get("name", "") == self.profile:
-                matched_profile = True
+                matched_profile_uid = x.get("uid", "")
                 break
 
         reg_info["name"] = sysname
-        reg_info["profile"] = self.profile
+        # Cobbler >= 4.0's register_new_system assigns this straight into System.profile,
+        # which resolves parents by uid rather than name (like modify_system's "profile"
+        # attribute), so send the uid we just looked up instead of the profile name itself.
+        reg_info["profile"] = matched_profile_uid or self.profile
         reg_info["hostname"] = hostname
 
-        if not matched_profile:
+        if not matched_profile_uid:
             raise InfoException("no such remote profile, see 'koan --list-profiles'")
 
         if not self.batch:
@@ -88,7 +102,7 @@ class Register:
             try:
                 self.conn.register_new_system(reg_info)
                 print("- registration successful, new system name: %s" % sysname)
-            except:
+            except Exception:
                 traceback.print_exc()
                 print("- registration failed, ignoring because of --batch")
 
