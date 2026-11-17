@@ -49,6 +49,14 @@ class CobblerXMLRPCInterface(Protocol):
 
     def get_distros(self) -> List[Dict[str, Any]]: ...
 
+    def get_distro(
+        self,
+        name: str,
+        flatten: bool = False,
+        resolved: bool = False,
+        token: Optional[str] = None,
+    ) -> Union[Dict[str, Any], bool]: ...
+
     def get_profiles(self) -> List[Dict[str, Any]]: ...
 
     def get_systems(self) -> List[Dict[str, Any]]: ...

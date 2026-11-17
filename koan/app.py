@@ -107,6 +107,7 @@ def _flatten_virt_options(data: Dict[str, Any]) -> None:
             "got %s); koan may be incompatible with this Cobbler server version."
             % type(virt).__name__
         )
+    virt = cast(Dict[str, Any], virt)
     missing = [field for field in _VIRT_OPTION_FIELDS if field not in virt]
     if missing:
         raise InfoException(
@@ -679,8 +680,11 @@ class Koan:
         """
 
         try:
-            autoinstall_meta = profile_data["autoinstall_meta"]
-            if not isinstance(autoinstall_meta, dict) and profile_data.get("distro"):
+            raw_autoinstall_meta = profile_data["autoinstall_meta"]
+            meta: Dict[str, Any]
+            if isinstance(raw_autoinstall_meta, dict):
+                meta = cast(Dict[str, Any], raw_autoinstall_meta)
+            elif profile_data.get("distro"):
                 # get_profile_as_rendered()/get_system_as_rendered() (used by get_data())
                 # flatten autoinstall_meta into a "key=value " string, same as kernel_options,
                 # per blender()'s documented remove_dicts=True contract -- that contract is not
@@ -689,8 +693,14 @@ class Koan:
                 distro_data = self.xmlrpc_server.get_distro(
                     profile_data["distro"], False, True
                 )
-                autoinstall_meta = distro_data.get("autoinstall_meta", {})
-            tree = autoinstall_meta["tree"]
+                empty_meta: Dict[str, Any] = {}
+                if isinstance(distro_data, dict):
+                    meta = distro_data.get("autoinstall_meta", empty_meta)
+                else:
+                    meta = empty_meta
+            else:
+                meta = {}
+            tree = meta["tree"]
             tree_re = re.compile("(https?|ftp|nfs):")
             # Next check for installation tree on remote server
             if tree_re.match(tree):
@@ -1303,9 +1313,9 @@ EOF
                 autoinstall_template = self.safe_load(
                     pd, "autoinstall"
                 ) or self.safe_load(pd, "kickstart")
-                is_agama = isinstance(
-                    autoinstall_template, dict
-                ) and "agama" in autoinstall_template.get("tags", [])
+                is_agama = isinstance(autoinstall_template, dict) and "agama" in cast(
+                    Dict[str, Any], autoinstall_template
+                ).get("tags", [])
                 if is_agama:
                     kextra = "inst.auto=" + autoinst
                     install_tree = self.safe_load(pd, "install_tree")
