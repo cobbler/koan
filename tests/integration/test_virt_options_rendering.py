@@ -6,6 +6,7 @@ output has the shape koan now assumes, not just that koan's own parsing logic is
 internally consistent (tests/test_app.py already covers that with mocks).
 """
 
+import xmlrpc.client
 from typing import Any, Dict, Tuple
 
 import pytest
@@ -92,12 +93,14 @@ def test_modify_profile_virt_requires_two_element_path(
     assert remote.get_profile_as_rendered(pid)["virt"]["cpus"] == 2
 
     # Old flat single-string attribute path ("virt_cpus" as one string, not a
-    # ["virt", "cpus"] path) is iterated character-by-character by modify_item's
-    # getattr/setattr walk, since a plain str is itself iterable - it doesn't raise,
-    # but it also doesn't touch the real "virt.cpus" field. This is the concrete
-    # "silently does the wrong thing" hazard a client still sending the old flat
-    # attribute name would hit against a >= 4.0 server.
-    remote.modify_profile(pid, "virt_cpus", 4, token)
+    # ["virt", "cpus"] path) is now actively rejected server-side as an internal/
+    # computed attribute name, rather than being silently iterated character-by-
+    # character and doing nothing (modify_item's getattr/setattr walk used to accept
+    # it without effect, since a plain str is itself iterable). This is the concrete
+    # hazard a client still sending the old flat attribute name would hit against a
+    # current server: a loud failure instead of a silent no-op.
+    with pytest.raises(xmlrpc.client.Fault, match="Internal or computed attributes"):
+        remote.modify_profile(pid, "virt_cpus", 4, token)
     remote.save_profile(pid, True, True, "bypass", token)
     assert remote.get_profile_as_rendered(pid)["virt"]["cpus"] == 2
 
