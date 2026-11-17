@@ -30,11 +30,7 @@ clean:
 
 doc:
 	@echo "creating: documentation"
-	@if python3 -c "from importlib.metadata import version; from sys import exit; exit(0 if tuple(int(p) for p in version('setuptools_scm').split('.')[:2]) >= (8, 2) else 1)" 2>/dev/null; then \
-		${PYTHON} -m setuptools_scm --force-write-version-files > /dev/null; \
-	else \
-		${PYTHON} setup.py --version > /dev/null 2>&1; \
-	fi
+	@${PYTHON} -c "import setuptools_scm; from setuptools_scm import Configuration; c = Configuration.from_file(); setuptools_scm.get_version(write_to=c.version_file, write_to_template=c.version_file_template)" > /dev/null
 	@cd docs; make html
 
 qa:
@@ -42,7 +38,7 @@ ifeq ($(strip $(PYFLAKES)),)
 	@echo "No pyflakes found"
 else
 	@echo "checking: pyflakes ${PYFLAKES}"
-	@${PYFLAKES} *.py koan/*.py
+	@${PYFLAKES} koan/*.py
 endif
 
 ifeq ($(strip $(BLACK)),)

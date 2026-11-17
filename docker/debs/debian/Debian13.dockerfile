@@ -34,6 +34,7 @@ RUN apt-get update -qq && \
     python3-pytest-mock \
     python3-setuptools \
     python3-setuptools-scm \
+    pybuild-plugin-pyproject \
     python3-sphinx \
     python3-sphinx-rtd-theme \
     python3-tz \
